@@ -1,6 +1,8 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import fs from "fs";
+import path from "path";
 
 const banner =
 `/*
@@ -10,6 +12,21 @@ if you want to view the source, please visit the github repository of this plugi
 `;
 
 const prod = (process.argv[2] === "production");
+
+// Ensure ESV.json exists and is copied to the output directory
+const esvJsonPath = path.resolve("./src/ESV.json");
+const destDir = "./";
+
+// Make sure we have the ESV.json file
+if (fs.existsSync(esvJsonPath)) {
+	console.log("ESV.json found, including in build");
+	// Create the directory if it doesn't exist
+	fs.mkdirSync(path.dirname(path.resolve(destDir, "src/ESV.json")), { recursive: true });
+	// Copy the file
+	fs.copyFileSync(esvJsonPath, path.resolve(destDir, "src/ESV.json"));
+} else {
+	console.error("ESV.json not found at:", esvJsonPath);
+}
 
 const context = await esbuild.context({
 	banner: {
@@ -39,6 +56,7 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
+	loader: { ".json": "json" },
 });
 
 if (prod) {
