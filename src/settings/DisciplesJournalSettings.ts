@@ -26,7 +26,7 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
     preferredBibleVersion: 'ESV',
     esvApiToken: '',
     downloadOnDemand: true,
-    bibleContentVaultPath: 'Bible/ESV'
+    bibleContentVaultPath: 'Bible'
 };
 
 export class DisciplesJournalSettingsTab extends PluginSettingTab {
@@ -138,6 +138,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.preferredBibleVersion = value;
                     await this.plugin.saveSettings();
+                    this.plugin.setBibleVersion(value);
                 })
             );
         
@@ -145,14 +146,14 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
         
         new Setting(containerEl)
             .setName('Bible Content Vault Path')
-            .setDesc('Path in your vault where Bible content will be stored.')
+            .setDesc('Root path in your vault where Bible content will be stored. Each translation will be stored in a subdirectory.')
             .addText(text => text
-                .setPlaceholder('Bible/ESV')
+                .setPlaceholder('Bible')
                 .setValue(this.plugin.settings.bibleContentVaultPath)
                 .onChange(async (value) => {
-                    this.plugin.settings.bibleContentVaultPath = value || 'Bible/ESV';
+                    this.plugin.settings.bibleContentVaultPath = value || 'Bible';
                     await this.plugin.saveSettings();
-                    this.plugin.setContentPath(value || 'Bible/ESV');
+                    this.plugin.setContentPath(value || 'Bible');
                 }));
         
         containerEl.createEl('h3', { text: 'ESV API Settings' });

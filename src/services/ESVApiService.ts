@@ -33,7 +33,8 @@ export interface ESVPassageMeta {
 export class ESVApiService {
     private app: App;
     private apiToken: string = '';
-    private bibleContentVaultPath: string = 'Bible/ESV';
+    private bibleContentVaultPath: string = 'Bible';  // Root path for all Bible versions
+    private bibleVersion: string = 'ESV';  // Default version
     private bookNameService: BookNameService;
     
     // Store HTML formatted Bible chapters
@@ -57,10 +58,24 @@ export class ESVApiService {
     }
 
     /**
-     * Set the path where Bible content will be stored in the vault
+     * Set the root path where Bible content will be stored in the vault
      */
     public setContentPath(path: string): void {
         this.bibleContentVaultPath = path;
+    }
+    
+    /**
+     * Set the Bible version to use (affects the subdirectory)
+     */
+    public setBibleVersion(version: string): void {
+        this.bibleVersion = version;
+    }
+    
+    /**
+     * Get the full vault path including version subdirectory
+     */
+    private getFullContentPath(): string {
+        return `${this.bibleContentVaultPath}/${this.bibleVersion}`;
     }
 
     /**
@@ -78,28 +93,56 @@ export class ESVApiService {
     }
 
     /**
-     * Load a collection of HTML formatted Bible chapters
+     * Load a collection of HTML formatted Bible chapters from files in the vault
      */
-    public loadChapterCollection(data: any): void {
-        if (!data) return;
-        
+    public async loadBibleChaptersFromVault(): Promise<void> {
         try {
-            // Process each chapter in the collection
-            for (const key in data) {
-                const chapterData = data[key];
-                if (this.isESVApiFormat(chapterData)) {
-                    // Store the HTML content
-                    const canonical = chapterData.canonical;
-                    const htmlContent = chapterData.passages[0];
-                    
-                    this.htmlFormattedBible[canonical] = {
-                        canonical,
-                        htmlContent
-                    };
+            // Get the path where Bible content is stored
+            const fullPath = this.getFullContentPath();
+            
+            // Check if path exists
+            if (!(await this.app.vault.adapter.exists(fullPath))) {
+                console.log(`Bible content directory ${fullPath} does not exist yet`);
+                return;
+            }
+            
+            // Get all book directories
+            const bookDirs = await this.app.vault.adapter.list(fullPath);
+            
+            // Process each book directory
+            for (const bookDir of bookDirs.folders) {
+                // Get all chapter files
+                const files = await this.app.vault.adapter.list(bookDir);
+                
+                // Process each chapter file
+                for (const file of files.files) {
+                    if (file.endsWith('.json')) {
+                        try {
+                            // Read and parse the file
+                            const content = await this.app.vault.adapter.read(file);
+                            const data = JSON.parse(content);
+                            
+                            // Process the data if it's in the expected format
+                            if (this.isESVApiFormat(data)) {
+                                // Store the chapter content
+                                const canonical = data.canonical;
+                                const htmlContent = data.passages[0];
+                                
+                                this.htmlFormattedBible[canonical] = {
+                                    canonical,
+                                    htmlContent
+                                };
+                            }
+                        } catch (error) {
+                            console.error(`Error processing file ${file}:`, error);
+                        }
+                    }
                 }
             }
+            
+            console.log(`Loaded ${Object.keys(this.htmlFormattedBible).length} Bible chapters from vault`);
         } catch (error) {
-            console.error('Error loading chapter collection:', error);
+            console.error('Error loading Bible chapters from vault:', error);
         }
     }
 
@@ -244,8 +287,10 @@ export class ESVApiService {
             const chapter = parts[parts.length - 1];
             const book = parts.slice(0, -1).join(' ');
             
-            // Create the directory structure
-            const bookPath = `${this.bibleContentVaultPath}/${book}`;
+            // Create the directory structure with version subdirectory
+            const fullPath = this.getFullContentPath();
+            const bookPath = `${fullPath}/${book}`;
+            await this.ensureVaultDirectoryExists(fullPath);
             await this.ensureVaultDirectoryExists(bookPath);
             
             // Save the raw API response as JSON

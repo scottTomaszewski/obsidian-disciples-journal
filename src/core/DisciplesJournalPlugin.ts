@@ -45,6 +45,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         // Configure services from settings
         this.esvApiService.setApiToken(this.settings.esvApiToken);
         this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
+        this.esvApiService.setBibleVersion(this.settings.preferredBibleVersion);
         this.bibleContentService.setUseHtmlFormat(true);
         this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
         
@@ -55,12 +56,16 @@ export default class DisciplesJournalPlugin extends Plugin {
         
         // Initialize components
         this.bibleStyles = new BibleStyles(this.app);
+        
+        // Create the full path with version for the renderer
+        const fullContentPath = `${this.settings.bibleContentVaultPath}/${this.settings.preferredBibleVersion}`;
+        
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.app,
             this.bibleContentService,
             this.bookNameService,
             this.settings.fontSizeForVerses,
-            this.settings.bibleContentVaultPath
+            fullContentPath
         );
         this.bibleReferenceRenderer.setDownloadOnDemand(this.settings.downloadOnDemand);
         this.bibleReferenceParser = new BibleReferenceParser(this.bookNameService);
@@ -123,6 +128,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         // Update services with new settings
         this.esvApiService.setApiToken(this.settings.esvApiToken);
         this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
+        this.esvApiService.setBibleVersion(this.settings.preferredBibleVersion);
         this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
         this.bibleReferenceRenderer.setDownloadOnDemand(this.settings.downloadOnDemand);
     }
@@ -132,7 +138,8 @@ export default class DisciplesJournalPlugin extends Plugin {
      */
     async loadBibleData() {
         try {
-            await this.bibleContentService.loadBible(null);
+            // Load Bible data from the appropriate version directory in the vault
+            await this.esvApiService.loadBibleChaptersFromVault();
         } catch (error) {
             console.error('Failed to load Bible data:', error);
         }
@@ -260,6 +267,13 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
     
     /**
+     * Get the full path with version
+     */
+    private getFullContentPath(): string {
+        return `${this.settings.bibleContentVaultPath}/${this.settings.preferredBibleVersion}`;
+    }
+
+    /**
      * Open or create a chapter note
      */
     async openChapterNote(reference: string) {
@@ -271,9 +285,9 @@ export default class DisciplesJournalPlugin extends Plugin {
                 return;
             }
             
-            // Get content path
-            const contentPath = this.settings.bibleContentVaultPath;
-            const chapterPath = `${contentPath}/${parsedRef.book}/${parsedRef.book} ${parsedRef.chapter}.md`;
+            // Get full content path including version
+            const fullPath = this.getFullContentPath();
+            const chapterPath = `${fullPath}/${parsedRef.book}/${parsedRef.book} ${parsedRef.chapter}.md`;
             
             // Check if note exists
             const fileExists = await this.app.vault.adapter.exists(chapterPath);
@@ -316,19 +330,16 @@ export default class DisciplesJournalPlugin extends Plugin {
             // Use the formatter utility to format the content
             const content = BibleFormatter.formatChapterContent(passage);
             
-            // Save the content to a note
-            const contentPath = this.settings.bibleContentVaultPath;
-            const bookPath = `${contentPath}/${reference.book}`;
-            const chapterPath = BibleFormatter.buildChapterPath(contentPath, reference.book, reference.chapter);
+            // Save the content to a note with the version path
+            const fullPath = this.getFullContentPath();
+            const bookPath = `${fullPath}/${reference.book}`;
+            const chapterPath = `${fullPath}/${reference.book}/${reference.book} ${reference.chapter}.md`;
             
-            // Create directory if needed
+            // Ensure the directory exists
             await this.app.vault.adapter.mkdir(bookPath);
             
-            // Only create the file if it doesn't exist
-            const exists = await this.app.vault.adapter.exists(chapterPath);
-            if (!exists) {
-                await this.app.vault.create(chapterPath, content);
-            }
+            // Create the note
+            await this.app.vault.create(chapterPath, content);
             
             return chapterPath;
         } catch (error) {
@@ -394,7 +405,20 @@ export default class DisciplesJournalPlugin extends Plugin {
      */
     public setContentPath(path: string): void {
         this.esvApiService.setContentPath(path);
-        this.bibleReferenceRenderer.setVaultPath(path);
+        // Pass the full path with version to the renderer for now
+        // This maintains backwards compatibility
+        const fullPath = `${path}/${this.settings.preferredBibleVersion}`;
+        this.bibleReferenceRenderer.setVaultPath(fullPath);
+    }
+    
+    /**
+     * Set the preferred Bible version
+     */
+    public setBibleVersion(version: string): void {
+        this.esvApiService.setBibleVersion(version);
+        // Update the renderer's path to include the version
+        const fullPath = `${this.settings.bibleContentVaultPath}/${version}`;
+        this.bibleReferenceRenderer.setVaultPath(fullPath);
     }
     
     /**
