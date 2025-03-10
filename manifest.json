@@ -1,7 +1,7 @@
 {
 	"id": "disciples-journal",
 	"name": "Disciples Journal",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"minAppVersion": "0.15.0",
 	"description": "Bible verse reference and passage renderer for Obsidian. Transforms inline code references like `Genesis 1:1` into interactive verses and renders full passages with ```bible``` code blocks.",
 	"author": "Scott Tomaszewski (Xentis)",
