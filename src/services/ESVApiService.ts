@@ -260,7 +260,7 @@ export class ESVApiService {
      * Format Bible chapter data as Markdown
      */
     private formatBibleChapterAsMarkdown(reference: string, data: ESVApiResponse): string {
-        let content = `# ${reference}\n\n`;
+        let content = ``;
         
         // Add HTML content in a code block for rendering
         content += "```bible\n";
@@ -269,9 +269,9 @@ export class ESVApiService {
         
         // Add copyright attribution
         content += "---\n\n";
-        content += "Scripture quotations marked \"ESV\" are from the ESV® Bible ";
-        content += "(The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, ";
-        content += "a publishing ministry of Good News Publishers. Used by permission. All rights reserved.\n";
+        content += `Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved. The ESV text may not be quoted in any publication made available to the public by a Creative Commons license. The ESV may not be translated into any other language.
+
+Users may not copy or download more than 500 verses of the ESV Bible or more than one half of any book of the ESV Bible.`
         
         return content;
     }

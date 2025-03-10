@@ -1,5 +1,8 @@
 import { App, MarkdownPostProcessorContext, MarkdownView, TFile } from "obsidian";
 import { BibleContentService } from "../services/BibleContentService";
+import { BibleReference } from "../core/BibleReference";
+import { BibleNavigation } from "./BibleNavigation";
+import { BookNameService } from "../services/BookNameService";
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -9,12 +12,21 @@ export class BibleReferenceRenderer {
     private fontSizeForVerses: string;
     private vaultPath: string;
     private app: App;
+    private bibleNavigation: BibleNavigation;
+    private downloadOnDemand: boolean = true;
     
-    constructor(app: App, bibleContentService: BibleContentService, fontSizeForVerses: string = '100%', vaultPath: string = 'Bible/ESV') {
+    constructor(app: App, bibleContentService: BibleContentService, bookNameService: BookNameService, fontSizeForVerses: string = '100%', vaultPath: string = 'Bible/ESV') {
         this.app = app;
         this.bibleContentService = bibleContentService;
         this.fontSizeForVerses = fontSizeForVerses;
         this.vaultPath = vaultPath;
+        this.bibleNavigation = new BibleNavigation(
+            app, 
+            bookNameService, 
+            bibleContentService,
+            vaultPath, 
+            this.downloadOnDemand
+        );
     }
     
     /**
@@ -29,13 +41,24 @@ export class BibleReferenceRenderer {
      */
     public setVaultPath(path: string): void {
         this.vaultPath = path;
+        this.bibleNavigation.setVaultPath(path);
+    }
+    
+    /**
+     * Set whether to download Bible content on demand
+     */
+    public setDownloadOnDemand(download: boolean): void {
+        this.downloadOnDemand = download;
+        this.bibleNavigation.setDownloadOnDemand(download);
     }
     
     /**
      * Format chapter content as Markdown
      */
-    public formatChapterContent(passage: any): string {
-        let content = `# ${passage.reference}\n\n`;
+    public formatChapterContent(passage: any, reference?: BibleReference): string {
+        if (!passage) return "# Error: No passage content\n\nThe requested passage could not be loaded.";
+        
+        let content = "";
         
         // Add code block for rendering
         content += "```bible\n";
@@ -51,9 +74,9 @@ export class BibleReferenceRenderer {
         
         // Add copyright attribution
         content += "---\n\n";
-        content += "Scripture quotations marked \"ESV\" are from the ESV® Bible ";
-        content += "(The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, ";
-        content += "a publishing ministry of Good News Publishers. Used by permission. All rights reserved.\n";
+        content += `Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved. The ESV text may not be quoted in any publication made available to the public by a Creative Commons license. The ESV may not be translated into any other language.
+
+Users may not copy or download more than 500 verses of the ESV Bible or more than one half of any book of the ESV Bible.`
         
         return content;
     }
@@ -99,6 +122,24 @@ export class BibleReferenceRenderer {
         if (passage) {
             const containerEl = document.createElement('div');
             containerEl.classList.add('bible-passage-container');
+            
+            // Add navigation elements at the top of the passage
+            try {
+                // Try to parse the reference
+                const refParts = passage.reference.split(" ");
+                if (refParts.length >= 2) {
+                    const book = refParts.slice(0, -1).join(" ");
+                    const chapter = parseInt(refParts[refParts.length - 1]);
+                    if (!isNaN(chapter)) {
+                        const parsedRef = new BibleReference(book, chapter);
+                        
+                        // Use the new navigation method
+                        this.bibleNavigation.createNavigationElements(containerEl, parsedRef);
+                    }
+                }
+            } catch (error) {
+                console.error("Error adding navigation:", error);
+            }
             
             // Add reference heading
             const headingEl = document.createElement('h3');

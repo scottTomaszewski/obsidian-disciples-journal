@@ -52,9 +52,11 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.app,
             this.bibleContentService,
+            this.bookNameService,
             this.settings.fontSizeForVerses,
             this.settings.bibleContentVaultPath
         );
+        this.bibleReferenceRenderer.setDownloadOnDemand(this.settings.downloadOnDemand);
         this.bibleReferenceParser = new BibleReferenceParser(this.bookNameService);
         
         // Load Bible data
@@ -113,6 +115,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.esvApiService.setApiToken(this.settings.esvApiToken);
         this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
         this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
+        this.bibleReferenceRenderer.setDownloadOnDemand(this.settings.downloadOnDemand);
     }
     
     /**
@@ -295,7 +298,10 @@ export default class DisciplesJournalPlugin extends Plugin {
             
             // Get the content from the ESV API and format it for a note
             const passage = await this.bibleContentService.getBibleContent(referenceStr);
-            const content = this.bibleReferenceRenderer.formatChapterContent(passage);
+            
+            // Use the reference object when formatting the content 
+            // (without navigation since it will be dynamically added when rendering)
+            const content = this.bibleReferenceRenderer.formatChapterContent(passage, reference);
             
             // Save the content to a note
             const contentPath = this.settings.bibleContentVaultPath;
@@ -305,7 +311,7 @@ export default class DisciplesJournalPlugin extends Plugin {
             // Create directory if needed
             await this.app.vault.adapter.mkdir(bookPath);
             
-            // Check if file already exists
+            // Only create the file if it doesn't exist
             const exists = await this.app.vault.adapter.exists(chapterPath);
             if (!exists) {
                 await this.app.vault.create(chapterPath, content);

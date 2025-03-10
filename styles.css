@@ -25,6 +25,115 @@ If your plugin does not need CSS, delete this file.
     border-radius: 3px;
 }
 
+/* Bible Chapter Navigation Styles */
+.bible-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0 0 20px;
+    padding: 10px;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+    position: relative;
+    font-family: var(--default-font);
+    font-size: 14px;
+}
+
+.bible-passage-container .bible-navigation {
+    margin-bottom: 12px; 
+}
+
+.nav-prev, .nav-next, .nav-book-selector {
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.nav-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: inherit;
+    font-family: inherit;
+    color: var(--text-accent);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: center;
+    transition: background-color 0.2s ease;
+    line-height: 1.5;
+}
+
+.nav-button:hover {
+    background-color: var(--background-modifier-hover);
+    color: var(--text-accent-hover);
+    text-decoration: none;
+}
+
+.nav-disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.nav-book-selector {
+    cursor: pointer;
+    color: var(--text-normal);
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    font-weight: bold;
+    padding: 6px 14px;
+    user-select: none;
+}
+
+.nav-book-selector:hover {
+    background-color: var(--background-modifier-hover);
+}
+
+.nav-book-data {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    border-radius: 4px;
+    z-index: 100;
+    width: 300px;
+}
+
+.nav-book-data .dropdown {
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.nav-book-data .dropdown select {
+    width: 100%;
+    padding: 6px;
+    background-color: var(--background-primary);
+    color: var(--text-normal);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+}
+
+.nav-chapter-container {
+    margin-bottom: 8px;
+}
+
+.nav-go-button {
+    width: 100% !important;
+    padding: 6px 12px;
+    background-color: var(--interactive-accent) !important;
+    color: var(--text-on-accent) !important;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: block;
+    text-align: center;
+}
+
 /* Bible Verse Preview Styles */
 .bible-verse-preview {
     font-size: 14px;
