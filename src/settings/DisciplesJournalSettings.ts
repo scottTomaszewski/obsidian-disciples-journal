@@ -223,37 +223,8 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                     this.plugin.setDownloadOnDemand(value);
                 }));
         
-        containerEl.createEl('h3', { text: 'About' });
         
-        const aboutDiv = containerEl.createDiv();
-        aboutDiv.addClass('disciples-journal-about');
-        
-        aboutDiv.createEl('p', { 
-            text: 'Disciples Journal Bible plugin for Obsidian' 
-        });
-        
-        aboutDiv.createEl('p', { 
-            text: `Version: ${this.plugin.manifest.version}` 
-        });
-        
-        aboutDiv.createEl('p', { 
-            text: 'Transform Bible references into interactive elements in your notes.' 
-        });
-        
-        const copyrightP = aboutDiv.createEl('p');
-        copyrightP.createEl('small', { 
-            text: 'ESV® Bible copyright information: Scripture quotations marked "ESV" are from the ESV® Bible ' +
-                  '(The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, ' +
-                  'a publishing ministry of Good News Publishers. ' +
-                  'Used by permission. All rights reserved.'
-        });
-        
-        // About & Diagnostics Section
-        containerEl.createEl('h3', { text: 'Diagnostics' });
-
-        const status = containerEl.createEl('div', { cls: 'disciples-journal-about' });
-        
-        new Setting(status)
+        new Setting(containerEl)
             .setName('Bible Data Status')
             .setDesc('Click to reload Bible data from source')
             .addButton(button => button
