@@ -67,7 +67,13 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this as any));
         
         // Register styles
-        this.bibleStyles.addStyles(this.settings.fontSizeForVerses);
+        this.bibleStyles.addStyles({
+            fontSize: this.settings.fontSizeForVerses,
+            wordsOfChristColor: this.settings.wordsOfChristColor,
+            verseNumberColor: this.settings.verseNumberColor,
+            headingColor: this.settings.headingColor,
+            blockIndentation: this.settings.blockIndentation
+        });
         
         // Register Bible code block processor
         this.bibleCodeBlockProcessor = this.registerMarkdownCodeBlockProcessor(
@@ -108,7 +114,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         await this.saveData(this.settings);
         
         // Update components with new settings
-        this.bibleStyles.updateFontSize(this.settings.fontSizeForVerses);
+        this.updateBibleStyles();
         this.bibleReferenceRenderer.setFontSize(this.settings.fontSizeForVerses);
         this.bibleReferenceRenderer.setVaultPath(this.settings.bibleContentVaultPath);
         
@@ -355,11 +361,25 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
     
     /**
-     * Update font size for Bible verses
+     * Update Bible styles with current settings
+     */
+    public updateBibleStyles(): void {
+        this.bibleStyles.updateStyles({
+            fontSize: this.settings.fontSizeForVerses,
+            wordsOfChristColor: this.settings.wordsOfChristColor,
+            verseNumberColor: this.settings.verseNumberColor,
+            headingColor: this.settings.headingColor,
+            blockIndentation: this.settings.blockIndentation
+        });
+        this.bibleReferenceRenderer.setFontSize(this.settings.fontSizeForVerses);
+    }
+    
+    /**
+     * Update font size for Bible verses (legacy method for compatibility)
      */
     public updateFontSize(fontSize: string): void {
-        this.bibleStyles.updateFontSize(fontSize);
-        this.bibleReferenceRenderer.setFontSize(fontSize);
+        this.settings.fontSizeForVerses = fontSize;
+        this.updateBibleStyles();
     }
     
     /**

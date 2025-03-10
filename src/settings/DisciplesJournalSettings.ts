@@ -5,6 +5,10 @@ export interface DisciplesJournalSettings {
     displayInlineVerses: boolean;
     displayFullPassages: boolean;
     fontSizeForVerses: string;
+    wordsOfChristColor: string;
+    verseNumberColor: string;
+    headingColor: string;
+    blockIndentation: string;
     preferredBibleVersion: string;
     esvApiToken: string;
     downloadOnDemand: boolean;
@@ -15,6 +19,10 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
     displayInlineVerses: true,
     displayFullPassages: true,
     fontSizeForVerses: '100%',
+    wordsOfChristColor: 'var(--text-accent)',
+    verseNumberColor: 'var(--text-accent)',
+    headingColor: 'var(--text-accent)',
+    blockIndentation: '2em',
     preferredBibleVersion: 'ESV',
     esvApiToken: '',
     downloadOnDemand: true,
@@ -56,6 +64,8 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                     this.plugin.settings.displayFullPassages = value;
                     await this.plugin.saveSettings();
                 }));
+        
+        containerEl.createEl('h3', { text: 'Text Styling' });
 
         new Setting(containerEl)
             .setName('Verse Font Size')
@@ -66,7 +76,55 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.fontSizeForVerses = value || '100%';
                     await this.plugin.saveSettings();
-                    this.plugin.updateFontSize(value || '100%');
+                    this.plugin.updateBibleStyles();
+                }));
+                
+        new Setting(containerEl)
+            .setName('Words of Christ Color')
+            .setDesc('Set the color for Words of Christ (use `var(--text-normal)` for no special color).')
+            .addText(text => text
+                .setPlaceholder('var(--text-accent)')
+                .setValue(this.plugin.settings.wordsOfChristColor)
+                .onChange(async (value) => {
+                    this.plugin.settings.wordsOfChristColor = value || 'var(--text-accent)';
+                    await this.plugin.saveSettings();
+                    this.plugin.updateBibleStyles();
+                }));
+                
+        new Setting(containerEl)
+            .setName('Verse Number Color')
+            .setDesc('Set the color for verse numbers.')
+            .addText(text => text
+                .setPlaceholder('var(--text-accent)')
+                .setValue(this.plugin.settings.verseNumberColor)
+                .onChange(async (value) => {
+                    this.plugin.settings.verseNumberColor = value || 'var(--text-accent)';
+                    await this.plugin.saveSettings();
+                    this.plugin.updateBibleStyles();
+                }));
+                
+        new Setting(containerEl)
+            .setName('Heading Color')
+            .setDesc('Set the color for Bible passage headings.')
+            .addText(text => text
+                .setPlaceholder('var(--text-accent)')
+                .setValue(this.plugin.settings.headingColor)
+                .onChange(async (value) => {
+                    this.plugin.settings.headingColor = value || 'var(--text-accent)';
+                    await this.plugin.saveSettings();
+                    this.plugin.updateBibleStyles();
+                }));
+                
+        new Setting(containerEl)
+            .setName('Block Indentation')
+            .setDesc('Set the indentation for block sections.')
+            .addText(text => text
+                .setPlaceholder('2em')
+                .setValue(this.plugin.settings.blockIndentation)
+                .onChange(async (value) => {
+                    this.plugin.settings.blockIndentation = value || '2em';
+                    await this.plugin.saveSettings();
+                    this.plugin.updateBibleStyles();
                 }));
         
         containerEl.createEl('h3', { text: 'Bible Version Settings' });

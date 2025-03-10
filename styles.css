@@ -9,23 +9,7 @@ If your plugin does not need CSS, delete this file.
 
 /* Disciples Journal Plugin Styles */
 
-/* Bible Reference Link Styles */
-.bible-reference {
-    color: var(--text-accent);
-    cursor: pointer;
-    text-decoration: underline;
-    font-weight: 500;
-}
-
-.bible-reference:hover {
-    color: var(--text-accent-hover);
-    background-color: var(--background-modifier-hover);
-    border-bottom: 1px solid var(--text-accent-hover);
-    text-decoration: none;
-    border-radius: 3px;
-}
-
-/* Bible Chapter Navigation Styles */
+/* Bible Navigation Styles */
 .bible-navigation {
     display: flex;
     justify-content: space-between;
@@ -134,96 +118,7 @@ If your plugin does not need CSS, delete this file.
     text-align: center;
 }
 
-/* Bible Verse Preview Styles */
-.bible-verse-preview {
-    font-size: 14px;
-    line-height: 1.5;
-    max-width: 450px;
-    max-height: 300px;
-    overflow-y: auto;
-    padding: 12px;
-    border-radius: 5px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    background-color: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    z-index: 1000;
-}
-
-.bible-verse-preview-heading {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 10px;
-    color: var(--text-accent);
-    border-bottom: 1px solid var(--background-modifier-border);
-    padding-bottom: 6px;
-}
-
-.bible-verse-preview-content {
-    color: var(--text-normal);
-}
-
-.bible-verse-preview-content p {
-    margin: 0 0 8px 0;
-    text-indent: -18px;
-    padding-left: 18px;
-}
-
-.bible-verse-number {
-    font-weight: bold;
-    color: var(--text-accent);
-    margin-right: 4px;
-}
-
-.bible-verse-text {
-    color: var(--text-normal);
-}
-
-/* Bible Passage Container Styles */
-.bible-passage-container {
-    background-color: var(--background-primary);
-    border: 1px solid var(--background-modifier-border);
-    border-radius: 6px;
-    padding: 16px;
-    margin: 12px 0;
-}
-
-.bible-passage-heading {
-    font-weight: bold;
-    color: var(--text-accent);
-    margin-top: 0;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--background-modifier-border);
-    padding-bottom: 6px;
-}
-
-.bible-passage-text {
-    font-size: var(--font-size-for-verses, 100%);
-    line-height: 1.5;
-}
-
-.bible-verse {
-    margin: 8px 0;
-}
-
-.bible-chapter-heading {
-    font-size: 1.4em;
-    font-weight: bold;
-    color: var(--text-accent);
-    margin-top: 24px;
-    margin-bottom: 16px;
-    border-bottom: 1px solid var(--background-modifier-border);
-    padding-bottom: 8px;
-}
-
-.bible-reference-error {
-    color: var(--text-error);
-    font-style: italic;
-    background-color: var(--background-modifier-error);
-    padding: 8px 12px;
-    border-radius: 4px;
-    display: inline-block;
-}
-
+/* About Section Styles */
 .disciples-journal-about {
     max-width: 450px;
     margin: 0 auto;
@@ -240,105 +135,38 @@ If your plugin does not need CSS, delete this file.
     color: var(--text-muted);
 }
 
-/* ESV API HTML Rendering Styles */
-.bible-passage-text h2 {
-    font-size: 1.3em;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-.bible-passage-text h3 {
-    font-size: 1.1em;
-    font-style: italic;
-    margin-top: 16px;
-    margin-bottom: 8px;
-    color: var(--text-accent);
-}
-
-.bible-passage-text .chapter-num,
-.bible-passage-text .verse-num {
-    font-weight: bold;
-    font-size: 0.8em;
-    color: var(--text-accent);
-    vertical-align: top;
-    margin-right: 0.2em;
-}
-
-.bible-passage-text p {
-    margin: 0.6em 0;
-}
-
-.bible-passage-text .block-indent {
-    margin-left: 2em;
-}
-
-.bible-passage-text .line {
-    display: block;
-}
-
-.bible-passage-text .indent {
-    text-indent: 1.5em;
-}
-
-.bible-passage-text .footnote {
-    font-size: 0.8em;
-    color: var(--text-muted);
-}
-
-.bible-passage-text .footnotes {
-    margin-top: 2em;
-    padding-top: 1em;
-    border-top: 1px solid var(--background-modifier-border);
-    font-size: 0.9em;
-}
-
-.bible-passage-text .audio {
-    display: none;
-}
-
-.bible-passage-text .extra_text {
-    color: var(--text-muted);
-}
-
-/* Words of Christ styling */
-.bible-passage-text .woc {
-    color: var(--text-accent);
-}
-
-/* Copyright Notice Styles */
+/* Bible Copyright Container Styles */
 .bible-copyright-container {
-    margin-top: 1rem;
+    margin-top: 20px;
     border-top: 1px solid var(--background-modifier-border);
-    padding-top: 0.5rem;
+    padding-top: 10px;
 }
 
 .bible-copyright {
-    font-size: 0.8rem;
+    font-size: 12px;
     color: var(--text-muted);
-    margin-bottom: 0.5rem;
+    margin-top: 8px;
 }
 
 .bible-copyright summary {
     cursor: pointer;
-    display: inline-block;
-    color: var(--text-faint);
-    font-style: italic;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
 }
 
 .bible-copyright summary:hover {
-    color: var(--text-normal);
+    opacity: 1;
     text-decoration: underline;
 }
 
 .bible-copyright-content {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
     background-color: var(--background-secondary);
+    padding: 10px;
     border-radius: 4px;
-    font-size: 0.75rem;
-    line-height: 1.4;
+    margin-top: 8px;
+    font-size: 11px;
 }
 
 .bible-copyright-content p {
-    margin: 0.5rem 0;
+    margin: 6px 0;
 }
