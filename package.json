@@ -1,7 +1,7 @@
 {
-	"name": "obsidian-sample-plugin",
+	"name": "obsidian-disciples-journal",
 	"version": "1.0.0",
-	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
+	"description": "Obsidian plugin for Bible verse references and passage display",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
