@@ -1,4 +1,4 @@
-import { App, Plugin, MarkdownPostProcessorContext, MarkdownView, HoverParent, debounce, Workspace, MarkdownRenderer, TFile } from 'obsidian';
+import { App, Plugin, MarkdownPostProcessorContext, MarkdownView, HoverParent, debounce, Workspace, MarkdownRenderer, TFile, Notice } from 'obsidian';
 import { BookNameService } from '../services/BookNameService';
 import { ESVApiService } from '../services/ESVApiService';
 import { BibleContentService } from '../services/BibleContentService';
@@ -47,6 +47,11 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
         this.bibleContentService.setUseHtmlFormat(true);
         this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
+        
+        // Check if ESV API token is set and show a notice if it's not
+        if (!this.settings.esvApiToken) {
+            new Notice('Disciples Journal: ESV API token not set. Bible content may not load correctly. Visit the plugin settings to add your API token.', 10000);
+        }
         
         // Initialize components
         this.bibleStyles = new BibleStyles(this.app);

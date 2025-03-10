@@ -121,7 +121,16 @@ export class ESVApiService {
     public async downloadFromESVApi(reference: string): Promise<BiblePassage | null> {
         if (!this.apiToken) {
             console.warn('ESV API token not set. Cannot download content.');
-            return null;
+            return {
+                reference: reference,
+                verses: [],
+                htmlContent: `<div class="bible-missing-token-warning">
+                    <p><strong>ESV API Token Not Set</strong></p>
+                    <p>To display Bible passages, you need to set up an ESV API token in the plugin settings.</p>
+                    <p>You can request a free token from <a href="https://api.esv.org/docs/" target="_blank">api.esv.org</a>.</p>
+                </div>`,
+                missingToken: true
+            };
         }
         
         try {
@@ -155,11 +164,27 @@ export class ESVApiService {
                 };
             } else {
                 console.error(`ESV API request failed with status ${response.status}: ${response.text}`);
-                return null;
+                return {
+                    reference: reference,
+                    verses: [],
+                    htmlContent: `<div class="bible-api-error">
+                        <p><strong>Error Loading Bible Passage</strong></p>
+                        <p>Failed to load the passage from the ESV API. Status: ${response.status}</p>
+                        <p>Please check your API token in the plugin settings.</p>
+                    </div>`
+                };
             }
         } catch (error) {
             console.error('Error downloading from ESV API:', error);
-            return null;
+            return {
+                reference: reference,
+                verses: [],
+                htmlContent: `<div class="bible-api-error">
+                    <p><strong>Error Loading Bible Passage</strong></p>
+                    <p>An error occurred when trying to access the ESV API.</p>
+                    <p>Please check your internet connection and API token.</p>
+                </div>`
+            };
         }
     }
 

@@ -135,6 +135,36 @@ If your plugin does not need CSS, delete this file.
     color: var(--text-muted);
 }
 
+/* API Info Styles */
+.disciples-journal-api-info {
+    background-color: var(--background-secondary);
+    border-left: 4px solid var(--text-accent);
+    padding: 12px 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.disciples-journal-api-info p {
+    margin: 0 0 10px 0;
+}
+
+.disciples-journal-api-info ol {
+    margin: 0 0 10px 20px;
+}
+
+.disciples-journal-api-info li {
+    margin-bottom: 5px;
+}
+
+.disciples-journal-api-info a {
+    color: var(--text-accent);
+    text-decoration: underline;
+}
+
+.disciples-journal-api-info a:hover {
+    text-decoration: none;
+}
+
 /* Bible Copyright Container Styles */
 .bible-copyright-container {
     margin-top: 20px;

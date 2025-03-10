@@ -157,6 +157,19 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
         
         containerEl.createEl('h3', { text: 'ESV API Settings' });
         
+        const apiInfoDiv = containerEl.createDiv({ cls: 'disciples-journal-api-info' });
+        apiInfoDiv.innerHTML = `
+            <p>The ESV API allows this plugin to download and display Bible passages from the ESV translation.</p>
+            <p><strong>To get a free ESV API token:</strong></p>
+            <ol>
+                <li>Visit <a href="https://api.esv.org/docs/" target="_blank">api.esv.org</a></li>
+                <li>Sign up for a free account</li>
+                <li>After logging in, go to "API Keys" in your account</li>
+                <li>Create a new token and copy it here</li>
+            </ol>
+            <p>With a valid token, the plugin can download and display Bible passages directly in your notes.</p>
+        `;
+        
         new Setting(containerEl)
             .setName('ESV API Token')
             .setDesc('Enter your ESV API token from api.esv.org.')
@@ -167,6 +180,10 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                     this.plugin.settings.esvApiToken = value;
                     await this.plugin.saveSettings();
                     this.plugin.setESVApiToken(value);
+                    
+                    if (value) {
+                        new Notice('ESV API token updated', 2000);
+                    }
                 }));
         
         new Setting(containerEl)

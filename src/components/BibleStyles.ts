@@ -249,6 +249,32 @@ export class BibleStyles {
             .esv-text .woc {
                 color: ${options.wordsOfChristColor};
             }
+            
+            /* Error messages and warnings */
+            .bible-api-error,
+            .bible-missing-token-warning {
+                background-color: var(--background-modifier-error-hover);
+                color: var(--text-error);
+                padding: 12px;
+                border-radius: 6px;
+                border-left: 4px solid var(--text-error);
+                margin: 12px 0;
+            }
+            
+            .bible-missing-token-warning {
+                background-color: var(--background-modifier-border);
+                color: var(--text-normal);
+                border-left-color: var(--text-accent);
+            }
+            
+            .bible-missing-token-warning a {
+                color: var(--text-accent);
+                text-decoration: underline;
+            }
+            
+            .bible-missing-token-warning a:hover {
+                text-decoration: none;
+            }
         `;
     }
 } 

@@ -31,6 +31,7 @@ export interface BiblePassage {
     reference: string;
     verses: BibleVerse[];
     htmlContent?: string;
+    missingToken?: boolean;
 }
 
 /**
