@@ -274,11 +274,11 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
 
     /**
-     * Process inline code blocks that might contain Bible references
+     * Process inline code blocks for Bible references
      */
     private async processInlineCodeBlocks(element: HTMLElement, context: MarkdownPostProcessorContext): Promise<void> {
         if (!this.settings.displayInlineVerses) return;
-
+        
         const codeBlocks = element.querySelectorAll('code');
         for (let i = 0; i < codeBlocks.length; i++) {
             const codeBlock = codeBlocks[i];
@@ -303,7 +303,19 @@ export default class DisciplesJournalPlugin extends Plugin {
             });
             
             referenceEl.addEventListener('click', async () => {
-                await this.openChapterNote(reference.book, reference.startChapter);
+                // Determine if we should scroll to a specific verse
+                const startVerse = reference.startVerse;
+                
+                // We only scroll to the verse if it's not a whole chapter reference
+                const shouldScrollToVerse = startVerse > 1 || reference.endVerse;
+                
+                if (shouldScrollToVerse) {
+                    // Open the chapter and scroll to the verse
+                    await this.openChapterNote(reference.book, reference.startChapter, startVerse);
+                } else {
+                    // Just open the chapter without scrolling to a specific verse
+                    await this.openChapterNote(reference.book, reference.startChapter);
+                }
             });
             
             // Replace the code block with our reference element
@@ -463,12 +475,15 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
     
     /**
-     * Open a chapter note in the vault, downloading it if needed
+     * Open a chapter note in the vault, downloading it if needed, and scroll to a specific verse
      */
-    private async openChapterNote(book: string, chapter: number): Promise<void> {
+    private async openChapterNote(book: string, chapter: number, verse?: number): Promise<void> {
         try {
-            const standardBook = this.bibleService.standardizeBookName ? 
-                this.bibleService.standardizeBookName(book) : book;
+            const standardBook = this.bibleService.standardizeBookName(book);
+            if (!standardBook) {
+                throw new Error(`Unknown book: ${book}`);
+            }
+            
             const chapterRef = `${standardBook} ${chapter}`;
             
             // Check if the file exists in the vault path first
@@ -478,8 +493,17 @@ export default class DisciplesJournalPlugin extends Plugin {
             if (exists) {
                 // Open the existing file
                 const file = this.app.vault.getAbstractFileByPath(vaultPath);
-                if (file) {
-                    await this.app.workspace.getLeaf().openFile(file as TFile);
+                if (file instanceof TFile) {
+                    const leaf = this.app.workspace.getLeaf();
+                    await leaf.openFile(file);
+                    
+                    // If a verse is specified, scroll to it
+                    if (verse) {
+                        // Wait a moment for the file to render
+                        setTimeout(() => {
+                            this.scrollToVerse(verse);
+                        }, 300);
+                    }
                     return;
                 }
             }
@@ -494,8 +518,16 @@ export default class DisciplesJournalPlugin extends Plugin {
                     // Try to open the file again after downloading
                     setTimeout(async () => {
                         const file = this.app.vault.getAbstractFileByPath(vaultPath);
-                        if (file) {
-                            await this.app.workspace.getLeaf().openFile(file as TFile);
+                        if (file instanceof TFile) {
+                            const leaf = this.app.workspace.getLeaf();
+                            await leaf.openFile(file);
+                            
+                            // If a verse is specified, scroll to it
+                            if (verse) {
+                                setTimeout(() => {
+                                    this.scrollToVerse(verse);
+                                }, 300);
+                            }
                         } else {
                             new Notice(`Error: Unable to open ${chapterRef} after downloading`);
                         }
@@ -516,8 +548,19 @@ export default class DisciplesJournalPlugin extends Plugin {
             // Create directories for the book if they don't exist
             await this.createDirectoryStructure(standardBook);
             
-            // Create or open the file
-            await this.createOrOpenFile(vaultPath, content);
+            // Create the file
+            const newFile = await this.app.vault.create(vaultPath, content);
+            
+            // Open the newly created file
+            const leaf = this.app.workspace.getLeaf();
+            await leaf.openFile(newFile);
+            
+            // If a verse is specified, scroll to it
+            if (verse) {
+                setTimeout(() => {
+                    this.scrollToVerse(verse);
+                }, 300);
+            }
         } catch (error) {
             console.error("Error creating chapter note:", error);
             new Notice(`Error opening chapter note: ${error}`);
@@ -550,7 +593,7 @@ export default class DisciplesJournalPlugin extends Plugin {
     /**
      * Create or open a file in the vault
      */
-    private async createOrOpenFile(path: string, content: string): Promise<void> {
+    private async createOrOpenFile(path: string, content: string, verse?: number): Promise<void> {
         // Check if file exists
         const exists = await this.app.vault.adapter.exists(path);
         
@@ -558,7 +601,13 @@ export default class DisciplesJournalPlugin extends Plugin {
             // Open the existing file
             const file = this.app.vault.getAbstractFileByPath(path);
             if (file instanceof TFile) {
-                await this.app.workspace.getLeaf().openFile(file);
+                const leaf = this.app.workspace.getLeaf();
+                await leaf.openFile(file);
+                
+                // If a verse is specified, scroll to it
+                if (verse) {
+                    this.scrollToVerse(verse);
+                }
             }
         } else {
             // Create the file
@@ -574,18 +623,79 @@ export default class DisciplesJournalPlugin extends Plugin {
             const newFile = await this.app.vault.create(path, content);
             
             // Open the newly created file
-            await this.app.workspace.getLeaf().openFile(newFile);
+            const leaf = this.app.workspace.getLeaf();
+            await leaf.openFile(newFile);
+            
+            // If a verse is specified, scroll to it
+            if (verse) {
+                // Delay slightly to allow rendering
+                setTimeout(() => {
+                    this.scrollToVerse(verse);
+                }, 300);
+            }
         }
     }
 
-    onunload() {
-        // Clean up
+    /**
+     * Scroll to a specific verse in the active editor
+     */
+    private scrollToVerse(verse: number): void {
+        // Get the active leaf
+        const activeLeaf = this.app.workspace.activeLeaf;
+        if (!activeLeaf) return;
+        
+        // Get the view
+        const view = activeLeaf.view;
+        if (!(view instanceof MarkdownView)) return;
+        
+        // Try finding the verse by ID first
+        const contentEl = view.contentEl;
+        
+        // Try different methods to find the verse
+        // Method 1: Try to find HTML elements with verse ID (for rendered HTML content)
+        const verseId = `verse-${verse}`;
+        const verseElement = contentEl.querySelector(`#${verseId}, [data-verse="${verse}"], .verse-${verse}`);
+        
+        if (verseElement) {
+            // Scroll to the element
+            verseElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            return;
+        }
+        
+        // Method 2: Try to find verse in Bible rendered content
+        const verseTags = contentEl.querySelectorAll('.bible-verse-number, .verse-num');
+        for (let i = 0; i < verseTags.length; i++) {
+            const element = verseTags[i];
+            const text = element.textContent?.trim();
+            if (text && text.replace(/[^\d]/g, '') === verse.toString()) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+        }
+        
+        // Method 3: Search for the verse number in text content (for plain text rendering)
+        const paragraphs = contentEl.querySelectorAll('p');
+        for (let i = 0; i < paragraphs.length; i++) {
+            const p = paragraphs[i];
+            if (p.textContent?.includes(`**${verse}**`) || 
+                p.textContent?.includes(`${verse} `) || 
+                p.innerHTML?.includes(`>${verse}<`)) {
+                p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+        }
     }
 
+    /**
+     * Load settings from Obsidian's data storage
+     */
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     }
-
+    
+    /**
+     * Save settings to Obsidian's data storage
+     */
     async saveSettings() {
         await this.saveData(this.settings);
     }
@@ -677,6 +787,20 @@ class DisciplesJournalSettingsTab extends PluginSettingTab {
                 })
             );
         
+        containerEl.createEl('h3', { text: 'Bible Content Vault Path' });
+        
+        new Setting(containerEl)
+            .setName('Bible Content Vault Path')
+            .setDesc('Specify the vault directory where chapter notes and files will be saved')
+            .addText(text => text
+                .setPlaceholder('Bible/ESV')
+                .setValue(this.plugin.settings.bibleContentVaultPath)
+                .onChange(async (value) => {
+                    this.plugin.settings.bibleContentVaultPath = value;
+                    this.plugin.bibleService.setBibleContentVaultPath(value);
+                    await this.plugin.saveSettings();
+                }));
+        
         containerEl.createEl('h3', { text: 'ESV API Settings' });
         
         new Setting(containerEl)
@@ -699,20 +823,6 @@ class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.downloadOnDemand = value;
                     this.plugin.bibleService.setDownloadOnDemand(value);
-                    await this.plugin.saveSettings();
-                }));
-        
-        containerEl.createEl('h3', { text: 'Bible Content Vault Path' });
-        
-        new Setting(containerEl)
-            .setName('Bible Content Vault Path')
-            .setDesc('Specify the vault directory where chapter notes and files will be saved')
-            .addText(text => text
-                .setPlaceholder('Bible/ESV')
-                .setValue(this.plugin.settings.bibleContentVaultPath)
-                .onChange(async (value) => {
-                    this.plugin.settings.bibleContentVaultPath = value;
-                    this.plugin.bibleService.setBibleContentVaultPath(value);
                     await this.plugin.saveSettings();
                 }));
         
@@ -755,4 +865,4 @@ class DisciplesJournalSettingsTab extends PluginSettingTab {
                 })
             );
     }
-} 
+}
