@@ -281,47 +281,25 @@ export class BibleNavigation {
                         return;
                     }
                     
-                    // Format the content using the utility
+                    // Format the content
                     const content = BibleFormatter.formatChapterContent(passage);
                     
-                    // Create the directory structure
+                    // Ensure the book directory exists
                     const bookPath = `${this.vaultPath}/${book}`;
                     await this.app.vault.adapter.mkdir(bookPath);
                     
-                    // Check again if the file exists before creating it
-                    // This helps prevent race conditions and "file already exists" errors
-                    abstractFile = this.app.vault.getAbstractFileByPath(filePath);
-                    if (abstractFile && abstractFile instanceof TFile) {
-                        // File already exists (possibly created by another process)
-                        const leaf = this.app.workspace.getLeaf();
-                        await leaf.openFile(abstractFile);
-                        return;
-                    }
-                    
                     // Create the file
-                    const file = await this.app.vault.create(filePath, content);
+                    const newFile = await this.app.vault.create(filePath, content);
                     
-                    // Open the file
+                    // Open the new file
                     const leaf = this.app.workspace.getLeaf();
-                    await leaf.openFile(file);
+                    await leaf.openFile(newFile);
                 } catch (error) {
-                    console.error('Error creating chapter note:', error);
-                    
-                    // Special handling for "file already exists" errors
-                    if (error.message && error.message.includes("already exists")) {
-                        // Try to open the file anyway
-                        const existingFile = this.app.vault.getAbstractFileByPath(filePath);
-                        if (existingFile && existingFile instanceof TFile) {
-                            const leaf = this.app.workspace.getLeaf();
-                            await leaf.openFile(existingFile);
-                            return;
-                        }
-                    }
-                    
                     new Notice(`Error creating chapter note: ${error.message}`);
+                    console.error('Error creating chapter note:', error);
                 }
             } else {
-                new Notice(`Chapter file not found: ${book} ${chapter}`, 3000);
+                new Notice(`Chapter ${book} ${chapter} not found.`);
             }
         } catch (error) {
             console.error('Error navigating to chapter:', error);
