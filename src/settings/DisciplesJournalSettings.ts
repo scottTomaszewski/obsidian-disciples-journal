@@ -158,17 +158,42 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
         containerEl.createEl('h3', { text: 'ESV API Settings' });
         
         const apiInfoDiv = containerEl.createDiv({ cls: 'disciples-journal-api-info' });
-        apiInfoDiv.innerHTML = `
-            <p>The ESV API allows this plugin to download and display Bible passages from the ESV translation.</p>
-            <p><strong>To get a free ESV API token:</strong></p>
-            <ol>
-                <li>Visit <a href="https://api.esv.org/docs/" target="_blank">api.esv.org</a></li>
-                <li>Sign up for a free account</li>
-                <li>After logging in, go to "API Keys" in your account</li>
-                <li>Create a new token and copy it here</li>
-            </ol>
-            <p>With a valid token, the plugin can download and display Bible passages directly in your notes.</p>
-        `;
+        
+        apiInfoDiv.createEl('p', { 
+            text: 'The ESV API allows this plugin to download and display Bible passages from the ESV translation.' 
+        });
+        
+        apiInfoDiv.createEl('p', { 
+            text: 'To get a free ESV API token:',
+            attr: { style: 'font-weight: bold;' }
+        });
+        
+        const instructionsList = apiInfoDiv.createEl('ol');
+        
+        const steps = [
+            'Visit api.esv.org',
+            'Sign up for a free account',
+            'After logging in, go to "API Keys" in your account',
+            'Create a new token and copy it here'
+        ];
+        
+        steps.forEach(step => {
+            if (step === 'Visit api.esv.org') {
+                const listItem = instructionsList.createEl('li');
+                listItem.createEl('span', { text: 'Visit ' });
+                listItem.createEl('a', { 
+                    text: 'api.esv.org', 
+                    href: 'https://api.esv.org/docs/',
+                    attr: { target: '_blank' } 
+                });
+            } else {
+                instructionsList.createEl('li', { text: step });
+            }
+        });
+        
+        apiInfoDiv.createEl('p', { 
+            text: 'With a valid token, the plugin can download and display Bible passages directly in your notes.'
+        });
         
         new Setting(containerEl)
             .setName('ESV API Token')
@@ -201,15 +226,26 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
         
         const aboutDiv = containerEl.createDiv();
         aboutDiv.addClass('disciples-journal-about');
-        aboutDiv.innerHTML = `
-            <p>Disciples Journal Bible plugin for Obsidian</p>
-            <p>Version: ${this.plugin.manifest.version}</p>
-            <p>Transform Bible references into interactive elements in your notes.</p>
-            <p><small>ESV® Bible copyright information: Scripture quotations marked "ESV" are from the ESV® Bible 
-            (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, 
-            a publishing ministry of Good News Publishers. 
-            Used by permission. All rights reserved.</small></p>
-        `;
+        
+        aboutDiv.createEl('p', { 
+            text: 'Disciples Journal Bible plugin for Obsidian' 
+        });
+        
+        aboutDiv.createEl('p', { 
+            text: `Version: ${this.plugin.manifest.version}` 
+        });
+        
+        aboutDiv.createEl('p', { 
+            text: 'Transform Bible references into interactive elements in your notes.' 
+        });
+        
+        const copyrightP = aboutDiv.createEl('p');
+        copyrightP.createEl('small', { 
+            text: 'ESV® Bible copyright information: Scripture quotations marked "ESV" are from the ESV® Bible ' +
+                  '(The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, ' +
+                  'a publishing ministry of Good News Publishers. ' +
+                  'Used by permission. All rights reserved.'
+        });
         
         // About & Diagnostics Section
         containerEl.createEl('h3', { text: 'Diagnostics' });

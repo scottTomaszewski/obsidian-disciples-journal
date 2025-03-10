@@ -116,6 +116,51 @@ export class ESVApiService {
     }
 
     /**
+     * Create a DOM-friendly error message for missing token or API errors
+     */
+    private createErrorMessageContent(type: 'missing-token' | 'api-error', message: string = '', details: string = ''): string {
+        // We're required to return a string here because it's part of the ESV API response structure
+        // This method creates the content in a DOM-safe way then serializes to a string
+        const container = document.createElement('div');
+        container.className = type === 'missing-token' ? 'bible-missing-token-warning' : 'bible-api-error';
+        
+        const titleEl = document.createElement('p');
+        const titleStrong = document.createElement('strong');
+        titleStrong.textContent = type === 'missing-token' ? 'ESV API Token Not Set' : 'Error Loading Bible Passage';
+        titleEl.appendChild(titleStrong);
+        container.appendChild(titleEl);
+        
+        if (message) {
+            const messageEl = document.createElement('p');
+            messageEl.textContent = message;
+            container.appendChild(messageEl);
+        }
+        
+        if (details) {
+            const detailsEl = document.createElement('p');
+            detailsEl.textContent = details;
+            container.appendChild(detailsEl);
+        }
+        
+        // For the API token link
+        if (type === 'missing-token') {
+            const linkPara = document.createElement('p');
+            linkPara.textContent = 'You can request a free token from ';
+            
+            const link = document.createElement('a');
+            link.textContent = 'api.esv.org';
+            link.href = 'https://api.esv.org/docs/';
+            link.target = '_blank';
+            
+            linkPara.appendChild(link);
+            linkPara.appendChild(document.createTextNode('.'));
+            container.appendChild(linkPara);
+        }
+        
+        return container.outerHTML;
+    }
+
+    /**
      * Download Bible content from the ESV API
      */
     public async downloadFromESVApi(reference: string): Promise<BiblePassage | null> {
@@ -124,11 +169,10 @@ export class ESVApiService {
             return {
                 reference: reference,
                 verses: [],
-                htmlContent: `<div class="bible-missing-token-warning">
-                    <p><strong>ESV API Token Not Set</strong></p>
-                    <p>To display Bible passages, you need to set up an ESV API token in the plugin settings.</p>
-                    <p>You can request a free token from <a href="https://api.esv.org/docs/" target="_blank">api.esv.org</a>.</p>
-                </div>`,
+                htmlContent: this.createErrorMessageContent(
+                    'missing-token',
+                    'To display Bible passages, you need to set up an ESV API token in the plugin settings.'
+                ),
                 missingToken: true
             };
         }
@@ -167,11 +211,11 @@ export class ESVApiService {
                 return {
                     reference: reference,
                     verses: [],
-                    htmlContent: `<div class="bible-api-error">
-                        <p><strong>Error Loading Bible Passage</strong></p>
-                        <p>Failed to load the passage from the ESV API. Status: ${response.status}</p>
-                        <p>Please check your API token in the plugin settings.</p>
-                    </div>`
+                    htmlContent: this.createErrorMessageContent(
+                        'api-error',
+                        'Failed to load the passage from the ESV API.',
+                        `Status: ${response.status}. Please check your API token in the plugin settings.`
+                    )
                 };
             }
         } catch (error) {
@@ -179,11 +223,11 @@ export class ESVApiService {
             return {
                 reference: reference,
                 verses: [],
-                htmlContent: `<div class="bible-api-error">
-                    <p><strong>Error Loading Bible Passage</strong></p>
-                    <p>An error occurred when trying to access the ESV API.</p>
-                    <p>Please check your internet connection and API token.</p>
-                </div>`
+                htmlContent: this.createErrorMessageContent(
+                    'api-error',
+                    'An error occurred when trying to access the ESV API.',
+                    'Please check your internet connection and API token.'
+                )
             };
         }
     }
