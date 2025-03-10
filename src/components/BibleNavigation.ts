@@ -214,7 +214,7 @@ export class BibleNavigation {
         } else {
             // Next chapter in same book
             const nextButton = new ButtonComponent(navEl)
-                .setButtonText(`► ${book} ${chapter + 1}`)
+                .setButtonText(`${book} ${chapter + 1} ►`)
                 .setClass('nav-next')
                 .setClass('nav-button')
                 .onClick(async () => {
