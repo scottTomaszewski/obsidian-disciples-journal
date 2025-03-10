@@ -96,8 +96,6 @@ export class ESVApiService {
                         canonical,
                         htmlContent
                     };
-                    
-                    console.log(`Loaded HTML content for ${canonical}`);
                 }
             }
         } catch (error) {
@@ -184,8 +182,6 @@ export class ESVApiService {
             // Save the raw API response as JSON
             const jsonPath = `${bookPath}/${data.canonical}.json`;
             await this.app.vault.adapter.write(jsonPath, JSON.stringify(data));
-            
-            console.log(`Saved ESV API response to ${jsonPath}`);
         } catch (error) {
             console.error('Error saving ESV API response:', error);
         }
@@ -202,7 +198,6 @@ export class ESVApiService {
             currentPath += (currentPath ? '/' : '') + part;
             if (!(await this.app.vault.adapter.exists(currentPath))) {
                 await this.app.vault.adapter.mkdir(currentPath);
-                console.log(`Created directory: ${currentPath}`);
             }
         }
     }

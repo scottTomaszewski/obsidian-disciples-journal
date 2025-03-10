@@ -70,26 +70,19 @@ export class BibleContentService {
     public loadBible(bibleData: any): void {
         // Process the raw data into our expected format
         if (!bibleData) {
-            console.log("No Bible data provided, skipping load");
             return;
         }
 
         try {
-            console.log("Loading Bible data...");
-
             // Check if the data is already in our expected format
             if (this.isStructuredBibleFormat(bibleData)) {
-                console.log("Data is in structured Bible format");
                 this.bible = bibleData;
             } else if (this.isESVApiFormat(bibleData)) {
-                console.log("Data is in ESV API format");
                 // Convert the ESV API format to our structured format
                 this.loadESVApiData(bibleData);
             } else {
                 console.error("Unsupported Bible data format");
             }
-
-            console.log("Bible data loaded successfully");
         } catch (error) {
             console.error("Error loading Bible data:", error);
         }
@@ -177,14 +170,14 @@ export class BibleContentService {
      */
     public getVerse(book: string, chapter: number, verse: number): BibleVerse | null {
         if (!this.bible) {
-            console.log("Bible data not loaded");
+            console.error("Bible data not loaded");
             return null;
         }
 
         // Standardize the book name
         const standardBook = this.bookNameService.standardizeBookName(book);
         if (!standardBook) {
-            console.log(`Invalid book name: ${book}`);
+            console.error(`Invalid book name: ${book}`);
             return null;
         }
 
@@ -330,7 +323,7 @@ export class BibleContentService {
             // Parse the reference string to get the structured reference
             const reference = this.bibleReferenceParser.parse(referenceString);
             if (!reference) {
-                console.log(`Could not parse reference: ${referenceString}`);
+                console.error(`Could not parse reference: ${referenceString}`);
                 return null;
             }
 

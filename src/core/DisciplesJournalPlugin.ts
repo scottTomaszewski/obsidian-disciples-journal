@@ -97,12 +97,9 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this))
         );
-        
-        console.log('Disciples Journal plugin loaded');
     }
     
     onunload() {
-        console.log('Unloading Disciples Journal plugin');
         this.bibleStyles.removeStyles();
     }
     
@@ -131,7 +128,6 @@ export default class DisciplesJournalPlugin extends Plugin {
     async loadBibleData() {
         try {
             await this.bibleContentService.loadBible(null);
-            console.log('Bible data loaded successfully');
         } catch (error) {
             console.error('Failed to load Bible data:', error);
         }
@@ -327,7 +323,6 @@ export default class DisciplesJournalPlugin extends Plugin {
             const exists = await this.app.vault.adapter.exists(chapterPath);
             if (!exists) {
                 await this.app.vault.create(chapterPath, content);
-                console.log(`Created chapter note: ${chapterPath}`);
             }
             
             return chapterPath;
