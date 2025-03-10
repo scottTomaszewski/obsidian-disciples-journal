@@ -13,9 +13,6 @@ export class BibleFormatter {
         
         let content = "";
         
-        // Add heading
-        content += `# ${passage.reference}\n\n`;
-        
         // Add code block for rendering
         content += "```bible\n";
         content += passage.reference;
