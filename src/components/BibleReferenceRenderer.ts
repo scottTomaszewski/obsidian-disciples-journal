@@ -157,11 +157,12 @@ export class BibleReferenceRenderer {
             
             containerEl.appendChild(passageEl);
             
-            // Add collapsible copyright notice
-            const copyrightContainer = document.createElement('div');
-            copyrightContainer.classList.add('bible-copyright-container');
-            copyrightContainer.innerHTML = BibleFormatter.getCopyrightNoticeHTML();
-            containerEl.appendChild(copyrightContainer);
+            // Skipping this for now since the ESV API appends its own copyright notice
+            // // Add collapsible copyright notice
+            // const copyrightContainer = document.createElement('div');
+            // copyrightContainer.classList.add('bible-copyright-container');
+            // copyrightContainer.innerHTML = BibleFormatter.getCopyrightNoticeHTML();
+            // containerEl.appendChild(copyrightContainer);
             
             el.appendChild(containerEl);
         } else {
