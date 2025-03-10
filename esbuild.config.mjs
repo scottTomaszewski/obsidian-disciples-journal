@@ -17,7 +17,7 @@ const prod = (process.argv[2] === "production");
 const esvJsonPath = path.resolve("./src/ESV.json");
 const destDir = "./";
 
-// Make sure we have the ESV.json file
+// Make sure we have the ESV.json file (legacy format)
 if (fs.existsSync(esvJsonPath)) {
 	console.log("ESV.json found, including in build");
 	// Create the directory if it doesn't exist
@@ -26,6 +26,38 @@ if (fs.existsSync(esvJsonPath)) {
 	fs.copyFileSync(esvJsonPath, path.resolve(destDir, "src/ESV.json"));
 } else {
 	console.error("ESV.json not found at:", esvJsonPath);
+}
+
+// Check for ESV chapter JSON files in the data directory
+const esvDataDir = path.resolve("./src/data/esv");
+const destDataDir = path.resolve(destDir, "src/data/esv");
+
+if (fs.existsSync(esvDataDir)) {
+	console.log("ESV chapter data directory found, including in build");
+	// Create the destination directory if it doesn't exist
+	fs.mkdirSync(destDataDir, { recursive: true });
+	
+	// Copy all JSON files from the data directory
+	try {
+		const files = fs.readdirSync(esvDataDir);
+		let copyCount = 0;
+		
+		for (const file of files) {
+			if (file.endsWith('.json')) {
+				fs.copyFileSync(
+					path.resolve(esvDataDir, file),
+					path.resolve(destDataDir, file)
+				);
+				copyCount++;
+			}
+		}
+		
+		console.log(`Copied ${copyCount} ESV chapter JSON files`);
+	} catch (error) {
+		console.error("Error copying ESV chapter files:", error);
+	}
+} else {
+	console.log("No ESV chapter data directory found at:", esvDataDir);
 }
 
 const context = await esbuild.context({

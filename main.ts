@@ -20,13 +20,19 @@ interface DisciplesJournalSettings {
     displayFullPassages: boolean;
     fontSizeForVerses: string;
     preferredBibleVersion: string;
+    esvApiToken: string;
+    downloadOnDemand: boolean;
+    bibleContentVaultPath: string;
 }
 
 const DEFAULT_SETTINGS: DisciplesJournalSettings = {
     displayInlineVerses: true,
     displayFullPassages: true,
     fontSizeForVerses: '100%',
-    preferredBibleVersion: 'ESV'
+    preferredBibleVersion: 'ESV',
+    esvApiToken: '',
+    downloadOnDemand: true,
+    bibleContentVaultPath: 'Bible/ESV'
 };
 
 export default class DisciplesJournalPlugin extends Plugin {
@@ -40,7 +46,10 @@ export default class DisciplesJournalPlugin extends Plugin {
         await this.loadSettings();
         
         // Initialize Bible service
-        this.bibleService = new BibleService();
+        this.bibleService = new BibleService(this.app);
+        this.bibleService.setESVApiToken(this.settings.esvApiToken);
+        this.bibleService.setDownloadOnDemand(this.settings.downloadOnDemand);
+        this.bibleService.setBibleContentVaultPath(this.settings.bibleContentVaultPath);
         
         // Show loading notice
         this.loadingNotice = new Notice("Loading Bible data...", 0);
@@ -50,13 +59,13 @@ export default class DisciplesJournalPlugin extends Plugin {
             await this.loadBibleData();
             
             // Register Markdown post processor for inline code (e.g., `Genesis 1:1`)
-            this.registerMarkdownPostProcessor((element, context) => {
-                this.processInlineCodeBlocks(element, context);
+            this.registerMarkdownPostProcessor(async (element, context) => {
+                await this.processInlineCodeBlocks(element, context);
             });
 
             // Register Markdown code block processor for multiline passages (e.g., ```bible Genesis 1:1-10 ```)
-            this.registerMarkdownCodeBlockProcessor('bible', (source, el, ctx) => {
-                this.processFullBiblePassage(source, el, ctx);
+            this.registerMarkdownCodeBlockProcessor('bible', async (source, el, ctx) => {
+                await this.processFullBiblePassage(source, el, ctx);
             });
 
             // Register event handlers
@@ -104,27 +113,122 @@ export default class DisciplesJournalPlugin extends Plugin {
      */
     public async loadBibleData(): Promise<void> {
         try {
-            // Try approach 1: Use the data from require if available
+            // Try approach 1: Check for ESV JSON files in the data directory
+            console.log("Checking for ESV chapter JSON files...");
+            const esv = await this.loadESVChapterFiles();
+            if (esv) {
+                this.bibleService.loadBible(esv);
+                this.bibleDataLoaded = true;
+                
+                if (this.loadingNotice) {
+                    this.loadingNotice.hide();
+                    this.loadingNotice = null;
+                }
+                return;
+            }
+            
+            // Try approach 2: Use the legacy data from require if available
             if (ESV) {
                 console.log("Loading Bible data from require (memory)");
                 this.bibleService.loadBible(ESV);
                 this.bibleDataLoaded = true;
+                
+                if (this.loadingNotice) {
+                    this.loadingNotice.hide();
+                    this.loadingNotice = null;
+                }
                 return;
             }
             
-            console.log("Attempting to load Bible data from file...");
-            // Try approach 2: Load from multiple possible file locations
+            console.log("Attempting to load legacy Bible data from file...");
+            // Try approach 3: Load from multiple possible file locations
             await this.tryLoadingBibleData();
             
         } catch (error) {
             console.error("All Bible data loading methods failed:", error);
             this.bibleDataLoaded = false;
+            
+            if (this.loadingNotice) {
+                this.loadingNotice.hide();
+                this.loadingNotice = null;
+            }
+            
+            new Notice("Error loading Bible data. Please check the console for details.", 5000);
             throw new Error("Could not load Bible data from any source");
         }
     }
     
     /**
-     * Try multiple approaches to load the Bible data
+     * Load ESV chapter files from the data directory
+     */
+    private async loadESVChapterFiles(): Promise<object | null> {
+        try {
+            const adapter = this.app.vault.adapter;
+            const pluginDir = this.manifest.dir || '';
+            
+            // Check for the data directory
+            const dataDir = `${pluginDir}/src/data/esv`;
+            
+            // Check if the directory exists
+            if (!(await adapter.exists(dataDir))) {
+                console.log(`ESV data directory not found: ${dataDir}`);
+                return null;
+            }
+            
+            // Read the directory to get all JSON files
+            const files = await adapter.list(dataDir);
+            
+            if (!files || !files.files || files.files.length === 0) {
+                console.log("No JSON files found in ESV data directory");
+                return null;
+            }
+            
+            // Filter for JSON files
+            const jsonFiles = files.files.filter(f => f.endsWith('.json'));
+            if (jsonFiles.length === 0) {
+                console.log("No JSON files found in ESV data directory");
+                return null;
+            }
+            
+            console.log(`Found ${jsonFiles.length} ESV chapter JSON files`);
+            
+            // Load each file and combine them
+            const chapterData: Record<string, any> = {};
+            let loadedCount = 0;
+            
+            for (const filePath of jsonFiles) {
+                try {
+                    const fileContent = await adapter.read(filePath);
+                    const fileData = JSON.parse(fileContent);
+                    
+                    // Extract the reference from the file name
+                    const fileName = filePath.split('/').pop() || '';
+                    const reference = fileName.replace('.json', '');
+                    
+                    // Store with the canonical reference as the key
+                    chapterData[reference] = fileData;
+                    loadedCount++;
+                    
+                } catch (e) {
+                    console.error(`Failed to load or parse ${filePath}:`, e);
+                }
+            }
+            
+            console.log(`Successfully loaded ${loadedCount} ESV chapter files`);
+            
+            if (loadedCount > 0) {
+                return chapterData;
+            }
+            
+            return null;
+        } catch (error) {
+            console.error("Error loading ESV chapter files:", error);
+            return null;
+        }
+    }
+    
+    /**
+     * Try loading legacy Bible data from various sources
      */
     private async tryLoadingBibleData(): Promise<void> {
         const pluginDir = this.manifest.dir;
@@ -172,39 +276,39 @@ export default class DisciplesJournalPlugin extends Plugin {
     /**
      * Process inline code blocks that might contain Bible references
      */
-    private processInlineCodeBlocks(element: HTMLElement, context: MarkdownPostProcessorContext): void {
+    private async processInlineCodeBlocks(element: HTMLElement, context: MarkdownPostProcessorContext): Promise<void> {
         if (!this.settings.displayInlineVerses) return;
 
-        const codeBlocks = element.querySelectorAll('code:not(.block-language-bible)');
-        codeBlocks.forEach(codeBlock => {
-            const text = codeBlock.textContent?.trim() || '';
-            const reference = BibleReferenceParser.parseReference(text);
+        const codeBlocks = element.querySelectorAll('code');
+        for (let i = 0; i < codeBlocks.length; i++) {
+            const codeBlock = codeBlocks[i];
+            // Skip if the code block is not a direct child (might be inside a pre tag)
+            if (codeBlock.parentElement?.tagName === 'PRE') continue;
             
-            if (reference) {
-                // Check if it's a valid Bible reference
-                const referenceType = BibleReferenceParser.getReferenceType(reference);
-                
-                // Convert inline code to a Bible reference link
-                const linkEl = document.createElement('a');
-                linkEl.classList.add('bible-reference');
-                linkEl.textContent = text;
-                linkEl.dataset.referenceText = text;
-                
-                // Show verse text on hover
-                this.registerDomEvent(linkEl, 'mouseover', (e) => {
-                    this.showVersePreview(linkEl, text, e);
-                });
-                
-                // Open chapter note when clicked
-                this.registerDomEvent(linkEl, 'click', (e) => {
-                    e.preventDefault();
-                    this.openChapterNote(reference.book, reference.startChapter);
-                });
-                
-                // Replace the code element with our custom link
-                codeBlock.replaceWith(linkEl);
-            }
-        });
+            const codeText = codeBlock.textContent?.trim();
+            if (!codeText) continue;
+            
+            // Try to parse as Bible reference
+            const reference = BibleReferenceParser.parseReference(codeText);
+            if (!reference) continue;
+            
+            // Create a Bible reference element
+            const referenceEl = document.createElement('span');
+            referenceEl.classList.add('bible-reference');
+            referenceEl.textContent = codeText;
+            
+            // Add hover and click events
+            referenceEl.addEventListener('mouseover', (event) => {
+                this.showVersePreview(referenceEl, codeText, event as MouseEvent);
+            });
+            
+            referenceEl.addEventListener('click', async () => {
+                await this.openChapterNote(reference.book, reference.startChapter);
+            });
+            
+            // Replace the code block with our reference element
+            codeBlock.parentElement?.replaceChild(referenceEl, codeBlock);
+        }
     }
     
     /**
@@ -214,7 +318,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         if (!this.settings.displayFullPassages) return;
         
         const reference = source.trim();
-        const passage = this.bibleService.getBibleContent(reference);
+        const passage = await this.bibleService.getBibleContent(reference);
         
         if (passage) {
             const containerEl = document.createElement('div');
@@ -231,21 +335,28 @@ export default class DisciplesJournalPlugin extends Plugin {
             passageEl.classList.add('bible-passage-text');
             passageEl.style.fontSize = this.settings.fontSizeForVerses;
             
-            for (const verse of passage.verses) {
-                const verseEl = document.createElement('p');
-                verseEl.classList.add('bible-verse');
-                
-                const verseNumEl = document.createElement('span');
-                verseNumEl.classList.add('bible-verse-number');
-                verseNumEl.textContent = `${verse.verse} `;
-                
-                const verseTextEl = document.createElement('span');
-                verseTextEl.classList.add('bible-verse-text');
-                verseTextEl.textContent = verse.text;
-                
-                verseEl.appendChild(verseNumEl);
-                verseEl.appendChild(verseTextEl);
-                passageEl.appendChild(verseEl);
+            // Check if we have HTML content
+            if (passage.htmlContent) {
+                // Use the HTML content directly
+                passageEl.innerHTML = passage.htmlContent;
+            } else {
+                // Fallback to traditional verse rendering
+                for (const verse of passage.verses) {
+                    const verseEl = document.createElement('p');
+                    verseEl.classList.add('bible-verse');
+                    
+                    const verseNumEl = document.createElement('span');
+                    verseNumEl.classList.add('bible-verse-number');
+                    verseNumEl.textContent = `${verse.verse} `;
+                    
+                    const verseTextEl = document.createElement('span');
+                    verseTextEl.classList.add('bible-verse-text');
+                    verseTextEl.textContent = verse.text;
+                    
+                    verseEl.appendChild(verseNumEl);
+                    verseEl.appendChild(verseTextEl);
+                    passageEl.appendChild(verseEl);
+                }
             }
             
             containerEl.appendChild(passageEl);
@@ -263,7 +374,7 @@ export default class DisciplesJournalPlugin extends Plugin {
      * Show a verse preview in a hover popup
      */
     private async showVersePreview(element: HTMLElement, referenceText: string, event: MouseEvent): Promise<void> {
-        const passage = this.bibleService.getBibleContent(referenceText);
+        const passage = await this.bibleService.getBibleContent(referenceText);
         if (!passage) return;
         
         // Create verse preview element
@@ -280,21 +391,47 @@ export default class DisciplesJournalPlugin extends Plugin {
         const contentEl = document.createElement('div');
         contentEl.classList.add('bible-verse-preview-content');
         
-        for (const verse of passage.verses) {
-            const verseEl = document.createElement('p');
-            
-            if (passage.verses.length > 1) {
-                const verseNumEl = document.createElement('span');
-                verseNumEl.classList.add('bible-verse-number');
-                verseNumEl.textContent = `${verse.verse} `;
-                verseEl.appendChild(verseNumEl);
+        // Check if we have HTML content
+        if (passage.htmlContent) {
+            // Use the HTML content directly, but try to extract just the portion we need
+            // for the preview (to avoid showing footnotes, chapter headings, etc.)
+            try {
+                // Create a temporary element to parse the HTML
+                const tempEl = document.createElement('div');
+                tempEl.innerHTML = passage.htmlContent;
+                
+                // Find and extract the main verse content (paragraphs)
+                const paragraphs = tempEl.querySelectorAll('p:not(.extra_text)');
+                if (paragraphs.length > 0) {
+                    for (let i = 0; i < paragraphs.length; i++) {
+                        contentEl.appendChild(paragraphs[i].cloneNode(true));
+                    }
+                } else {
+                    // Fallback if we can't extract the verses properly
+                    contentEl.innerHTML = passage.htmlContent;
+                }
+            } catch (error) {
+                console.error("Error extracting verse content from HTML:", error);
+                contentEl.innerHTML = passage.htmlContent;
             }
-            
-            const verseTextEl = document.createElement('span');
-            verseTextEl.textContent = verse.text;
-            verseEl.appendChild(verseTextEl);
-            
-            contentEl.appendChild(verseEl);
+        } else {
+            // Fallback to traditional verse rendering
+            for (const verse of passage.verses) {
+                const verseEl = document.createElement('p');
+                
+                if (passage.verses.length > 1) {
+                    const verseNumEl = document.createElement('span');
+                    verseNumEl.classList.add('bible-verse-number');
+                    verseNumEl.textContent = `${verse.verse} `;
+                    verseEl.appendChild(verseNumEl);
+                }
+                
+                const verseTextEl = document.createElement('span');
+                verseTextEl.textContent = verse.text;
+                verseEl.appendChild(verseTextEl);
+                
+                contentEl.appendChild(verseEl);
+            }
         }
         
         versePreviewEl.appendChild(contentEl);
@@ -326,51 +463,118 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
     
     /**
-     * Open a note for the specified Bible chapter
+     * Open a chapter note in the vault, downloading it if needed
      */
     private async openChapterNote(book: string, chapter: number): Promise<void> {
-        // Format the filename for the chapter note
-        const fileName = `Bible/${book}/${book} ${chapter}.md`;
-        
-        // Check if the note exists
-        const file = this.app.vault.getAbstractFileByPath(fileName);
-        
-        if (file instanceof TFile) {
-            // If it exists, open it
-            const leaf = this.app.workspace.getLeaf();
-            await leaf.openFile(file);
-        } else {
-            // If it doesn't exist, create it
-            try {
-                // Make sure directories exist
-                await this.app.vault.createFolder(`Bible/${book}`).catch(() => {
-                    // Folder might already exist, just continue
-                });
-                
-                // Get the chapter content
-                const bibleChapter = this.bibleService.getChapter(book, chapter);
-                if (!bibleChapter) {
-                    new Notice(`Chapter ${book} ${chapter} not found.`);
+        try {
+            const standardBook = this.bibleService.standardizeBookName ? 
+                this.bibleService.standardizeBookName(book) : book;
+            const chapterRef = `${standardBook} ${chapter}`;
+            
+            // Check if the file exists in the vault path first
+            const vaultPath = `${this.settings.bibleContentVaultPath}/${standardBook}/${chapterRef}.md`;
+            const exists = await this.app.vault.adapter.exists(vaultPath);
+            
+            if (exists) {
+                // Open the existing file
+                const file = this.app.vault.getAbstractFileByPath(vaultPath);
+                if (file) {
+                    await this.app.workspace.getLeaf().openFile(file as TFile);
                     return;
                 }
-                
-                // Format the note content
-                let content = `# ${book} ${chapter}\n\n`;
-                
-                for (const verse of bibleChapter.verses) {
-                    content += `**${verse.verse}** ${verse.text}\n\n`;
-                }
-                
-                // Create the file
-                const newFile = await this.app.vault.create(fileName, content);
-                
-                // Open the new file
-                const leaf = this.app.workspace.getLeaf();
-                await leaf.openFile(newFile);
-            } catch (error) {
-                console.error('Error creating chapter note:', error);
-                new Notice(`Error creating note for ${book} ${chapter}`);
             }
+            
+            // If file doesn't exist or couldn't be opened, try to download it
+            if (this.settings.downloadOnDemand && this.settings.esvApiToken) {
+                // Try to download the chapter
+                new Notice(`Downloading ${chapterRef}...`);
+                const downloaded = await this.bibleService.downloadFromESVApi(chapterRef);
+                
+                if (downloaded) {
+                    // Try to open the file again after downloading
+                    setTimeout(async () => {
+                        const file = this.app.vault.getAbstractFileByPath(vaultPath);
+                        if (file) {
+                            await this.app.workspace.getLeaf().openFile(file as TFile);
+                        } else {
+                            new Notice(`Error: Unable to open ${chapterRef} after downloading`);
+                        }
+                    }, 500); // Small delay to ensure file is written
+                    return;
+                }
+            }
+            
+            // Legacy fallback if download failed or not enabled
+            const passage = await this.bibleService.getChapter(book, chapter);
+            if (!passage) {
+                throw new Error("Bible data not loaded");
+            }
+            
+            // Create new file content
+            const content = this.formatChapterContent(passage);
+            
+            // Create directories for the book if they don't exist
+            await this.createDirectoryStructure(standardBook);
+            
+            // Create or open the file
+            await this.createOrOpenFile(vaultPath, content);
+        } catch (error) {
+            console.error("Error creating chapter note:", error);
+            new Notice(`Error opening chapter note: ${error}`);
+        }
+    }
+
+    /**
+     * Create directory structure for a book
+     */
+    private async createDirectoryStructure(book: string | null): Promise<void> {
+        if (!book) {
+            console.error("Cannot create directory structure for null book name");
+            return;
+        }
+        
+        const basePath = this.settings.bibleContentVaultPath;
+        const bookPath = `${basePath}/${book}`;
+        
+        // Create base path if it doesn't exist
+        if (!(await this.app.vault.adapter.exists(basePath))) {
+            await this.app.vault.createFolder(basePath);
+        }
+        
+        // Create book directory if it doesn't exist
+        if (!(await this.app.vault.adapter.exists(bookPath))) {
+            await this.app.vault.createFolder(bookPath);
+        }
+    }
+
+    /**
+     * Create or open a file in the vault
+     */
+    private async createOrOpenFile(path: string, content: string): Promise<void> {
+        // Check if file exists
+        const exists = await this.app.vault.adapter.exists(path);
+        
+        if (exists) {
+            // Open the existing file
+            const file = this.app.vault.getAbstractFileByPath(path);
+            if (file instanceof TFile) {
+                await this.app.workspace.getLeaf().openFile(file);
+            }
+        } else {
+            // Create the file
+            const dir = path.substring(0, path.lastIndexOf('/'));
+            const filename = path.substring(path.lastIndexOf('/') + 1);
+            
+            // Ensure the directory exists
+            if (!(await this.app.vault.adapter.exists(dir))) {
+                await this.app.vault.createFolder(dir);
+            }
+            
+            // Create the file in the vault
+            const newFile = await this.app.vault.create(path, content);
+            
+            // Open the newly created file
+            await this.app.workspace.getLeaf().openFile(newFile);
         }
     }
 
@@ -384,6 +588,31 @@ export default class DisciplesJournalPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
+    }
+
+    /**
+     * Format chapter content as Markdown
+     */
+    private formatChapterContent(passage: BiblePassage): string {
+        let content = `# ${passage.reference}\n\n`;
+        
+        // Add code block for rendering
+        content += "```bible\n";
+        content += passage.reference;
+        content += "\n```\n\n";
+        
+        // Alternatively, add each verse separately
+        for (const verse of passage.verses) {
+            content += `**${verse.verse}** ${verse.text}\n\n`;
+        }
+        
+        // Add copyright attribution
+        content += "---\n\n";
+        content += "Scripture quotations marked \"ESV\" are from the ESV® Bible ";
+        content += "(The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, ";
+        content += "a publishing ministry of Good News Publishers. Used by permission. All rights reserved.\n";
+        
+        return content;
     }
 }
 
@@ -448,6 +677,45 @@ class DisciplesJournalSettingsTab extends PluginSettingTab {
                 })
             );
         
+        containerEl.createEl('h3', { text: 'ESV API Settings' });
+        
+        new Setting(containerEl)
+            .setName('ESV API Token')
+            .setDesc('Enter your ESV API token to enable downloading passages on demand')
+            .addText(text => text
+                .setPlaceholder('Enter your ESV API token')
+                .setValue(this.plugin.settings.esvApiToken)
+                .onChange(async (value) => {
+                    this.plugin.settings.esvApiToken = value;
+                    this.plugin.bibleService.setESVApiToken(value);
+                    await this.plugin.saveSettings();
+                }));
+        
+        new Setting(containerEl)
+            .setName('Download on Demand')
+            .setDesc('Automatically download Bible passages that are not already available')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.downloadOnDemand)
+                .onChange(async (value) => {
+                    this.plugin.settings.downloadOnDemand = value;
+                    this.plugin.bibleService.setDownloadOnDemand(value);
+                    await this.plugin.saveSettings();
+                }));
+        
+        containerEl.createEl('h3', { text: 'Bible Content Vault Path' });
+        
+        new Setting(containerEl)
+            .setName('Bible Content Vault Path')
+            .setDesc('Specify the vault directory where chapter notes and files will be saved')
+            .addText(text => text
+                .setPlaceholder('Bible/ESV')
+                .setValue(this.plugin.settings.bibleContentVaultPath)
+                .onChange(async (value) => {
+                    this.plugin.settings.bibleContentVaultPath = value;
+                    this.plugin.bibleService.setBibleContentVaultPath(value);
+                    await this.plugin.saveSettings();
+                }));
+        
         containerEl.createEl('h3', { text: 'About' });
         
         const aboutDiv = containerEl.createDiv();
@@ -457,7 +725,8 @@ class DisciplesJournalSettingsTab extends PluginSettingTab {
             <p>Version: ${this.plugin.manifest.version}</p>
             <p>Transform Bible references into interactive elements in your notes.</p>
             <p><small>ESV® Bible copyright information: Scripture quotations marked "ESV" are from the ESV® Bible 
-            (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, a publishing ministry of Good News Publishers. 
+            (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, 
+            a publishing ministry of Good News Publishers. 
             Used by permission. All rights reserved.</small></p>
         `;
         

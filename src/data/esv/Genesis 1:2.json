@@ -1,0 +1,33 @@
+{
+  "query": "Genesis 1:2",
+  "canonical": "Genesis 1:2",
+  "parsed": [
+    [
+      1001002,
+      1001002
+    ]
+  ],
+  "passage_meta": [
+    {
+      "canonical": "Genesis 1:2",
+      "chapter_start": [
+        1001001,
+        1001031
+      ],
+      "chapter_end": [
+        1001001,
+        1001031
+      ],
+      "prev_verse": 1001001,
+      "next_verse": 1001003,
+      "prev_chapter": null,
+      "next_chapter": [
+        1002001,
+        1002025
+      ]
+    }
+  ],
+  "passages": [
+    "<h2 class=\"extra_text\">Genesis 1:2 <small class=\"audio extra_text\">(<a class=\"mp3link\" href=\"https://audio.esv.org/david-cochran-heath/mq/01001002-01001002.mp3\" title=\"Genesis 1:2\" type=\"audio/mpeg\">Listen</a>)</small></h2>\n<p id=\"p01001002_01-1\" class=\"virtual\"><b class=\"verse-num\" id=\"v01001002-1\">2&nbsp;</b>The earth was without form and void, and darkness was over the face of the deep. And the Spirit of God was hovering over the face of the waters.</p>\n<p>(<a href=\"http://www.esv.org\" class=\"copyright\">ESV</a>)</p>"
+  ]
+}

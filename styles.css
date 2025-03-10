@@ -138,3 +138,72 @@ If your plugin does not need CSS, delete this file.
     line-height: 1.4;
     display: block;
 }
+
+/* Add styles for ESV API HTML content */
+/* Chapter heading styles */
+.bible-passage-text h2 {
+    font-size: 1.4em;
+    margin-bottom: 16px;
+    color: var(--text-accent);
+}
+
+.bible-passage-text h3 {
+    font-size: 1.2em;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    color: var(--text-accent);
+    font-style: italic;
+}
+
+/* Verse number styles */
+.bible-passage-text .chapter-num,
+.bible-passage-text .verse-num {
+    font-weight: bold;
+    color: var(--text-accent);
+    margin-right: 4px;
+    font-size: 0.85em;
+}
+
+/* Paragraph styles */
+.bible-passage-text p {
+    margin-bottom: 10px;
+    line-height: 1.6;
+}
+
+/* Block indent for poetry */
+.bible-passage-text .block-indent {
+    margin-left: 20px;
+    font-style: italic;
+}
+
+.bible-passage-text .line {
+    display: block;
+}
+
+.bible-passage-text .indent {
+    margin-left: 20px;
+}
+
+/* Footnote styles */
+.bible-passage-text .footnote {
+    font-size: 0.8em;
+    vertical-align: super;
+    color: var(--text-accent);
+}
+
+.bible-passage-text .footnotes {
+    font-size: 0.85em;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid var(--background-modifier-border);
+    color: var(--text-muted);
+}
+
+/* Hide audio links and other extra elements */
+.bible-passage-text .audio {
+    display: none;
+}
+
+.bible-passage-text .extra_text {
+    display: none;
+}
