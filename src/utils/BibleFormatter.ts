@@ -25,12 +25,6 @@ export class BibleFormatter {
             }
         }
         
-        // Add copyright attribution
-        content += "---\n\n";
-        content += `Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved. The ESV text may not be quoted in any publication made available to the public by a Creative Commons license. The ESV may not be translated into any other language.
-
-Users may not copy or download more than 500 verses of the ESV Bible or more than one half of any book of the ESV Bible.`;
-        
         return content;
     }
     
@@ -39,5 +33,24 @@ Users may not copy or download more than 500 verses of the ESV Bible or more tha
      */
     public static buildChapterPath(vaultPath: string, book: string, chapter: number): string {
         return `${vaultPath}/${book}/${book} ${chapter}.md`;
+    }
+
+    /**
+     * Generate collapsible copyright notice HTML
+     */
+    public static getCopyrightNoticeHTML(): string {
+        return `
+<details class="bible-copyright">
+    <summary>ESV Copyright Notice</summary>
+    <div class="bible-copyright-content">
+        <p>Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), 
+        © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. 
+        All rights reserved. The ESV text may not be quoted in any publication made available to the 
+        public by a Creative Commons license. The ESV may not be translated into any other language.</p>
+        
+        <p>Users may not copy or download more than 500 verses of the ESV Bible or more than one half 
+        of any book of the ESV Bible.</p>
+    </div>
+</details>`;
     }
 } 

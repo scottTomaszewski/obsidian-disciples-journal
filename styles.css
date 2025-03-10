@@ -304,3 +304,41 @@ If your plugin does not need CSS, delete this file.
 .bible-passage-text .woc {
     color: var(--text-accent);
 }
+
+/* Copyright Notice Styles */
+.bible-copyright-container {
+    margin-top: 1rem;
+    border-top: 1px solid var(--background-modifier-border);
+    padding-top: 0.5rem;
+}
+
+.bible-copyright {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.bible-copyright summary {
+    cursor: pointer;
+    display: inline-block;
+    color: var(--text-faint);
+    font-style: italic;
+}
+
+.bible-copyright summary:hover {
+    color: var(--text-normal);
+    text-decoration: underline;
+}
+
+.bible-copyright-content {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background-color: var(--background-secondary);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    line-height: 1.4;
+}
+
+.bible-copyright-content p {
+    margin: 0.5rem 0;
+}
