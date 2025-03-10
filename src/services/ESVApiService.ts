@@ -1,6 +1,7 @@
 import { App, Notice, requestUrl } from "obsidian";
 import { BiblePassage } from "./BibleContentService";
 import { BookNameService } from "./BookNameService";
+import { BibleFormatter } from "../utils/BibleFormatter";
 
 /**
  * Interface for ESV API Response
@@ -77,55 +78,62 @@ export class ESVApiService {
     }
 
     /**
-     * Load a collection of ESV chapter files into memory
+     * Load a collection of HTML formatted Bible chapters
      */
     public loadChapterCollection(data: any): void {
+        if (!data) return;
+        
         try {
-            // Iterate through all references in the collection
-            for (const reference in data) {
-                if (this.isESVApiFormat(data[reference])) {
-                    this.htmlFormattedBible[reference] = {
-                        canonical: data[reference].canonical,
-                        htmlContent: data[reference].passages[0]
+            // Process each chapter in the collection
+            for (const key in data) {
+                const chapterData = data[key];
+                if (this.isESVApiFormat(chapterData)) {
+                    // Store the HTML content
+                    const canonical = chapterData.canonical;
+                    const htmlContent = chapterData.passages[0];
+                    
+                    this.htmlFormattedBible[canonical] = {
+                        canonical,
+                        htmlContent
                     };
+                    
+                    console.log(`Loaded HTML content for ${canonical}`);
                 }
             }
-            
-            console.log(`Loaded ${Object.keys(this.htmlFormattedBible).length} HTML-formatted Bible chapters`);
         } catch (error) {
-            console.error("Error loading ESV chapter collection:", error);
-            throw error;
+            console.error('Error loading chapter collection:', error);
         }
     }
-    
+
     /**
      * Check if data is in ESV API format
      */
     public isESVApiFormat(data: any): boolean {
-        return typeof data === 'object' && 
-               data.hasOwnProperty('passages') && 
-               Array.isArray(data.passages) &&
-               data.hasOwnProperty('canonical');
+        return data && 
+               typeof data === 'object' && 
+               data.canonical !== undefined && 
+               data.passages !== undefined && 
+               Array.isArray(data.passages) && 
+               data.passages.length > 0;
     }
 
     /**
      * Download Bible content from the ESV API
      */
     public async downloadFromESVApi(reference: string): Promise<BiblePassage | null> {
-        if (!this.apiToken || this.apiToken.trim() === '') {
-            new Notice('ESV API token not set. Please set it in the plugin settings.');
-            console.error('ESV API token not set');
+        if (!this.apiToken) {
+            console.warn('ESV API token not set. Cannot download content.');
             return null;
         }
-
+        
         try {
             // Encode the reference for the URL
-            const encodedReference = encodeURIComponent(reference);
+            const encodedRef = encodeURIComponent(reference);
             
-            // Prepare the API URL
-            const apiUrl = `https://api.esv.org/v3/passage/html/?q=${encodedReference}`;
+            // Build the API URL with parameters
+            const apiUrl = `https://api.esv.org/v3/passage/html/?q=${encodedRef}&include-passage-references=false&include-verse-numbers=true&include-first-verse-numbers=true&include-footnotes=true&include-headings=true`;
             
-            // Make the API request
+            // Make the request
             const response = await requestUrl({
                 url: apiUrl,
                 method: 'GET',
@@ -135,147 +143,54 @@ export class ESVApiService {
             });
             
             // Check if the request was successful
-            if (response.status !== 200) {
-                console.error(`API request failed with status ${response.status}: ${response.text}`);
-                return null;
-            }
-            
-            // Parse the response
-            const data = response.json as ESVApiResponse;
-            
-            // Store the result in our HTML formatted Bible
-            if (data.passages && data.passages.length > 0) {
-                const canonical = data.canonical;
+            if (response.status === 200) {
+                const data = response.json as ESVApiResponse;
                 
-                this.htmlFormattedBible[canonical] = {
-                    canonical: canonical,
-                    htmlContent: data.passages[0]
-                };
+                // Save the response to a file
+                await this.saveESVApiResponse(reference, data);
                 
-                // Also store the result in files for future use
-                await this.saveESVApiResponse(canonical, data);
-                
-                // Also create a Markdown note in the vault for navigation
-                await this.createBibleChapterNote(canonical, data);
-                
-                // Return the passage
+                // Return the content
                 return {
-                    reference: canonical,
+                    reference: data.canonical,
                     verses: [], // Empty since we're using HTML
                     htmlContent: data.passages[0]
                 };
+            } else {
+                console.error(`ESV API request failed with status ${response.status}: ${response.text}`);
+                return null;
             }
-            
-            return null;
         } catch (error) {
             console.error('Error downloading from ESV API:', error);
             return null;
         }
     }
-    
+
     /**
-     * Save an ESV API response to a file in the plugin directory
+     * Save ESV API response to a file
      */
     private async saveESVApiResponse(reference: string, data: ESVApiResponse): Promise<void> {
         try {
-            // Save to plugin directory for loading on startup
-            const adapter = this.app.vault.adapter;
-            const pluginDir = (this.app as any).plugins.plugins['disciples-journal']?.manifest?.dir || '';
+            // Extract book and chapter from the canonical reference
+            const parts = data.canonical.split(' ');
+            if (parts.length < 2) return;
             
-            if (!pluginDir) {
-                console.error('Could not determine plugin directory');
-                return;
-            }
+            const chapter = parts[parts.length - 1];
+            const book = parts.slice(0, -1).join(' ');
             
-            // Ensure the data directory exists
-            const dataDir = `${pluginDir}/src/data/esv`;
+            // Create the directory structure
+            const bookPath = `${this.bibleContentVaultPath}/${book}`;
+            await this.ensureVaultDirectoryExists(bookPath);
             
-            if (!(await adapter.exists(dataDir))) {
-                await adapter.mkdir(dataDir);
-            }
+            // Save the raw API response as JSON
+            const jsonPath = `${bookPath}/${data.canonical}.json`;
+            await this.app.vault.adapter.write(jsonPath, JSON.stringify(data));
             
-            // Extract book name from the reference (e.g., "Genesis 1:1" -> "Genesis")
-            const book = this.bookNameService.extractBookFromReference(reference);
-            const bookDir = `${dataDir}/${book}`;
-            
-            // Create book subdirectory if it doesn't exist
-            if (!(await adapter.exists(bookDir))) {
-                await adapter.mkdir(bookDir);
-            }
-            
-            // Save the file to the book subdirectory
-            const filePath = `${bookDir}/${reference}.json`;
-            await adapter.write(filePath, JSON.stringify(data, null, 2));
-            
-            console.log(`Saved ESV API response for "${reference}" to ${filePath}`);
+            console.log(`Saved ESV API response to ${jsonPath}`);
         } catch (error) {
-            console.error('Error saving ESV API response to plugin directory:', error);
+            console.error('Error saving ESV API response:', error);
         }
     }
 
-    /**
-     * Create a Bible chapter note in the vault
-     */
-    private async createBibleChapterNote(reference: string, data: ESVApiResponse): Promise<void> {
-        try {
-            // Extract the chapter reference from the full reference
-            // e.g., "Genesis 1:1" -> "Genesis 1"
-            let chapterRef = reference;
-            if (reference.includes(':')) {
-                const parts = reference.split(':');
-                chapterRef = parts[0]; // Get just the book and chapter part
-            }
-            
-            // Extract book name from reference
-            const book = this.bookNameService.extractBookFromReference(chapterRef);
-            
-            // Create the content path (Bible/ESV/Genesis/Genesis 1.md)
-            const contentPath = `${this.bibleContentVaultPath}/${book}`;
-            
-            // Ensure directories exist
-            await this.ensureVaultDirectoryExists(contentPath);
-            
-            // Format data as Markdown
-            const noteContent = this.formatBibleChapterAsMarkdown(chapterRef, data);
-            
-            // Create or update the note
-            const fileName = `${contentPath}/${chapterRef}.md`;
-            const fileExists = await this.app.vault.adapter.exists(fileName);
-            
-            if (fileExists) {
-                // Update the file
-                await this.app.vault.adapter.write(fileName, noteContent);
-                console.log(`Updated Bible chapter note: ${fileName}`);
-            } else {
-                // Create the file
-                await this.app.vault.adapter.write(fileName, noteContent);
-                console.log(`Created Bible chapter note: ${fileName}`);
-            }
-        } catch (error) {
-            console.error('Error creating Bible chapter note:', error);
-        }
-    }
-    
-    /**
-     * Format Bible chapter data as Markdown
-     */
-    private formatBibleChapterAsMarkdown(reference: string, data: ESVApiResponse): string {
-        let content = ``;
-        
-        // Add HTML content in a code block for rendering
-        content += "```bible\n";
-        content += reference;
-        content += "\n```\n\n";
-        
-        // Add copyright attribution
-        content += "---\n\n";
-        content += `Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved. The ESV text may not be quoted in any publication made available to the public by a Creative Commons license. The ESV may not be translated into any other language.
-
-Users may not copy or download more than 500 verses of the ESV Bible or more than one half of any book of the ESV Bible.`
-        
-        return content;
-    }
-    
     /**
      * Ensure vault directory exists, creating it if necessary
      */

@@ -7,6 +7,7 @@ import { BibleReference } from './BibleReference';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 import { BibleStyles } from '../components/BibleStyles';
 import { DisciplesJournalSettings, DEFAULT_SETTINGS, DisciplesJournalSettingsTab } from '../settings/DisciplesJournalSettings';
+import { BibleFormatter } from "../utils/BibleFormatter";
 
 /**
  * Disciples Journal Plugin for Obsidian
@@ -299,14 +300,19 @@ export default class DisciplesJournalPlugin extends Plugin {
             // Get the content from the ESV API and format it for a note
             const passage = await this.bibleContentService.getBibleContent(referenceStr);
             
-            // Use the reference object when formatting the content 
-            // (without navigation since it will be dynamically added when rendering)
-            const content = this.bibleReferenceRenderer.formatChapterContent(passage, reference);
+            // Check if passage is null
+            if (!passage) {
+                console.error(`Failed to get Bible content for ${referenceStr}`);
+                throw new Error(`Failed to get Bible content for ${referenceStr}`);
+            }
+            
+            // Use the formatter utility to format the content
+            const content = BibleFormatter.formatChapterContent(passage);
             
             // Save the content to a note
             const contentPath = this.settings.bibleContentVaultPath;
             const bookPath = `${contentPath}/${reference.book}`;
-            const chapterPath = `${bookPath}/${reference.book} ${reference.chapter}.md`;
+            const chapterPath = BibleFormatter.buildChapterPath(contentPath, reference.book, reference.chapter);
             
             // Create directory if needed
             await this.app.vault.adapter.mkdir(bookPath);

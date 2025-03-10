@@ -2,6 +2,7 @@ import { App, ButtonComponent, DropdownComponent, Notice, Setting, TFile } from 
 import { BibleReference } from "../core/BibleReference";
 import { BookNameService } from "../services/BookNameService";
 import { BibleContentService } from "../services/BibleContentService";
+import { BibleFormatter } from "../utils/BibleFormatter";
 
 /**
  * Component for generating Bible navigation elements
@@ -252,8 +253,8 @@ export class BibleNavigation {
      */
     private async navigateToChapter(book: string, chapter: number): Promise<void> {
         try {
-            // Create the file path
-            const filePath = `${this.vaultPath}/${book}/${book} ${chapter}.md`;
+            // Create the file path using the utility
+            const filePath = BibleFormatter.buildChapterPath(this.vaultPath, book, chapter);
             
             // Try to find the file
             let abstractFile = this.app.vault.getAbstractFileByPath(filePath);
@@ -280,26 +281,8 @@ export class BibleNavigation {
                         return;
                     }
                     
-                    // Format the content
-                    let content = `# ${passage.reference}\n\n`;
-                    
-                    // Add code block for rendering
-                    content += "```bible\n";
-                    content += passage.reference;
-                    content += "\n```\n\n";
-                    
-                    // Alternatively, add each verse separately
-                    if (passage.verses && passage.verses.length > 0) {
-                        for (const verse of passage.verses) {
-                            content += `**${verse.verse}** ${verse.text}\n\n`;
-                        }
-                    }
-                    
-                    // Add copyright attribution
-                    content += "---\n\n";
-                    content += "Scripture quotations marked \"ESV\" are from the ESV® Bible ";
-                    content += "(The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, ";
-                    content += "a publishing ministry of Good News Publishers. Used by permission. All rights reserved.\n";
+                    // Format the content using the utility
+                    const content = BibleFormatter.formatChapterContent(passage);
                     
                     // Create the directory structure
                     const bookPath = `${this.vaultPath}/${book}`;
