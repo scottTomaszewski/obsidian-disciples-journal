@@ -1,9 +1,11 @@
-import { App, MarkdownPostProcessorContext, MarkdownView, TFile } from "obsidian";
+import { App, MarkdownPostProcessorContext, MarkdownView, Notice, TFile } from "obsidian";
 import { BibleContentService } from "../services/BibleContentService";
 import { BibleReference } from "../core/BibleReference";
 import { BibleNavigation } from "./BibleNavigation";
 import { BookNameService } from "../services/BookNameService";
 import { BibleFormatter } from "../utils/BibleFormatter";
+import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
+
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -15,12 +17,21 @@ export class BibleReferenceRenderer {
     private app: App;
     private bibleNavigation: BibleNavigation;
     private downloadOnDemand: boolean = true;
+    private plugin: DisciplesJournalPlugin;
     
-    constructor(app: App, bibleContentService: BibleContentService, bookNameService: BookNameService, fontSizeForVerses: string = '100%', vaultPath: string = 'Bible/ESV') {
+    constructor(
+        app: App, 
+        bibleContentService: BibleContentService, 
+        bookNameService: BookNameService, 
+        fontSizeForVerses: string = '100%', 
+        vaultPath: string = 'Bible/ESV',
+        plugin: DisciplesJournalPlugin
+    ) {
         this.app = app;
         this.bibleContentService = bibleContentService;
         this.fontSizeForVerses = fontSizeForVerses;
         this.vaultPath = vaultPath;
+        this.plugin = plugin;
         this.bibleNavigation = new BibleNavigation(
             app, 
             bookNameService, 
@@ -197,89 +208,16 @@ export class BibleReferenceRenderer {
             e.preventDefault();
             
             try {
-                // Get the plugin using the manifest ID (which is the plugin folder name)
-                const pluginID = 'obsidian-disciples-journal';
+                // Call the method to open the chapter note
+                this.plugin.openChapterNote(passage.reference);
                 
-                // Access the plugin through the app's plugins registry
-                // @ts-ignore - Accessing internal API
-                const pluginsRegistry = this.app.plugins;
-                
-                // Check different ways to access the plugin
-                let plugin = null;
-                
-                // Try the most likely path
-                if (pluginsRegistry.plugins && pluginsRegistry.plugins[pluginID]) {
-                    plugin = pluginsRegistry.plugins[pluginID];
-                } 
-                // Try looking through enabled plugins
-                else if (pluginsRegistry.enabledPlugins) {
-                    const enabledPlugins = Array.from(pluginsRegistry.enabledPlugins);
-                    if (enabledPlugins.includes(pluginID)) {
-                        plugin = pluginsRegistry.plugins[pluginID];
-                    }
-                }
-                
-                // If still not found, try direct access
-                if (!plugin && (window as any).app) {
-                    // @ts-ignore - Window app access
-                    plugin = (window as any).app.plugins.plugins[pluginID];
-                }
-                
-                // Final fallback - try to extract from global app reference
-                if (!plugin) {
-                    // Get all plugins and find ours
-                    // @ts-ignore - Accessing internal API
-                    const allPlugins = Object.values(this.app.plugins.plugins);
-                    plugin = allPlugins.find((p: any) => 
-                        p.manifest && (
-                            p.manifest.id === pluginID || 
-                            p.manifest.name === 'Disciples Journal' ||
-                            p.id === pluginID
-                        )
-                    );
-                }
-                
-                if (plugin && typeof plugin.openChapterNote === 'function') {
-                    // Call the method to open the chapter note
-                    plugin.openChapterNote(passage.reference);
-                    
-                    // Also try to remove the preview after clicking
-                    if (plugin.removePreviewPopper && typeof plugin.removePreviewPopper === 'function') {
-                        plugin.removePreviewPopper();
-                    }
-                } else {
-                    console.error('Could not find plugin or openChapterNote method - please report this issue');
-                    
-                    // Fallback method - try to find any DisciplesJournalPlugin instance
-                    const anyPluginInstance: any = Object.values(pluginsRegistry.plugins).find(
-                        (p: any) => p && p.constructor && p.constructor.name === 'DisciplesJournalPlugin'
-                    );
-                    
-                    if (anyPluginInstance && typeof anyPluginInstance.openChapterNote === 'function') {
-                        anyPluginInstance.openChapterNote(passage.reference);
-                    } else {
-                        // Show user feedback
-                        const notice = document.createElement('div');
-                        notice.textContent = `Unable to open chapter note for ${passage.reference}`;
-                        notice.style.position = 'absolute';
-                        notice.style.bottom = '20px';
-                        notice.style.left = '50%';
-                        notice.style.transform = 'translateX(-50%)';
-                        notice.style.padding = '10px 20px';
-                        notice.style.backgroundColor = 'var(--background-modifier-error)';
-                        notice.style.color = 'var(--text-on-accent)';
-                        notice.style.borderRadius = '4px';
-                        notice.style.zIndex = '1000';
-                        document.body.appendChild(notice);
-                        
-                        // Remove after 3 seconds
-                        setTimeout(() => {
-                            notice.remove();
-                        }, 3000);
-                    }
-                }
+                // Close the preview
+                this.plugin.removePreviewPopper();
             } catch (error) {
                 console.error('Error opening chapter note from popup:', error);
+                
+                // Show user feedback if there's an error
+                new Notice(`Disciples Journal: Unable to open chapter note for ${passage.reference}`, 10000);
             }
         });
         

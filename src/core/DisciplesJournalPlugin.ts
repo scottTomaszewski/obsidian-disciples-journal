@@ -65,7 +65,8 @@ export default class DisciplesJournalPlugin extends Plugin {
             this.bibleContentService,
             this.bookNameService,
             this.settings.fontSizeForVerses,
-            fullContentPath
+            fullContentPath,
+            this
         );
         this.bibleReferenceRenderer.setDownloadOnDemand(this.settings.downloadOnDemand);
         this.bibleReferenceParser = new BibleReferenceParser(this.bookNameService);
