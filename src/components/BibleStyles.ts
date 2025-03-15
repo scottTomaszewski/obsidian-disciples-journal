@@ -102,10 +102,17 @@ export class BibleStyles {
                 overflow-y: auto;
                 padding: 12px;
                 border-radius: 5px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
                 background-color: var(--background-primary);
                 border: 1px solid var(--background-modifier-border);
                 z-index: 1000;
+                transition: box-shadow 0.2s ease;
+            }
+            
+            /* Add a subtle highlight when the popup is being hovered */
+            .bible-verse-preview.popup-locked {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+                border-color: var(--text-accent);
             }
             
             .bible-verse-preview-heading {
@@ -115,6 +122,17 @@ export class BibleStyles {
                 color: ${options.headingColor};
                 border-bottom: 1px solid var(--background-modifier-border);
                 padding-bottom: 6px;
+            }
+            
+            /* Style for clickable heading in the popup */
+            .bible-reference-clickable {
+                cursor: pointer;
+                transition: color 0.2s ease;
+            }
+            
+            .bible-reference-clickable:hover {
+                color: var(--text-accent-hover);
+                text-decoration: underline;
             }
             
             .bible-verse-preview-content {

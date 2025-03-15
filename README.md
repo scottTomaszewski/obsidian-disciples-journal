@@ -14,9 +14,10 @@ Type a Bible reference in an inline code block:
 `Genesis 1:1`
 ```
 
-The plugin transforms it into a clickable link that:
-- **Shows a preview** of the verse text on hover
-- **Opens or creates** a chapter note when clicked, automatically scrolling to the verse
+The plugin transforms it into a reference with enhanced features:
+- **Hover over the reference** to see a popup with the verse text
+- The popup remains visible even when you move your cursor onto it
+- **Click the reference inside the popup's heading** to open or create a chapter note, which automatically scrolls to the verse
 
 ### Full Passage Rendering
 

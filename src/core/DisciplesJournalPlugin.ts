@@ -176,7 +176,8 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
     
     /**
-     * Handle clicks on Bible references
+     * Handle click on Bible references
+     * Now only displays the preview without opening the chapter note
      */
     async handleBibleReferenceClick(event: MouseEvent) {
         const target = event.target as HTMLElement;
@@ -185,25 +186,22 @@ export default class DisciplesJournalPlugin extends Plugin {
         const referenceEl = target.closest('.bible-reference') as HTMLElement;
         if (!referenceEl) return;
         
+        // If this is from the popup's clickable heading, allow the click handler there to process
+        if (referenceEl.classList.contains('bible-reference-clickable')) {
+            return;
+        }
+        
         const referenceText = referenceEl.textContent;
         if (!referenceText) return;
         
         try {
-            // Parse the reference
-            const reference = this.bibleReferenceParser.parse(referenceText);
-            if (!reference) return;
-            
-            // Get the chapter reference (without verse)
-            const chapterRef = reference.getChapterReference();
-            
-            // Open the chapter
-            await this.openChapterNote(chapterRef.toString());
-            
-            // If there's a specific verse, scroll to it
-            if (reference.verse) {
-                setTimeout(() => {
-                    this.bibleReferenceRenderer.scrollToVerse(reference.verse!);
-                }, 300); // Give it a moment to load
+            // Just show the preview if it's not already showing
+            if (!this.previewPopper) {
+                this.previewPopper = await this.bibleReferenceRenderer.showVersePreview(
+                    referenceEl, 
+                    referenceText,
+                    event
+                );
             }
         } catch (error) {
             console.error('Error handling Bible reference click:', error);
@@ -214,8 +212,8 @@ export default class DisciplesJournalPlugin extends Plugin {
      * Handle hover on Bible references
      */
     async handleBibleReferenceHover(event: MouseEvent) {
-        // Clean up any existing poppers
-        this.removePreviewPopper();
+        // Don't create new preview if we already have one active
+        if (this.previewPopper) return;
         
         const target = event.target as HTMLElement;
         if (!target || !target.closest) return;
@@ -233,26 +231,88 @@ export default class DisciplesJournalPlugin extends Plugin {
                 referenceText,
                 event
             );
+            
+            // Add event listeners directly to the preview for better control
+            if (this.previewPopper) {
+                // When mouse enters the popup, mark it as locked
+                this.previewPopper.addEventListener('mouseenter', () => {
+                    this.previewPopper?.classList.add('popup-locked');
+                });
+                
+                // When mouse leaves the popup, check if we should close it
+                this.previewPopper.addEventListener('mouseleave', (e) => {
+                    // Only close if not moving to the reference or another part of the popup
+                    const relatedTarget = e.relatedTarget as HTMLElement;
+                    if (relatedTarget && 
+                        !relatedTarget.classList.contains('bible-reference') && 
+                        !relatedTarget.closest('.bible-verse-preview')) {
+                        this.previewPopper?.classList.remove('popup-locked');
+                        this.removePreviewPopper();
+                    }
+                });
+            }
+            
+            // Also add listeners to the reference element
+            referenceEl.addEventListener('mouseleave', (e) => {
+                // Don't close if the popup is locked (being hovered) or we're moving to the popup
+                if (this.previewPopper) {
+                    const relatedTarget = e.relatedTarget as HTMLElement;
+                    
+                    // If moving to the popup or if popup is locked, don't close
+                    if (relatedTarget && 
+                        (relatedTarget.classList.contains('bible-verse-preview') || 
+                         relatedTarget.closest('.bible-verse-preview') ||
+                         this.previewPopper.classList.contains('popup-locked'))) {
+                        return;
+                    }
+                    
+                    // Add a 100ms delay before closing to allow for cursor movement
+                    setTimeout(() => {
+                        // If locked during this delay, don't close
+                        if (!this.previewPopper || this.previewPopper.classList.contains('popup-locked')) {
+                            return;
+                        }
+                        this.removePreviewPopper();
+                    }, 100);
+                }
+            });
         } catch (error) {
             console.error('Error showing Bible reference preview:', error);
         }
     }
     
     /**
-     * Handle mouse out from Bible references
+     * Handle mouse out from Bible references (this is now a simpler fallback)
      */
     handleBibleReferenceMouseOut(event: MouseEvent) {
-        // Check if we're still within the preview
+        // This is now a simplified fallback that will rarely be used
+        // Most closings are handled by the direct event listeners added above
+        
+        // If we don't have a popup, nothing to do
+        if (!this.previewPopper) return;
+        
+        // If the popup is locked (being hovered), don't close it
+        if (this.previewPopper.classList.contains('popup-locked')) {
+            return;
+        }
+        
+        const target = event.target as HTMLElement;
         const relatedTarget = event.relatedTarget as HTMLElement;
-        if (relatedTarget && this.previewPopper && this.previewPopper.contains(relatedTarget)) {
+        
+        // If either target is missing, can't make a good decision
+        if (!target || !relatedTarget) return;
+        
+        // If moving to/from the popup or reference, don't close
+        if (target.classList.contains('bible-reference') || 
+            target.classList.contains('bible-verse-preview') ||
+            target.closest('.bible-verse-preview') ||
+            relatedTarget.classList.contains('bible-reference') ||
+            relatedTarget.classList.contains('bible-verse-preview') ||
+            relatedTarget.closest('.bible-verse-preview')) {
             return;
         }
         
-        // Check if we're moving to the preview from the reference
-        if (relatedTarget && relatedTarget.classList.contains('bible-verse-preview')) {
-            return;
-        }
-        
+        // In all other cases, remove the popup
         this.removePreviewPopper();
     }
     
@@ -261,6 +321,10 @@ export default class DisciplesJournalPlugin extends Plugin {
      */
     removePreviewPopper() {
         if (this.previewPopper) {
+            // Remove any hover gap elements
+            const hoverGaps = document.querySelectorAll('.bible-hover-gap');
+            hoverGaps.forEach(gap => gap.remove());
+            
             this.previewPopper.remove();
             this.previewPopper = null;
         }
@@ -274,9 +338,9 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
 
     /**
-     * Open or create a chapter note
+     * Open or create a chapter note (Public method for external access)
      */
-    async openChapterNote(reference: string) {
+    public async openChapterNote(reference: string) {
         try {
             // Parse the reference string to ensure it's valid
             const parsedRef = this.bibleReferenceParser.parse(reference);
@@ -302,6 +366,13 @@ export default class DisciplesJournalPlugin extends Plugin {
             if (file) {
                 const leaf = this.app.workspace.getUnpinnedLeaf();
                 await leaf.openFile(file);
+                
+                // If there's a specific verse, scroll to it
+                if (parsedRef.verse) {
+                    setTimeout(() => {
+                        this.bibleReferenceRenderer.scrollToVerse(parsedRef.verse!);
+                    }, 300); // Give it a moment to load
+                }
             } else {
                 console.error(`Could not find or create the chapter note: ${chapterPath}`);
             }

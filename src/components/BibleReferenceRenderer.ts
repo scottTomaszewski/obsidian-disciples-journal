@@ -185,10 +185,104 @@ export class BibleReferenceRenderer {
         const versePreviewEl = document.createElement('div');
         versePreviewEl.classList.add('bible-verse-preview');
         
-        // Add reference heading
+        // Add reference heading (make it clickable)
         const headingEl = document.createElement('div');
-        headingEl.classList.add('bible-verse-preview-heading');
+        headingEl.classList.add('bible-verse-preview-heading', 'bible-reference-clickable');
         headingEl.textContent = passage.reference;
+        
+        // Add click handler to the heading
+        headingEl.addEventListener('click', (e) => {
+            // Prevent the event from propagating
+            e.stopPropagation();
+            e.preventDefault();
+            
+            try {
+                // Get the plugin using the manifest ID (which is the plugin folder name)
+                const pluginID = 'obsidian-disciples-journal';
+                
+                // Access the plugin through the app's plugins registry
+                // @ts-ignore - Accessing internal API
+                const pluginsRegistry = this.app.plugins;
+                
+                // Check different ways to access the plugin
+                let plugin = null;
+                
+                // Try the most likely path
+                if (pluginsRegistry.plugins && pluginsRegistry.plugins[pluginID]) {
+                    plugin = pluginsRegistry.plugins[pluginID];
+                } 
+                // Try looking through enabled plugins
+                else if (pluginsRegistry.enabledPlugins) {
+                    const enabledPlugins = Array.from(pluginsRegistry.enabledPlugins);
+                    if (enabledPlugins.includes(pluginID)) {
+                        plugin = pluginsRegistry.plugins[pluginID];
+                    }
+                }
+                
+                // If still not found, try direct access
+                if (!plugin && (window as any).app) {
+                    // @ts-ignore - Window app access
+                    plugin = (window as any).app.plugins.plugins[pluginID];
+                }
+                
+                // Final fallback - try to extract from global app reference
+                if (!plugin) {
+                    // Get all plugins and find ours
+                    // @ts-ignore - Accessing internal API
+                    const allPlugins = Object.values(this.app.plugins.plugins);
+                    plugin = allPlugins.find((p: any) => 
+                        p.manifest && (
+                            p.manifest.id === pluginID || 
+                            p.manifest.name === 'Disciples Journal' ||
+                            p.id === pluginID
+                        )
+                    );
+                }
+                
+                if (plugin && typeof plugin.openChapterNote === 'function') {
+                    // Call the method to open the chapter note
+                    plugin.openChapterNote(passage.reference);
+                    
+                    // Also try to remove the preview after clicking
+                    if (plugin.removePreviewPopper && typeof plugin.removePreviewPopper === 'function') {
+                        plugin.removePreviewPopper();
+                    }
+                } else {
+                    console.error('Could not find plugin or openChapterNote method - please report this issue');
+                    
+                    // Fallback method - try to find any DisciplesJournalPlugin instance
+                    const anyPluginInstance: any = Object.values(pluginsRegistry.plugins).find(
+                        (p: any) => p && p.constructor && p.constructor.name === 'DisciplesJournalPlugin'
+                    );
+                    
+                    if (anyPluginInstance && typeof anyPluginInstance.openChapterNote === 'function') {
+                        anyPluginInstance.openChapterNote(passage.reference);
+                    } else {
+                        // Show user feedback
+                        const notice = document.createElement('div');
+                        notice.textContent = `Unable to open chapter note for ${passage.reference}`;
+                        notice.style.position = 'absolute';
+                        notice.style.bottom = '20px';
+                        notice.style.left = '50%';
+                        notice.style.transform = 'translateX(-50%)';
+                        notice.style.padding = '10px 20px';
+                        notice.style.backgroundColor = 'var(--background-modifier-error)';
+                        notice.style.color = 'var(--text-on-accent)';
+                        notice.style.borderRadius = '4px';
+                        notice.style.zIndex = '1000';
+                        document.body.appendChild(notice);
+                        
+                        // Remove after 3 seconds
+                        setTimeout(() => {
+                            notice.remove();
+                        }, 3000);
+                    }
+                }
+            } catch (error) {
+                console.error('Error opening chapter note from popup:', error);
+            }
+        });
+        
         versePreviewEl.appendChild(headingEl);
         
         // Add verse content
@@ -242,12 +336,15 @@ export class BibleReferenceRenderer {
         
         // Position the preview near the element
         const rect = element.getBoundingClientRect();
+        
+        // Position the main popup with slight overlap to the reference
+        // This creates an easier hover target when moving from reference to popup
         versePreviewEl.style.position = 'absolute';
         versePreviewEl.style.left = `${rect.left}px`;
-        versePreviewEl.style.top = `${rect.bottom + 10}px`;
+        versePreviewEl.style.top = `${rect.bottom - 3}px`; // Slight overlap with reference
         versePreviewEl.style.zIndex = '1000';
         
-        // Add to document
+        // Add popup to document
         document.body.appendChild(versePreviewEl);
         
         return versePreviewEl;
