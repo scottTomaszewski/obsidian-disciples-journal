@@ -99,14 +99,28 @@ export class BibleStyles {
     /**
      * Apply styles based on theme and preset
      */
-    public applyStyles(theme: 'light' | 'dark', presetName: string = 'default', fontSize: string = '100%'): void {
+    public applyStyles(theme: 'light' | 'dark', presetName: string = 'default', fontSize: string = '100%', settings?: {
+        wordsOfChristColor?: string;
+        verseNumberColor?: string;
+        headingColor?: string;
+        blockIndentation?: string;
+    }): void {
         this.createStyleElement();
         
         // Get the preset, defaulting to 'default' if not found
         const preset = THEME_PRESETS[presetName] || THEME_PRESETS.default;
         
-        // Get the options for the current theme
+        // Get the options for the current theme with preset values
         const options = { ...preset[theme], fontSize: fontSize || this.currentFontSize };
+        
+        // Apply custom settings from DisciplesJournalSettings if provided
+        // These will override the preset values
+        if (settings) {
+            if (settings.wordsOfChristColor) options.wordsOfChristColor = settings.wordsOfChristColor;
+            if (settings.verseNumberColor) options.verseNumberColor = settings.verseNumberColor;
+            if (settings.headingColor) options.headingColor = settings.headingColor;
+            if (settings.blockIndentation) options.blockIndentation = settings.blockIndentation;
+        }
         
         // Update the style element
         if (this.styleElement) {
@@ -304,6 +318,10 @@ export class BibleStyles {
                 margin-top: 16px;
                 margin-bottom: 8px;
                 color: ${options.headingColor};
+            }
+
+            .bible-passage-text .woc {
+                color: ${options.wordsOfChristColor};
             }
             
             .bible-passage-text .chapter-num,

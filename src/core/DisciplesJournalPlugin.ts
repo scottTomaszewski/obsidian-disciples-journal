@@ -169,7 +169,19 @@ export default class DisciplesJournalPlugin extends Plugin {
         
         const isDarkMode = document.body.classList.contains('theme-dark');
         const theme = isDarkMode ? 'dark' : 'light';
-        this.bibleStyles.applyStyles(theme, this.settings.stylePreset, this.settings.bibleTextFontSize);
+        
+        // Pass custom settings from DisciplesJournalSettings
+        this.bibleStyles.applyStyles(
+            theme, 
+            this.settings.stylePreset, 
+            this.settings.bibleTextFontSize,
+            {
+                wordsOfChristColor: this.settings.wordsOfChristColor,
+                verseNumberColor: this.settings.verseNumberColor,
+                headingColor: this.settings.headingColor,
+                blockIndentation: this.settings.blockIndentation
+            }
+        );
     }
     
     /**
@@ -177,6 +189,24 @@ export default class DisciplesJournalPlugin extends Plugin {
      */
     public updateFontSize(fontSize: string): void {
         this.bibleStyles.setFontSize(fontSize);
+        
+        // Refresh the styles with the new font size and current settings
+        const isDarkMode = document.body.classList.contains('theme-dark');
+        const theme = isDarkMode ? 'dark' : 'light';
+        
+        // Apply styles with the new font size and current settings
+        this.bibleStyles.applyStyles(
+            theme, 
+            this.settings.stylePreset, 
+            fontSize,
+            {
+                wordsOfChristColor: this.settings.wordsOfChristColor,
+                verseNumberColor: this.settings.verseNumberColor,
+                headingColor: this.settings.headingColor,
+                blockIndentation: this.settings.blockIndentation
+            }
+        );
+        
         this.bibleReferenceRenderer.setFontSize(fontSize);
     }
     
