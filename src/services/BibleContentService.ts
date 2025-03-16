@@ -2,6 +2,7 @@ import { BibleReference } from "../core/BibleReference";
 import { BibleReferenceParser } from "../core/BibleReferenceParser";
 import { BookNameService } from "./BookNameService";
 import { ESVApiService } from "./ESVApiService";
+import { BibleDataConverter } from "./BibleDataConverter";
 
 /**
  * Interface for a single Bible verse
@@ -38,21 +39,23 @@ export interface BiblePassage {
  * Main service for retrieving Bible content
  */
 export class BibleContentService {
-    private bible: Bible | null = null;
+    private bible: any = null;
     private bookNameService: BookNameService;
     private esvApiService: ESVApiService;
     private useHtmlFormat: boolean = false;
     private downloadOnDemand: boolean = true;
     private bibleReferenceParser: BibleReferenceParser;
+    private dataConverter: BibleDataConverter;
 
     constructor(bookNameService: BookNameService, esvApiService: ESVApiService) {
         this.bookNameService = bookNameService;
         this.esvApiService = esvApiService;
         this.bibleReferenceParser = new BibleReferenceParser(bookNameService);
+        this.dataConverter = new BibleDataConverter(bookNameService);
     }
 
     /**
-     * Set whether to use HTML format when available
+     * Set whether to use HTML format or plain text
      */
     public setUseHtmlFormat(use: boolean): void {
         this.useHtmlFormat = use;
@@ -66,293 +69,147 @@ export class BibleContentService {
     }
 
     /**
-     * Load Bible data from a data source
+     * Load Bible data into memory
      */
     public loadBible(bibleData: any): void {
-        // Process the raw data into our expected format
         if (!bibleData) {
+            this.bible = null;
             return;
         }
-
-        try {
-            // Check if the data is already in our expected format
-            if (this.isStructuredBibleFormat(bibleData)) {
-                this.bible = bibleData;
-            } else if (this.isESVApiFormat(bibleData)) {
-                // Convert the ESV API format to our structured format
-                this.loadESVApiData(bibleData);
-            } else {
-                console.error("Unsupported Bible data format");
-            }
-        } catch (error) {
-            console.error("Error loading Bible data:", error);
-        }
-    }
-
-    /**
-     * Check if data is in structured Bible format
-     */
-    private isStructuredBibleFormat(data: any): boolean {
-        if (!data) return false;
         
-        // Check if the data structure matches our expected format
-        // This is a simple check, might need to be enhanced based on actual data structure
-        return typeof data === 'object' && 
-               Object.keys(data).length > 0 && 
-               Object.keys(data).every(bookKey => {
-                  const book = data[bookKey];
-                  return typeof book === 'object' && 
-                         Object.keys(book).every(chapterKey => {
-                           const chapter = book[chapterKey];
-                           return typeof chapter === 'object';
-                         });
-               });
+        this.bible = this.dataConverter.convertToBibleData(bibleData);
     }
 
     /**
-     * Check if data is in ESV API format
-     */
-    private isESVApiFormat(data: any): boolean {
-        if (!data) return false;
-        
-        // Check if the data matches ESV API response format
-        return typeof data === 'object' &&
-               data.canonical !== undefined &&
-               data.passages !== undefined &&
-               Array.isArray(data.passages);
-    }
-
-    /**
-     * Load data from ESV API format
-     */
-    private loadESVApiData(data: any): void {
-        // Initialize Bible data structure if needed
-        if (!this.bible) {
-            this.bible = {};
-        }
-
-        // Parse the canonical reference to get book, chapter, etc.
-        const reference = this.bibleReferenceParser.parse(data.canonical);
-        if (!reference) {
-            console.error("Could not parse canonical reference:", data.canonical);
-            return;
-        }
-
-        // Process each passage in the response
-        for (const passageText of data.passages) {
-            // Extract verses from the passage text (simplified implementation)
-            // In a real implementation, you would need proper parsing of ESV HTML
-            const lines = passageText.split("\n");
-            for (const line of lines) {
-                // Very simplified parsing example
-                const verseMatch = line.match(/(\d+):((\d+)[^\d]+)(.*)/);
-                if (verseMatch) {
-                    const chapter = parseInt(verseMatch[1]);
-                    const verse = parseInt(verseMatch[3]);
-                    const text = verseMatch[4].trim();
-                    
-                    // Ensure book and chapter objects exist
-                    if (!this.bible[reference.book]) {
-                        this.bible[reference.book] = {};
-                    }
-                    if (!this.bible[reference.book][chapter.toString()]) {
-                        this.bible[reference.book][chapter.toString()] = {};
-                    }
-                    
-                    // Add the verse
-                    this.bible[reference.book][chapter.toString()][verse.toString()] = text;
-                }
-            }
-        }
-    }
-
-    /**
-     * Get a specific verse by reference
+     * Get a single verse by reference
      */
     public getVerse(book: string, chapter: number, verse: number): BibleVerse | null {
-        if (!this.bible) {
-            console.error("Bible data not loaded");
-            return null;
-        }
-
-        // Standardize the book name
-        const standardBook = this.bookNameService.standardizeBookName(book);
-        if (!standardBook) {
-            console.error(`Invalid book name: ${book}`);
-            return null;
-        }
-
-        // Check if the chapter and verse exist
-        if (this.bible[standardBook] && 
-            this.bible[standardBook][chapter.toString()] && 
-            this.bible[standardBook][chapter.toString()][verse.toString()]) {
+        if (!this.bible) return null;
+        
+        try {
+            const normalizedBook = this.bookNameService.getNormalizedBookName(book);
+            if (!normalizedBook) return null;
             
-            // Return the verse object
+            // Check if the book exists in the Bible data
+            if (!this.bible[normalizedBook]) return null;
+            
+            // Check if the chapter exists
+            const chapterStr = chapter.toString();
+            if (!this.bible[normalizedBook][chapterStr]) return null;
+            
+            // Check if the verse exists
+            const verseStr = verse.toString();
+            if (!this.bible[normalizedBook][chapterStr][verseStr]) return null;
+            
+            // Return the verse
             return {
-                book: standardBook,
+                book: normalizedBook,
                 chapter: chapter,
                 verse: verse,
-                text: this.bible[standardBook][chapter.toString()][verse.toString()]
+                text: this.bible[normalizedBook][chapterStr][verseStr]
             };
+        } catch (error) {
+            console.error('Error getting verse:', error);
+            return null;
         }
-
-        return null;
     }
 
     /**
      * Get a passage by reference
+     * This handles everything from single verses to full chapters
      */
     public getPassage(reference: BibleReference): BiblePassage | null {
-        if (!reference) return null;
-
-        const standardBook = this.bookNameService.standardizeBookName(reference.book);
-        if (!standardBook) return null;
-
-        // Single verse
-        if (reference.verse !== undefined && !reference.isRange()) {
-            const verse = this.getVerse(standardBook, reference.chapter, reference.verse);
-            if (!verse) return null;
-
-            return {
-                reference: `${standardBook} ${reference.chapter}:${reference.verse}`,
-                verses: [verse]
-            };
-        }
-
-        // Verse range within the same chapter
-        if (reference.verse !== undefined && reference.endVerse !== undefined && 
-            reference.endChapter === undefined) {
-            const verses: BibleVerse[] = [];
+        if (!this.bible) return null;
+        
+        try {
+            const normalizedBook = this.bookNameService.getNormalizedBookName(reference.book);
+            if (!normalizedBook) return null;
             
-            for (let v = reference.verse; v <= reference.endVerse; v++) {
-                const verse = this.getVerse(standardBook, reference.chapter, v);
-                if (verse) verses.push(verse);
-            }
-
-            if (verses.length === 0) return null;
-
-            return {
-                reference: `${standardBook} ${reference.chapter}:${reference.verse}-${reference.endVerse}`,
-                verses: verses
+            // Prepare the result
+            const result: BiblePassage = {
+                reference: reference.toString(),
+                verses: []
             };
-        }
-
-        // Chapter range
-        if (reference.endChapter !== undefined) {
-            const verses: BibleVerse[] = [];
             
-            for (let c = reference.chapter; c <= reference.endChapter; c++) {
-                // First chapter might start at a specific verse
-                let startVerse = (c === reference.chapter && reference.verse !== undefined) 
-                    ? reference.verse : 1;
-                
-                // Get all verses in this chapter
-                if (this.bible && this.bible[standardBook] && this.bible[standardBook][c.toString()]) {
-                    const chapterVerses = this.bible[standardBook][c.toString()];
-                    const verseNums = Object.keys(chapterVerses).map(v => parseInt(v)).sort((a, b) => a - b);
-                    
-                    // Last chapter might end at a specific verse
-                    const endVerse = (c === reference.endChapter && reference.endVerse !== undefined)
-                        ? reference.endVerse
-                        : Math.max(...verseNums);
-                    
-                    for (let v = startVerse; v <= endVerse; v++) {
-                        const verse = this.getVerse(standardBook, c, v);
-                        if (verse) verses.push(verse);
+            // Get the chapter
+            const chapterStr = reference.chapter.toString();
+            if (!this.bible[normalizedBook][chapterStr]) return null;
+            
+            // If verse is specified, get just that verse or verse range
+            if (reference.verse) {
+                // Single verse
+                if (!reference.endVerse) {
+                    const verse = this.getVerse(normalizedBook, reference.chapter, reference.verse);
+                    if (verse) {
+                        result.verses.push(verse);
+                    }
+                } 
+                // Verse range
+                else {
+                    // Add all verses in the range
+                    for (let v = reference.verse; v <= reference.endVerse; v++) {
+                        const verse = this.getVerse(normalizedBook, reference.chapter, v);
+                        if (verse) {
+                            result.verses.push(verse);
+                        }
                     }
                 }
             }
-
-            if (verses.length === 0) return null;
-
-            // Format reference string
-            let refStr = `${standardBook} ${reference.chapter}`;
-            if (reference.verse !== undefined) refStr += `:${reference.verse}`;
-            refStr += `-${reference.endChapter}`;
-            if (reference.endVerse !== undefined) refStr += `:${reference.endVerse}`;
-
-            return {
-                reference: refStr,
-                verses: verses
-            };
-        }
-
-        // Entire chapter
-        if (reference.verse === undefined) {
-            const verses: BibleVerse[] = [];
-            
-            if (this.bible && this.bible[standardBook] && this.bible[standardBook][reference.chapter.toString()]) {
-                const chapterVerses = this.bible[standardBook][reference.chapter.toString()];
-                const verseNums = Object.keys(chapterVerses).map(v => parseInt(v)).sort((a, b) => a - b);
-                
-                for (const v of verseNums) {
-                    const verse = this.getVerse(standardBook, reference.chapter, v);
-                    if (verse) verses.push(verse);
+            // No verse specified, get the whole chapter
+            else {
+                // Get all verses in the chapter
+                const chapter = this.bible[normalizedBook][chapterStr];
+                if (chapter) {
+                    const verseNumbers = Object.keys(chapter).map(v => parseInt(v)).sort((a, b) => a - b);
+                    
+                    for (const verseNum of verseNumbers) {
+                        const verse = this.getVerse(normalizedBook, reference.chapter, verseNum);
+                        if (verse) {
+                            result.verses.push(verse);
+                        }
+                    }
                 }
             }
-
-            if (verses.length === 0) return null;
-
-            return {
-                reference: `${standardBook} ${reference.chapter}`,
-                verses: verses
-            };
+            
+            return result;
+        } catch (error) {
+            console.error('Error getting passage:', error);
+            return null;
         }
-
-        return null;
     }
 
     /**
-     * Get an entire chapter
+     * Get a full chapter
      */
     public getChapter(book: string, chapter: number): BiblePassage | null {
-        // Create a reference for the chapter
-        const chapterRef = new BibleReference(book, chapter);
-        return this.getPassage(chapterRef);
+        const reference = new BibleReference(book, chapter);
+        return this.getPassage(reference);
     }
 
     /**
-     * Get Bible content based on reference string
+     * Get Bible content from any source (local or API)
      */
     public async getBibleContent(referenceString: string): Promise<BiblePassage | null> {
-        // Skip if reference string is empty or null
-        if (!referenceString || !referenceString.trim()) {
-            return null;
-        }
-
         try {
-            // Parse the reference string to get the structured reference
-            const reference = this.bibleReferenceParser.parse(referenceString);
-            if (!reference) {
-                console.error(`Could not parse reference: ${referenceString}`);
+            // Parse the reference
+            const parsedRef = this.bibleReferenceParser.parse(referenceString);
+            if (!parsedRef) {
+                console.error(`Invalid reference: ${referenceString}`);
                 return null;
             }
-
-            // First check if we have HTML content available through the ESV API service
-            if (this.useHtmlFormat) {
-                const htmlContent = this.esvApiService.getHTMLContent(referenceString);
-                if (htmlContent) {
-                    return htmlContent;
-                }
+            
+            // Try to get from local Bible data first
+            let passage = this.getPassage(parsedRef);
+            
+            // If not available locally and download on demand is enabled, try the API
+            if (!passage && this.downloadOnDemand) {
+                // Try to get from the ESV API
+                passage = await this.esvApiService.downloadFromESVApi(referenceString);
             }
-
-            // If the content is not found and download on demand is enabled, try to download it
-            if (this.downloadOnDemand) {
-                const downloadedContent = await this.esvApiService.downloadFromESVApi(referenceString);
-                if (downloadedContent) {
-                    return downloadedContent;
-                }
-            }
-
-            // As a fallback, try to get the content from our structured Bible data
-            const passageContent = this.getPassage(reference);
-            if (passageContent) {
-                return passageContent;
-            }
-
-            return null;
+            
+            return passage;
         } catch (error) {
-            console.error(`Error getting Bible content for "${referenceString}":`, error);
+            console.error('Error getting Bible content:', error);
             return null;
         }
     }

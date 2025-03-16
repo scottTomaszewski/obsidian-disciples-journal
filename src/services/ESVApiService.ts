@@ -209,6 +209,7 @@ export class ESVApiService {
     public async downloadFromESVApi(reference: string): Promise<BiblePassage | null> {
         if (!this.apiToken) {
             console.warn('ESV API token not set. Cannot download content.');
+            
             return {
                 reference: reference,
                 verses: [],
@@ -251,6 +252,7 @@ export class ESVApiService {
                 };
             } else {
                 console.error(`ESV API request failed with status ${response.status}: ${response.text}`);
+                
                 return {
                     reference: reference,
                     verses: [],
@@ -263,6 +265,7 @@ export class ESVApiService {
             }
         } catch (error) {
             console.error('Error downloading from ESV API:', error);
+            
             return {
                 reference: reference,
                 verses: [],
@@ -313,6 +316,40 @@ export class ESVApiService {
             if (!(await this.app.vault.adapter.exists(currentPath))) {
                 await this.app.vault.adapter.mkdir(currentPath);
             }
+        }
+    }
+
+    /**
+     * Ensures Bible data is loaded, downloading if necessary
+     */
+    public async ensureBibleData(): Promise<void> {
+        try {
+            // Check if we have data by looking for specific files in the vault
+            const hasData = await this.checkBibleDataExists();
+            
+            if (!hasData) {
+                console.log('Bible data not found, loading from vault...');
+                await this.loadBibleChaptersFromVault();
+            } else {
+                console.log('Bible data already exists');
+            }
+        } catch (error) {
+            console.error('Error ensuring Bible data:', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Check if Bible data exists in the vault
+     */
+    private async checkBibleDataExists(): Promise<boolean> {
+        try {
+            // Check for a common book like Genesis
+            const genesisPath = `${this.getFullContentPath()}/Genesis/Genesis 1.md`;
+            return await this.app.vault.adapter.exists(genesisPath);
+        } catch (error) {
+            console.error('Error checking if Bible data exists:', error);
+            return false;
         }
     }
 } 

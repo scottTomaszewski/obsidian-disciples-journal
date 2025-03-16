@@ -5,7 +5,27 @@ import { BibleNavigation } from "./BibleNavigation";
 import { BookNameService } from "../services/BookNameService";
 import { BibleFormatter } from "../utils/BibleFormatter";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
+import { BibleReferenceParser } from '../core/BibleReferenceParser';
 
+/**
+ * Interface for Bible passage content
+ */
+export interface BiblePassage {
+    reference: string;
+    verses: any[];
+    htmlContent?: string;
+    missingToken?: boolean;
+}
+
+/**
+ * Interface for plugin settings
+ */
+export interface PluginSettings {
+    displayInlineVerses: boolean;
+    displayFullPassages: boolean;
+    bibleTextFontSize: string;
+    stylePreset: string;
+}
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -18,6 +38,8 @@ export class BibleReferenceRenderer {
     private bibleNavigation: BibleNavigation;
     private downloadOnDemand: boolean = true;
     private plugin: DisciplesJournalPlugin;
+    private parser: BibleReferenceParser;
+    private settings: PluginSettings;
     
     constructor(
         app: App, 
@@ -39,6 +61,13 @@ export class BibleReferenceRenderer {
             vaultPath, 
             this.downloadOnDemand
         );
+        this.parser = new BibleReferenceParser(bookNameService);
+        this.settings = {
+            displayInlineVerses: true,
+            displayFullPassages: true,
+            bibleTextFontSize: fontSizeForVerses,
+            stylePreset: 'default'
+        };
     }
     
     /**
@@ -46,6 +75,7 @@ export class BibleReferenceRenderer {
      */
     public setFontSize(fontSize: string): void {
         this.fontSizeForVerses = fontSize;
+        this.settings.bibleTextFontSize = fontSize;
     }
     
     /**
@@ -76,18 +106,26 @@ export class BibleReferenceRenderer {
      */
     public async processInlineCodeBlocks(element: HTMLElement, context: MarkdownPostProcessorContext): Promise<void> {
         const codeBlocks = element.querySelectorAll('code');
+        
         for (let i = 0; i < codeBlocks.length; i++) {
             const codeBlock = codeBlocks[i];
             // Skip if the code block is not a direct child (might be inside a pre tag)
-            if (codeBlock.parentElement?.tagName === 'PRE') continue;
+            if (codeBlock.parentElement?.tagName === 'PRE') {
+                continue;
+            }
             
             const codeText = codeBlock.textContent?.trim();
-            if (!codeText) continue;
+            if (!codeText) {
+                continue;
+            }
             
             try {
                 // Try to parse as Bible reference
                 const reference = await this.bibleContentService.getBibleContent(codeText);
-                if (!reference) continue;
+                
+                if (!reference) {
+                    continue;
+                }
                 
                 // Create a Bible reference element
                 const referenceEl = document.createElement('span');
@@ -107,6 +145,7 @@ export class BibleReferenceRenderer {
      */
     public async processFullBiblePassage(source: string, el: HTMLElement): Promise<void> {
         const reference = source.trim();
+        
         const passage = await this.bibleContentService.getBibleContent(reference);
         
         if (passage) {
@@ -168,13 +207,6 @@ export class BibleReferenceRenderer {
             
             containerEl.appendChild(passageEl);
             
-            // Skipping this for now since the ESV API appends its own copyright notice
-            // // Add collapsible copyright notice
-            // const copyrightContainer = document.createElement('div');
-            // copyrightContainer.classList.add('bible-copyright-container');
-            // copyrightContainer.innerHTML = BibleFormatter.getCopyrightNoticeHTML();
-            // containerEl.appendChild(copyrightContainer);
-            
             el.appendChild(containerEl);
         } else {
             // If reference not found, show error
@@ -211,8 +243,12 @@ export class BibleReferenceRenderer {
                 // Call the method to open the chapter note
                 this.plugin.openChapterNote(passage.reference);
                 
-                // Close the preview
-                this.plugin.removePreviewPopper();
+                // Close the preview - using a method available in BibleEventHandlers
+                // Remove the popup directly instead of trying to access the private property
+                const previewPoppers = document.querySelectorAll('.bible-verse-preview');
+                if (previewPoppers) {
+                    previewPoppers.forEach(p => p.remove());
+                }
             } catch (error) {
                 console.error('Error opening chapter note from popup:', error);
                 
@@ -332,5 +368,123 @@ export class BibleReferenceRenderer {
                 return;
             }
         }
+    }
+
+    /**
+     * Process a Bible reference and return the corresponding HTML
+     */
+    async processReference(referenceString: string, ctx: MarkdownPostProcessorContext): Promise<string> {
+        try {
+            // Try to parse the reference
+            const bibleRef = this.parser.parse(referenceString);
+            
+            if (!bibleRef) {
+                console.error(`Failed to parse Bible reference: "${referenceString}"`);
+                return `<div class="bible-reference-error">Invalid reference: ${referenceString}</div>`;
+            }
+            
+            // Get the Bible content from the service
+            const passage = await this.bibleContentService.getBibleContent(bibleRef.toString());
+            
+            if (!passage) {
+                console.error(`Failed to get content for: "${referenceString}"`);
+                return `<div class="bible-reference-error">Failed to load content for: ${referenceString}</div>`;
+            }
+            
+            return this.renderPassage(passage);
+        } catch (error) {
+            console.error(`Error processing Bible reference "${referenceString}":`, error);
+            return `<div class="bible-reference-error">Error processing reference: ${referenceString}</div>`;
+        }
+    }
+
+    /**
+     * Process an inline Bible reference and return the corresponding HTML
+     */
+    async processInlineReference(referenceString: string): Promise<string> {
+        try {
+            if (!this.settings.displayInlineVerses) {
+                return `<span class="inline-bible-reference">${referenceString}</span>`;
+            }
+            
+            // Try to parse the reference
+            const bibleRef = this.parser.parse(referenceString);
+            
+            if (!bibleRef) {
+                console.error(`Failed to parse inline Bible reference: "${referenceString}"`);
+                return `<span class="inline-bible-reference-error">${referenceString}</span>`;
+            }
+            
+            // Get the Bible content from the service
+            const passage = await this.bibleContentService.getBibleContent(bibleRef.toString());
+            
+            if (!passage) {
+                console.error(`Failed to get content for inline reference: "${referenceString}"`);
+                return `<span class="inline-bible-reference-error">${referenceString}</span>`;
+            }
+            
+            return this.renderInlinePassage(passage);
+        } catch (error) {
+            console.error(`Error processing inline Bible reference "${referenceString}":`, error);
+            return `<span class="inline-bible-reference-error">${referenceString}</span>`;
+        }
+    }
+
+    /**
+     * Render a passage as a full block
+     */
+    private renderPassage(passage: BiblePassage): string {
+        if (passage.missingToken) {
+            return passage.htmlContent || '';
+        }
+        
+        // Apply styling based on settings
+        const fontSizeStyle = this.settings.bibleTextFontSize 
+            ? `font-size: ${this.settings.bibleTextFontSize}%;` 
+            : '';
+        
+        // Determine which CSS class to use based on the style preset
+        let styleClass = 'bible-passage-default';
+        if (this.settings.stylePreset === 'minimal') {
+            styleClass = 'bible-passage-minimal';
+        } else if (this.settings.stylePreset === 'elegant') {
+            styleClass = 'bible-passage-elegant';
+        } else if (this.settings.stylePreset === 'classic') {
+            styleClass = 'bible-passage-classic';
+        } else if (this.settings.stylePreset === 'modern') {
+            styleClass = 'bible-passage-modern';
+        }
+        
+        return `
+            <div class="bible-passage ${styleClass}" style="${fontSizeStyle}">
+                <div class="bible-passage-reference">${passage.reference}</div>
+                <div class="bible-passage-content">${passage.htmlContent || ''}</div>
+                <div class="bible-passage-footer">ESV</div>
+            </div>
+        `;
+    }
+
+    /**
+     * Render a passage inline
+     */
+    private renderInlinePassage(passage: BiblePassage): string {
+        if (passage.missingToken) {
+            return `<span class="inline-bible-reference-error">${passage.reference}</span>`;
+        }
+        
+        // Extract just the text, removing verse numbers if desired
+        let content = passage.htmlContent || '';
+        
+        // Apply styling based on settings
+        const fontSizeStyle = this.settings.bibleTextFontSize 
+            ? `font-size: ${this.settings.bibleTextFontSize}%;` 
+            : '';
+        
+        return `
+            <span class="inline-bible-reference" style="${fontSizeStyle}">
+                <span class="inline-bible-reference-text">${content}</span>
+                <span class="inline-bible-reference-label">(${passage.reference}, ESV)</span>
+            </span>
+        `;
     }
 } 

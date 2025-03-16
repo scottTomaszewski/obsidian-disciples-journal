@@ -25,16 +25,22 @@ export class BibleReferenceParser {
     public parse(reference: string): BibleReference | null {
         reference = reference.trim();
         
-        if (!reference) return null;
+        if (!reference) {
+            return null;
+        }
         
         try {
             // Extract book name
             const book = this.bookNameService.extractBookFromReference(reference);
-            if (!book) return null;
+            if (!book) {
+                return null;
+            }
             
             // Standardize the book name
             const standardizedBook = this.bookNameService.standardizeBookName(book);
-            if (!standardizedBook) return null;
+            if (!standardizedBook) {
+                return null;
+            }
             
             // Remove the book name to parse the chapter and verse
             const chapterVerseText = reference.substring(book.length).trim();
@@ -48,20 +54,20 @@ export class BibleReferenceParser {
                 const endChapter = parseInt(crossChapterMatch[3]);
                 const endVerse = parseInt(crossChapterMatch[4]);
                 
-                return new BibleReference(standardizedBook, chapter, verse, endVerse, endChapter);
+                return new BibleReference(standardizedBook, chapter, verse, endChapter, endVerse);
             }
             
-            // Cross-chapter reference without end verse (e.g., "1-2")
-            const crossChapterNoVersePattern = /^(\d+)-(\d+)$/;
-            const crossChapterNoVerseMatch = chapterVerseText.match(crossChapterNoVersePattern);
-            if (crossChapterNoVerseMatch) {
-                const chapter = parseInt(crossChapterNoVerseMatch[1]);
-                const endChapter = parseInt(crossChapterNoVerseMatch[2]);
+            // Chapter range pattern (e.g., "1-2")
+            const chapterRangePattern = /^(\d+)-(\d+)$/;
+            const chapterRangeMatch = chapterVerseText.match(chapterRangePattern);
+            if (chapterRangeMatch) {
+                const chapter = parseInt(chapterRangeMatch[1]);
+                const endChapter = parseInt(chapterRangeMatch[2]);
                 
-                return new BibleReference(standardizedBook, chapter, undefined, undefined, endChapter);
+                return new BibleReference(standardizedBook, chapter, undefined, endChapter);
             }
             
-            // Verse range pattern (e.g., "1:2-3")
+            // Verse range pattern (e.g., "1:2-10")
             const verseRangePattern = /^(\d+):(\d+)-(\d+)$/;
             const verseRangeMatch = chapterVerseText.match(verseRangePattern);
             if (verseRangeMatch) {
@@ -69,7 +75,7 @@ export class BibleReferenceParser {
                 const verse = parseInt(verseRangeMatch[2]);
                 const endVerse = parseInt(verseRangeMatch[3]);
                 
-                return new BibleReference(standardizedBook, chapter, verse, endVerse);
+                return new BibleReference(standardizedBook, chapter, verse, undefined, endVerse);
             }
             
             // Single verse pattern (e.g., "1:2")
@@ -82,19 +88,18 @@ export class BibleReferenceParser {
                 return new BibleReference(standardizedBook, chapter, verse);
             }
             
-            // Chapter only pattern (e.g., "1")
-            const chapterOnlyPattern = /^(\d+)$/;
-            const chapterOnlyMatch = chapterVerseText.match(chapterOnlyPattern);
-            if (chapterOnlyMatch) {
-                const chapter = parseInt(chapterOnlyMatch[1]);
+            // Single chapter pattern (e.g., "1")
+            const singleChapterPattern = /^(\d+)$/;
+            const singleChapterMatch = chapterVerseText.match(singleChapterPattern);
+            if (singleChapterMatch) {
+                const chapter = parseInt(singleChapterMatch[1]);
                 
                 return new BibleReference(standardizedBook, chapter);
             }
             
-            // If no pattern matches
             return null;
         } catch (error) {
-            console.error("Error parsing Bible reference:", error);
+            console.error(`Error parsing Bible reference "${reference}":`, error);
             return null;
         }
     }

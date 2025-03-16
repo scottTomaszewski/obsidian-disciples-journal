@@ -1,10 +1,11 @@
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian';
 import DisciplesJournalPlugin from '../core/DisciplesJournalPlugin';
+import { THEME_PRESETS } from '../components/BibleStyles';
 
 export interface DisciplesJournalSettings {
     displayInlineVerses: boolean;
     displayFullPassages: boolean;
-    fontSizeForVerses: string;
+    bibleTextFontSize: string;
     wordsOfChristColor: string;
     verseNumberColor: string;
     headingColor: string;
@@ -13,12 +14,13 @@ export interface DisciplesJournalSettings {
     esvApiToken: string;
     downloadOnDemand: boolean;
     bibleContentVaultPath: string;
+    stylePreset: string;
 }
 
 export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
     displayInlineVerses: true,
     displayFullPassages: true,
-    fontSizeForVerses: '100%',
+    bibleTextFontSize: '100%',
     wordsOfChristColor: 'var(--text-accent)',
     verseNumberColor: 'var(--text-accent)',
     headingColor: 'var(--text-accent)',
@@ -26,7 +28,8 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
     preferredBibleVersion: 'ESV',
     esvApiToken: '',
     downloadOnDemand: true,
-    bibleContentVaultPath: 'Bible'
+    bibleContentVaultPath: 'Bible',
+    stylePreset: 'default'
 };
 
 export class DisciplesJournalSettingsTab extends PluginSettingTab {
@@ -53,32 +56,56 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.displayInlineVerses = value;
                     await this.plugin.saveSettings();
-                }));
+                })
+            );
 
         new Setting(containerEl)
             .setName('Display Full Passages')
-            .setDesc('Enable rendering of Bible passages in ```bible code blocks.')
+            .setDesc('Enable rendering of full Bible passages (in ```bible code blocks).')
             .addToggle(toggle => toggle
                 .setValue(this.plugin.settings.displayFullPassages)
                 .onChange(async (value) => {
                     this.plugin.settings.displayFullPassages = value;
                     await this.plugin.saveSettings();
-                }));
+                })
+            );
+            
+        new Setting(containerEl)
+            .setName('Style Preset')
+            .setDesc('Choose a predefined style preset for Bible content.')
+            .addDropdown(dropdown => {
+                // Add all theme presets
+                Object.keys(THEME_PRESETS).forEach(preset => {
+                    dropdown.addOption(preset, preset.charAt(0).toUpperCase() + preset.slice(1));
+                });
+                
+                dropdown.setValue(this.plugin.settings.stylePreset);
+                dropdown.onChange(async (value) => {
+                    this.plugin.settings.stylePreset = value;
+                    await this.plugin.saveSettings();
+                    this.plugin.updateBibleStyles();
+                });
+            });
+
+        new Setting(containerEl)
+            .setName('Bible Text Font Size')
+            .setDesc('Set the font size for Bible verses and passages.')
+            .addDropdown(dropdown => dropdown
+                .addOption('80%', 'Smaller (80%)')
+                .addOption('90%', 'Small (90%)')
+                .addOption('100%', 'Normal (100%)')
+                .addOption('110%', 'Large (110%)')
+                .addOption('120%', 'Larger (120%)')
+                .setValue(this.plugin.settings.bibleTextFontSize)
+                .onChange(async (value) => {
+                    this.plugin.settings.bibleTextFontSize = value;
+                    this.plugin.updateFontSize(value);
+                    await this.plugin.saveSettings();
+                })
+            );
         
         containerEl.createEl('h3', { text: 'Text Styling' });
 
-        new Setting(containerEl)
-            .setName('Verse Font Size')
-            .setDesc('Set the font size for displayed verses.')
-            .addText(text => text
-                .setPlaceholder('100%')
-                .setValue(this.plugin.settings.fontSizeForVerses)
-                .onChange(async (value) => {
-                    this.plugin.settings.fontSizeForVerses = value || '100%';
-                    await this.plugin.saveSettings();
-                    this.plugin.updateBibleStyles();
-                }));
-                
         new Setting(containerEl)
             .setName('Words of Christ Color')
             .setDesc('Set the color for Words of Christ (use `var(--text-normal)` for no special color).')
