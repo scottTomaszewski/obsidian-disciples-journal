@@ -145,35 +145,54 @@ export class BibleReferenceRenderer {
      */
     public async processFullBiblePassage(source: string, el: HTMLElement): Promise<void> {
         const reference = source.trim();
-        
+        // TODO - this should be overlaoded with a form that takes the BibleReference
         const passage = await this.bibleContentService.getBibleContent(reference);
         
         if (passage) {
             const containerEl = document.createElement('div');
             containerEl.classList.add('bible-passage-container');
-            
-            // Add navigation elements at the top of the passage
-            try {
-                // Try to parse the reference
-                const refParts = passage.reference.split(" ");
-                if (refParts.length >= 2) {
-                    const book = refParts.slice(0, -1).join(" ");
-                    const chapter = parseInt(refParts[refParts.length - 1]);
-                    if (!isNaN(chapter)) {
-                        const parsedRef = new BibleReference(book, chapter);
-                        
-                        // Use the new navigation method
-                        this.bibleNavigation.createNavigationElements(containerEl, parsedRef);
-                    }
-                }
-            } catch (error) {
-                console.error("Error adding navigation:", error);
+        
+            const parsedRef = this.parser.parse(reference);
+            // TODO - this cant happen if getBibleContent passed...
+            if (!parsedRef) {
+                console.error("Failed to parse reference: " + reference);
+                return;
             }
+            if (parsedRef.isChapterReference() || this.plugin.settings.showNavigationForVerses) {
+                this.bibleNavigation.createNavigationElements(containerEl, parsedRef);
+            }
+        
+            // // Add navigation elements at the top of the passage
+            // try {
+            //     // Try to parse the reference
+            //     const refParts = passage.reference.split(" ");
+            //     if (refParts.length >= 2) {
+            //         const book = refParts.slice(0, -1).join(" ");
+            //         const chapter = parseInt(refParts[refParts.length - 1]);
+            //         if (!isNaN(chapter)) {
+            //             const parsedRef = new BibleReference(book, chapter);
+                        
+            //             // Check if the reference includes verses
+            //             const hasVerses = passage.reference.includes(':');
+                        
+            //             // Only show navigation if it's a full chapter or if the setting is enabled
+            //             if (!hasVerses || this.plugin.settings.showNavigationForVerses) {
+            //                 this.bibleNavigation.createNavigationElements(containerEl, parsedRef);
+            //             }
+            //         }
+            //     }
+            // } catch (error) {
+            //     console.error("Error adding navigation:", error);
+            // }
             
             // Add reference heading
             const headingEl = document.createElement('h3');
             headingEl.classList.add('bible-passage-heading');
-            headingEl.textContent = passage.reference;
+            const referenceLink = headingEl.createEl('a', { text: passage.reference });
+            referenceLink.onClickEvent(async l => {
+                await this.bibleNavigation.navigateToChapter(parsedRef.book, parsedRef.chapter);
+            });
+
             containerEl.appendChild(headingEl);
             
             // Add verses

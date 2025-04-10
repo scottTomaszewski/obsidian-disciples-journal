@@ -161,7 +161,7 @@ export class ESVApiService {
     /**
      * Create a DOM-friendly error message for missing token or API errors
      */
-    private createErrorMessageContent(type: 'missing-token' | 'api-error', message: string = '', details: string = ''): string {
+    private createErrorMessageContent(type: 'missing-token' | 'api-error', message: string = '', details: string = ''): HTMLElement {
         // We're required to return a string here because it's part of the ESV API response structure
         // This method creates the content in a DOM-safe way then serializes to a string
         const container = document.createElement('div');
@@ -200,7 +200,7 @@ export class ESVApiService {
             container.appendChild(linkPara);
         }
         
-        return container.outerHTML;
+        return container;
     }
 
     /**
@@ -216,7 +216,7 @@ export class ESVApiService {
                 htmlContent: this.createErrorMessageContent(
                     'missing-token',
                     'To display Bible passages, you need to set up an ESV API token in the plugin settings.'
-                ),
+                ).outerHTML,
                 missingToken: true
             };
         }
@@ -260,7 +260,7 @@ export class ESVApiService {
                         'api-error',
                         'Failed to load the passage from the ESV API.',
                         `Status: ${response.status}. Please check your API token in the plugin settings.`
-                    )
+                    ).outerHTML
                 };
             }
         } catch (error) {
@@ -273,7 +273,7 @@ export class ESVApiService {
                     'api-error',
                     'An error occurred when trying to access the ESV API.',
                     'Please check your internet connection and API token.'
-                )
+                ).outerHTML
             };
         }
     }

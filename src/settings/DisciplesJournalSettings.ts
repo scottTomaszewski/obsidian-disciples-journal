@@ -15,6 +15,7 @@ export interface DisciplesJournalSettings {
     downloadOnDemand: boolean;
     bibleContentVaultPath: string;
     stylePreset: string;
+    showNavigationForVerses: boolean;
 }
 
 export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
@@ -29,7 +30,8 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
     esvApiToken: '',
     downloadOnDemand: true,
     bibleContentVaultPath: 'Bible',
-    stylePreset: 'default'
+    stylePreset: 'default',
+    showNavigationForVerses: false
 };
 
 export class DisciplesJournalSettingsTab extends PluginSettingTab {
@@ -66,6 +68,17 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.displayFullPassages)
                 .onChange(async (value) => {
                     this.plugin.settings.displayFullPassages = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName('Show Navigation for Verses')
+            .setDesc('Show chapter navigation when displaying specific verses (by default, navigation only shows for full chapters).')
+            .addToggle(toggle => toggle
+                .setValue(this.plugin.settings.showNavigationForVerses)
+                .onChange(async (value) => {
+                    this.plugin.settings.showNavigationForVerses = value;
                     await this.plugin.saveSettings();
                 })
             );

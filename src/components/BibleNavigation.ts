@@ -251,7 +251,7 @@ export class BibleNavigation {
     /**
      * Navigate to a specific chapter
      */
-    private async navigateToChapter(book: string, chapter: number): Promise<void> {
+    public async navigateToChapter(book: string, chapter: number): Promise<void> {
         try {
             // Create the file path using the utility
             const filePath = BibleFormatter.buildChapterPath(this.vaultPath, book, chapter);
