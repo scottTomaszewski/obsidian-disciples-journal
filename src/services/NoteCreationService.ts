@@ -58,8 +58,9 @@ export class NoteCreationService {
             }
             
             // Try opening the note
-            const file = this.app.vault.getAbstractFileByPath(chapterPath) as TFile;
-            if (file) {
+            const file = this.app.vault.getAbstractFileByPath(chapterPath);
+
+            if (file && file instanceof TFile) {
                 const leaf = this.app.workspace.getUnpinnedLeaf();
                 await leaf.openFile(file);
                 
