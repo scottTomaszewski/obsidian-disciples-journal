@@ -113,7 +113,7 @@ export class BibleStyles {
             if (settings.headingColor) options.headingColor = settings.headingColor;
             if (settings.blockIndentation) options.blockIndentation = settings.blockIndentation;
         }
-        
+
         // Update the CSS variables on the root element
         const rootStyle = document.documentElement.style;
         rootStyle.setProperty('--dj-font-size', options.fontSize);

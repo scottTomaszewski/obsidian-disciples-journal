@@ -1,13 +1,10 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-
-/* Disciples Journal Plugin Styles */
+body {
+    --dj-font-size: 100%;
+    --dj-heading-color: var(--text-accent);
+    --dj-verse-number-color: var(--text-accent);
+    --dj-woc-color: var(--text-accent);
+    --dj-block-indentation: 2em;
+}
 
 /* Utility Classes */
 .dj-hidden {
@@ -234,25 +231,13 @@ If your plugin does not need CSS, delete this file.
     line-height: 1.4;
 }
 
-/* Bible Reference Font Size */
-:root {
-    /* Define default font size - can be overridden by themes/settings */
-    --bible-text-font-size: 100%; 
-    /* Define dynamic style variables with default values (e.g., from default light theme) */
-    --dj-font-size: 100%;
-    --dj-heading-color: var(--text-accent);
-    --dj-verse-number-color: var(--text-accent);
-    --dj-woc-color: var(--text-accent);
-    --dj-block-indentation: 2em;
-}
-
 .bible-passage .bible-passage-text,
 .bible-passage .bible-passage-content { /* Apply to both text and content divs */
-    font-size: var(--bible-text-font-size);
+    font-size: var(--dj-font-size);
 }
 
 .inline-bible-reference .inline-bible-reference-text { /* Target the text part */
-    font-size: var(--bible-text-font-size);
+    font-size: var(--dj-font-size);
 }
 
 /* Bible reference styles */
@@ -472,5 +457,5 @@ If your plugin does not need CSS, delete this file.
 }
 
 .inline-bible-reference .inline-bible-reference-text { /* Target the text part */
-    font-size: var(--bible-text-font-size); /* Keep original font size variable for now, or switch to --dj-font-size if desired */
+    font-size: var(--dj-font-size); /* Keep original font size variable for now, or switch to --dj-font-size if desired */
 }
