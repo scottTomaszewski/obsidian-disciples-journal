@@ -238,6 +238,12 @@ If your plugin does not need CSS, delete this file.
 :root {
     /* Define default font size - can be overridden by themes/settings */
     --bible-text-font-size: 100%; 
+    /* Define dynamic style variables with default values (e.g., from default light theme) */
+    --dj-font-size: 100%;
+    --dj-heading-color: var(--text-accent);
+    --dj-verse-number-color: var(--text-accent);
+    --dj-woc-color: var(--text-accent);
+    --dj-block-indentation: 2em;
 }
 
 .bible-passage .bible-passage-text,
@@ -247,4 +253,224 @@ If your plugin does not need CSS, delete this file.
 
 .inline-bible-reference .inline-bible-reference-text { /* Target the text part */
     font-size: var(--bible-text-font-size);
+}
+
+/* Bible reference styles */
+.bible-verse-preview {
+    font-size: var(--dj-font-size);
+    max-width: 600px;
+    padding: 0.5em 1em;
+    border-radius: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    background-color: var(--background-primary); /* Use existing background-primary */
+    border: 1px solid var(--background-modifier-border);
+    z-index: 1000;
+    overflow: auto;
+}
+
+.bible-verse-preview h1, 
+.bible-verse-preview h2, 
+.bible-verse-preview h3, 
+.bible-verse-preview h4 {
+    margin: 0.2em 0;
+    color: var(--dj-heading-color);
+}
+
+.bible-verse-preview .passage-content {
+    margin-top: 0.5em;
+    line-height: 1.6;
+}
+
+.bible-verse-preview .verse-num {
+    vertical-align: super;
+    font-size: 0.75em;
+    font-weight: bold;
+    color: var(--dj-verse-number-color);
+    margin-right: 0.25em;
+}
+
+.bible-verse-preview .woc {
+    color: var(--dj-woc-color);
+}
+
+.bible-verse-preview .indent {
+    padding-left: var(--dj-block-indentation);
+    display: block;
+    margin: 0.5em 0;
+}
+
+.bible-verse-preview .esv-text {
+    font-size: 0.9em;
+    margin-bottom: 0.5em;
+}
+
+.bible-verse-preview .copyright {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    margin-top: 0.5em;
+}
+
+.bible-reference {
+    cursor: pointer;
+    display: inline-block;
+    border-bottom: 1px dotted var(--text-accent);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.bible-reference:hover {
+    color: var(--text-accent);
+}
+
+.bible-heading {
+    color: var(--dj-heading-color);
+    font-weight: bold;
+    margin: 1em 0 0.5em 0;
+}
+
+.bible-reference-clickable {
+    cursor: pointer;
+    color: var(--text-accent);
+}
+
+.bible-reference-clickable:hover {
+    text-decoration: underline;
+}
+
+.verse-missing-token {
+    padding: 0.5em;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 4px;
+    background-color: var(--background-secondary);
+    margin: 0.5em 0;
+}
+
+.verse-missing-token .message {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+/* Bible Passage Container Styles */
+.bible-passage-container {
+    background-color: var(--background-primary);
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 6px;
+    padding: 16px;
+    margin: 12px 0;
+}
+
+.bible-passage-heading {
+    font-weight: bold;
+    color: var(--dj-heading-color);
+    margin-top: 0;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 6px;
+}
+
+.bible-passage-text {
+    font-size: var(--dj-font-size); /* Use variable */
+    line-height: 1.5;
+}
+
+.bible-verse {
+    margin: 8px 0;
+}
+
+.bible-chapter-heading {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: var(--dj-heading-color);
+    margin-top: 24px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    padding-bottom: 8px;
+}
+
+.bible-verse-number {
+    font-weight: bold;
+    color: var(--dj-verse-number-color);
+    margin-right: 4px;
+}
+
+.bible-verse-text {
+    color: var(--text-normal);
+}
+
+.bible-reference-error {
+    color: var(--text-error);
+    font-style: italic;
+    background-color: var(--background-modifier-error);
+    padding: 8px 12px;
+    border-radius: 4px;
+    display: inline-block;
+}
+
+/* ESV API HTML Rendering Styles */
+.bible-passage-text h2 {
+    font-size: 1.3em;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    color: var(--dj-heading-color);
+}
+
+.bible-passage-text h3 {
+    font-size: 1.1em;
+    font-style: italic;
+    margin-top: 16px;
+    margin-bottom: 8px;
+    color: var(--dj-heading-color);
+}
+
+.bible-passage-text .woc {
+    color: var(--dj-woc-color);
+}
+
+.bible-passage-text .chapter-num,
+.bible-passage-text .verse-num {
+    font-weight: bold;
+    font-size: 0.8em;
+    color: var(--dj-verse-number-color) !important; /* Keep important if needed for specificity */
+    vertical-align: top;
+    margin-right: 0.2em;
+}
+
+.bible-passage-text p {
+    margin: 0.6em 0;
+}
+
+.bible-passage-text .block-indent {
+    margin-left: var(--dj-block-indentation);
+}
+
+.bible-passage-text .line {
+    display: block;
+}
+
+.bible-passage-text .indent {
+    text-indent: 1.5em; /* Keep specific text-indent if needed */
+}
+
+.bible-passage-text .footnote {
+    font-size: 0.8em;
+    color: var(--text-muted);
+}
+
+.bible-passage-text .footnotes {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid var(--background-modifier-border);
+    font-size: 0.9em;
+}
+
+.bible-passage-text .audio {
+    display: none;
+}
+
+.bible-passage-text .extra_text {
+    color: var(--text-muted);
+}
+
+.inline-bible-reference .inline-bible-reference-text { /* Target the text part */
+    font-size: var(--bible-text-font-size); /* Keep original font size variable for now, or switch to --dj-font-size if desired */
 }

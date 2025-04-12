@@ -75,29 +75,16 @@ export const THEME_PRESETS: Record<string, ThemePreset> = {
 
 /**
  * Component for managing Bible reference CSS styles
+ * Updates CSS variables on the root element.
  */
 export class BibleStyles {
-    private currentFontSize: string;
-    private styleElement: HTMLStyleElement | null = null;
-    
-    constructor(fontSize: string = '100%') {
-        this.currentFontSize = fontSize;
-        this.createStyleElement();
+
+    constructor() {
+        // No initial style element creation needed
     }
     
     /**
-     * Create the style element if it doesn't exist
-     */
-    private createStyleElement(): void {
-        if (!this.styleElement) {
-            this.styleElement = document.createElement('style');
-            this.styleElement.id = 'disciples-journal-styles';
-            document.head.appendChild(this.styleElement);
-        }
-    }
-    
-    /**
-     * Apply styles based on theme and preset
+     * Apply styles by updating CSS variables based on theme, preset, and settings.
      */
     public applyStyles(theme: 'light' | 'dark', presetName: string = 'default', fontSize: string = '100%', settings?: {
         wordsOfChristColor?: string;
@@ -105,13 +92,18 @@ export class BibleStyles {
         headingColor?: string;
         blockIndentation?: string;
     }): void {
-        this.createStyleElement();
         
         // Get the preset, defaulting to 'default' if not found
         const preset = THEME_PRESETS[presetName] || THEME_PRESETS.default;
         
-        // Get the options for the current theme with preset values
-        const options = { ...preset[theme], fontSize: fontSize || this.currentFontSize };
+        // Get the base options for the current theme
+        const baseOptions = preset[theme];
+
+        // Start with base options and apply the specific font size
+        const options: BibleStyleOptions = { 
+            ...baseOptions, 
+            fontSize: fontSize || '100%' // Ensure fontSize always has a value
+        };
         
         // Apply custom settings from DisciplesJournalSettings if provided
         // These will override the preset values
@@ -122,253 +114,25 @@ export class BibleStyles {
             if (settings.blockIndentation) options.blockIndentation = settings.blockIndentation;
         }
         
-        // Update the style element
-        if (this.styleElement) {
-            this.styleElement.textContent = this.getStylesText(options);
-        }
-        
-        // Update current font size
-        this.currentFontSize = fontSize;
+        // Update the CSS variables on the root element
+        const rootStyle = document.documentElement.style;
+        rootStyle.setProperty('--dj-font-size', options.fontSize);
+        rootStyle.setProperty('--dj-heading-color', options.headingColor);
+        rootStyle.setProperty('--dj-verse-number-color', options.verseNumberColor);
+        rootStyle.setProperty('--dj-woc-color', options.wordsOfChristColor);
+        rootStyle.setProperty('--dj-block-indentation', options.blockIndentation);
     }
-    
-    /**
-     * Set the font size
-     */
-    public setFontSize(fontSize: string): void {
-        this.currentFontSize = fontSize;
-    }
-    
-    /**
-     * Remove styles from the document
-     */
-    public removeStyles(): void {
-        if (this.styleElement) {
-            this.styleElement.remove();
-            this.styleElement = null;
-        }
-    }
-    
-    /**
-     * Generate CSS text based on options
-     */
-    private getStylesText(options: BibleStyleOptions): string {
-        return `
-            /* Bible reference styles */
-            .bible-verse-preview {
-                font-size: ${options.fontSize};
-                max-width: 600px;
-                padding: 0.5em 1em;
-                border-radius: 5px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-                background-color: var(--background-primary);
-                border: 1px solid var(--background-modifier-border);
-                z-index: 1000;
-                overflow: auto;
-            }
-            
-            .bible-verse-preview h1, 
-            .bible-verse-preview h2, 
-            .bible-verse-preview h3, 
-            .bible-verse-preview h4 {
-                margin: 0.2em 0;
-                color: ${options.headingColor};
-            }
-            
-            .bible-verse-preview .passage-content {
-                margin-top: 0.5em;
-                line-height: 1.6;
-            }
-            
-            .bible-verse-preview .verse-num {
-                vertical-align: super;
-                font-size: 0.75em;
-                font-weight: bold;
-                color: ${options.verseNumberColor};
-                margin-right: 0.25em;
-            }
-            
-            .bible-verse-preview .woc {
-                color: ${options.wordsOfChristColor};
-            }
-            
-            .bible-verse-preview .indent {
-                padding-left: ${options.blockIndentation};
-                display: block;
-                margin: 0.5em 0;
-            }
-            
-            .bible-verse-preview .esv-text {
-                font-size: 0.9em;
-                margin-bottom: 0.5em;
-            }
-            
-            .bible-verse-preview .copyright {
-                font-size: 0.8em;
-                color: var(--text-muted);
-                margin-top: 0.5em;
-            }
-            
-            .bible-reference {
-                cursor: pointer;
-                display: inline-block;
-                border-bottom: 1px dotted var(--text-accent);
-                font-weight: 500;
-                white-space: nowrap;
-            }
-            
-            .bible-reference:hover {
-                color: var(--text-accent);
-            }
-            
-            .bible-heading {
-                color: ${options.headingColor};
-                font-weight: bold;
-                margin: 1em 0 0.5em 0;
-            }
-            
-            .bible-reference-clickable {
-                cursor: pointer;
-                color: var(--text-accent);
-            }
-            
-            .bible-reference-clickable:hover {
-                text-decoration: underline;
-            }
-            
-            .verse-missing-token {
-                padding: 0.5em;
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 4px;
-                background-color: var(--background-secondary);
-                margin: 0.5em 0;
-            }
-            
-            .verse-missing-token .message {
-                color: var(--text-muted);
-                font-style: italic;
-            }
 
-            /* Bible Passage Container Styles */
-            .bible-passage-container {
-                background-color: var(--background-primary);
-                border: 1px solid var(--background-modifier-border);
-                border-radius: 6px;
-                padding: 16px;
-                margin: 12px 0;
-            }
-            
-            .bible-passage-heading {
-                font-weight: bold;
-                color: ${options.headingColor};
-                margin-top: 0;
-                margin-bottom: 12px;
-                border-bottom: 1px solid var(--background-modifier-border);
-                padding-bottom: 6px;
-            }
-            
-            .bible-passage-text {
-                font-size: ${options.fontSize};
-                line-height: 1.5;
-            }
-            
-            .bible-verse {
-                margin: 8px 0;
-            }
-            
-            .bible-chapter-heading {
-                font-size: 1.4em;
-                font-weight: bold;
-                color: ${options.headingColor};
-                margin-top: 24px;
-                margin-bottom: 16px;
-                border-bottom: 1px solid var(--background-modifier-border);
-                padding-bottom: 8px;
-            }
-            
-            .bible-verse-number {
-                font-weight: bold;
-                color: ${options.verseNumberColor};
-                margin-right: 4px;
-            }
-            
-            .bible-verse-text {
-                color: var(--text-normal);
-            }
-            
-            .bible-reference-error {
-                color: var(--text-error);
-                font-style: italic;
-                background-color: var(--background-modifier-error);
-                padding: 8px 12px;
-                border-radius: 4px;
-                display: inline-block;
-            }
-
-            /* ESV API HTML Rendering Styles */
-            .bible-passage-text h2 {
-                font-size: 1.3em;
-                margin-top: 20px;
-                margin-bottom: 10px;
-                color: ${options.headingColor};
-            }
-            
-            .bible-passage-text h3 {
-                font-size: 1.1em;
-                font-style: italic;
-                margin-top: 16px;
-                margin-bottom: 8px;
-                color: ${options.headingColor};
-            }
-
-            .bible-passage-text .woc {
-                color: ${options.wordsOfChristColor};
-            }
-            
-            .bible-passage-text .chapter-num,
-            .bible-passage-text .verse-num {
-                font-weight: bold;
-                font-size: 0.8em;
-                color: ${options.verseNumberColor} !important;
-                vertical-align: top;
-                margin-right: 0.2em;
-            }
-            
-            .bible-passage-text p {
-                margin: 0.6em 0;
-            }
-            
-            .bible-passage-text .block-indent {
-                margin-left: ${options.blockIndentation};
-            }
-            
-            .bible-passage-text .line {
-                display: block;
-            }
-            
-            .bible-passage-text .indent {
-                text-indent: 1.5em;
-            }
-            
-            .bible-passage-text .footnote {
-                font-size: 0.8em;
-                color: var(--text-muted);
-            }
-            
-            .bible-passage-text .footnotes {
-                margin-top: 2em;
-                padding-top: 1em;
-                border-top: 1px solid var(--background-modifier-border);
-                font-size: 0.9em;
-            }
-            
-            .bible-passage-text .audio {
-                display: none;
-            }
-            
-            .bible-passage-text .extra_text {
-                color: var(--text-muted);
-            }
-            
-        `;
+    /**
+     * Resets the custom styles potentially set by this class by removing the CSS variables.
+     * This allows the default styles in styles.css to take effect.
+     */
+    public resetStyles(): void {
+        const rootStyle = document.documentElement.style;
+        rootStyle.removeProperty('--dj-font-size');
+        rootStyle.removeProperty('--dj-heading-color');
+        rootStyle.removeProperty('--dj-verse-number-color');
+        rootStyle.removeProperty('--dj-woc-color');
+        rootStyle.removeProperty('--dj-block-indentation');
     }
 } 
