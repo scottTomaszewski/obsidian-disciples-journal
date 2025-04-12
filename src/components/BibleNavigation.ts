@@ -147,9 +147,8 @@ export class BibleNavigation {
         });
         
         const selectorContainer = navEl.createDiv({
-            cls: 'nav-book-data'
+            cls: 'nav-book-data dj-hidden'
         });
-        selectorContainer.style.display = 'none';
         
         // Create the book dropdown
         const bookDropdownContainer = selectorContainer.createDiv();
@@ -187,8 +186,7 @@ export class BibleNavigation {
         
         // Toggle selector on click
         selectorEl.addEventListener('click', () => {
-            selectorContainer.style.display = 
-                selectorContainer.style.display === 'none' ? 'block' : 'none';
+            selectorContainer.classList.toggle('dj-hidden');
         });
         
         // Next chapter button

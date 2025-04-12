@@ -198,7 +198,6 @@ export class BibleReferenceRenderer {
             // Add verses
             const passageEl = document.createElement('div');
             passageEl.classList.add('bible-passage-text');
-            passageEl.style.fontSize = this.fontSizeForVerses;
             
             // Check if we have HTML content
             if (passage.htmlContent) {
@@ -332,10 +331,8 @@ export class BibleReferenceRenderer {
         
         // Position the main popup with slight overlap to the reference
         // This creates an easier hover target when moving from reference to popup
-        versePreviewEl.style.position = 'absolute';
         versePreviewEl.style.left = `${rect.left}px`;
-        versePreviewEl.style.top = `${rect.bottom - 3}px`; // Slight overlap with reference
-        versePreviewEl.style.zIndex = '1000';
+        versePreviewEl.style.top = `${rect.bottom - 3}px`;
         
         // Add popup to document
         document.body.appendChild(versePreviewEl);
@@ -457,11 +454,6 @@ export class BibleReferenceRenderer {
             return passage.htmlContent || '';
         }
         
-        // Apply styling based on settings
-        const fontSizeStyle = this.settings.bibleTextFontSize 
-            ? `font-size: ${this.settings.bibleTextFontSize}%;` 
-            : '';
-        
         // Determine which CSS class to use based on the style preset
         let styleClass = 'bible-passage-default';
         if (this.settings.stylePreset === 'minimal') {
@@ -475,7 +467,7 @@ export class BibleReferenceRenderer {
         }
         
         return `
-            <div class="bible-passage ${styleClass}" style="${fontSizeStyle}">
+            <div class="bible-passage ${styleClass}">
                 <div class="bible-passage-reference">${passage.reference}</div>
                 <div class="bible-passage-content">${passage.htmlContent || ''}</div>
                 <div class="bible-passage-footer">ESV</div>
@@ -491,16 +483,10 @@ export class BibleReferenceRenderer {
             return `<span class="inline-bible-reference-error">${passage.reference}</span>`;
         }
         
-        // Extract just the text, removing verse numbers if desired
         let content = passage.htmlContent || '';
         
-        // Apply styling based on settings
-        const fontSizeStyle = this.settings.bibleTextFontSize 
-            ? `font-size: ${this.settings.bibleTextFontSize}%;` 
-            : '';
-        
         return `
-            <span class="inline-bible-reference" style="${fontSizeStyle}">
+            <span class="inline-bible-reference">
                 <span class="inline-bible-reference-text">${content}</span>
                 <span class="inline-bible-reference-label">(${passage.reference}, ESV)</span>
             </span>

@@ -9,6 +9,11 @@ If your plugin does not need CSS, delete this file.
 
 /* Disciples Journal Plugin Styles */
 
+/* Utility Classes */
+.dj-hidden {
+    display: none !important; /* Use !important to ensure override */
+}
+
 /* Bible Navigation Styles */
 .bible-navigation {
     display: flex;
@@ -199,3 +204,47 @@ If your plugin does not need CSS, delete this file.
     margin: 6px 0;
 }
 
+/* Bible Verse Preview Styles */
+.bible-verse-preview {
+    position: absolute; 
+    z-index: 1000; 
+    background-color: var(--background-secondary); /* Example background */
+    border: 1px solid var(--background-modifier-border);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    padding: 10px;
+    border-radius: 4px;
+    max-width: 400px; /* Example max-width */
+    font-size: 0.9em; /* Example font-size */
+}
+
+.bible-verse-preview-heading {
+    font-weight: bold;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--background-modifier-border);
+    cursor: pointer; /* Make heading clickable */
+}
+
+.bible-verse-preview-heading:hover {
+    color: var(--text-accent);
+}
+
+.bible-verse-preview-content p {
+    margin: 5px 0;
+    line-height: 1.4;
+}
+
+/* Bible Reference Font Size */
+:root {
+    /* Define default font size - can be overridden by themes/settings */
+    --bible-text-font-size: 100%; 
+}
+
+.bible-passage .bible-passage-text,
+.bible-passage .bible-passage-content { /* Apply to both text and content divs */
+    font-size: var(--bible-text-font-size);
+}
+
+.inline-bible-reference .inline-bible-reference-text { /* Target the text part */
+    font-size: var(--bible-text-font-size);
+}
