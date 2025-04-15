@@ -46,9 +46,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl('h2', { text: 'Disciples Journal Settings' });
-        
-        containerEl.createEl('h3', { text: 'Display Settings' });
+        new Setting(containerEl).setName('Display Customization').setHeading();
 
         new Setting(containerEl)
             .setName('Display Inline Verses')
@@ -117,7 +115,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 })
             );
         
-        containerEl.createEl('h3', { text: 'Text Styling' });
+        new Setting(containerEl).setName('Text Styling').setHeading();
 
         new Setting(containerEl)
             .setName('Words of Christ Color')
@@ -167,7 +165,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                     this.plugin.updateBibleStyles();
                 }));
         
-        containerEl.createEl('h3', { text: 'Bible Version Settings' });
+        new Setting(containerEl).setName('Bible').setHeading();
         
         new Setting(containerEl)
             .setName('Preferred Bible Version')
@@ -182,8 +180,6 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 })
             );
         
-        containerEl.createEl('h3', { text: 'Bible Content Vault Path' });
-        
         new Setting(containerEl)
             .setName('Bible Content Vault Path')
             .setDesc('Root path in your vault where Bible content will be stored. Each translation will be stored in a subdirectory.')
@@ -196,7 +192,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                     this.plugin.setContentPath(value || 'Bible');
                 }));
         
-        containerEl.createEl('h3', { text: 'ESV API Settings' });
+        new Setting(containerEl).setName('ESV API').setHeading();
         
         const apiInfoDiv = containerEl.createDiv({ cls: 'disciples-journal-api-info' });
         

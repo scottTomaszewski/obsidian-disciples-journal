@@ -61,7 +61,7 @@ export class NoteCreationService {
             const file = this.app.vault.getAbstractFileByPath(chapterPath);
 
             if (file && file instanceof TFile) {
-                const leaf = this.app.workspace.getUnpinnedLeaf();
+                const leaf = this.app.workspace.getLeaf(false);
                 await leaf.openFile(file);
                 
                 // If there's a specific verse, scroll to it
