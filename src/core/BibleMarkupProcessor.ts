@@ -1,26 +1,19 @@
 import { App, MarkdownPostProcessorContext } from 'obsidian';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
-import { BibleReferenceParser } from './BibleReferenceParser';
 import { DisciplesJournalSettings } from '../settings/DisciplesJournalSettings';
 
 /**
  * Handles processing of Bible references in markdown text
  */
 export class BibleMarkupProcessor {
-    private app: App;
     private bibleReferenceRenderer: BibleReferenceRenderer;
-    private bibleReferenceParser: BibleReferenceParser;
     private settings: DisciplesJournalSettings;
     
     constructor(
-        app: App,
         bibleReferenceRenderer: BibleReferenceRenderer,
-        bibleReferenceParser: BibleReferenceParser,
         settings: DisciplesJournalSettings
     ) {
-        this.app = app;
         this.bibleReferenceRenderer = bibleReferenceRenderer;
-        this.bibleReferenceParser = bibleReferenceParser;
         this.settings = settings;
     }
     

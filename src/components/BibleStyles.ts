@@ -1,5 +1,3 @@
-import { App } from "obsidian";
-
 /**
  * Interface for Bible styling options
  */

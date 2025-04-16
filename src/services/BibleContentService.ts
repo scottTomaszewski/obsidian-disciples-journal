@@ -15,17 +15,6 @@ export interface BibleVerse {
 }
 
 /**
- * Structure for traditional Bible content storage (legacy format)
- */
-interface Bible {
-    [book: string]: {
-        [chapter: string]: {
-            [verse: string]: string;
-        }
-    }
-}
-
-/**
  * Interface for Bible passage content
  */
 export interface BiblePassage {
@@ -42,7 +31,6 @@ export class BibleContentService {
     private bible: any = null;
     private bookNameService: BookNameService;
     private esvApiService: ESVApiService;
-    private useHtmlFormat: boolean = false;
     private downloadOnDemand: boolean = true;
     private bibleReferenceParser: BibleReferenceParser;
     private dataConverter: BibleDataConverter;
@@ -58,7 +46,6 @@ export class BibleContentService {
      * Set whether to use HTML format or plain text
      */
     public setUseHtmlFormat(use: boolean): void {
-        this.useHtmlFormat = use;
     }
 
     /**

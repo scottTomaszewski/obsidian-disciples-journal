@@ -16,11 +16,9 @@ interface Bible {
  * Class to handle conversion between different Bible data formats
  */
 export class BibleDataConverter {
-    private bookNameService: BookNameService;
     private bibleReferenceParser: BibleReferenceParser;
     
     constructor(bookNameService: BookNameService) {
-        this.bookNameService = bookNameService;
         this.bibleReferenceParser = new BibleReferenceParser(bookNameService);
     }
     

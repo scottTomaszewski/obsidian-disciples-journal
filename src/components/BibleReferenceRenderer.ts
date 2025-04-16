@@ -1,4 +1,4 @@
-import { App, MarkdownPostProcessorContext, MarkdownView, Notice, TFile } from "obsidian";
+import { App, MarkdownPostProcessorContext, MarkdownView, Notice } from "obsidian";
 import { BibleContentService } from "../services/BibleContentService";
 import { BibleReference } from "../core/BibleReference";
 import { BibleNavigation } from "./BibleNavigation";
@@ -33,14 +33,11 @@ export interface PluginSettings {
  */
 export class BibleReferenceRenderer {
     private bibleContentService: BibleContentService;
-    private fontSizeForVerses: string;
-    private vaultPath: string;
     private app: App;
     private bibleNavigation: BibleNavigation;
     private downloadOnDemand: boolean = true;
     private plugin: DisciplesJournalPlugin;
     private parser: BibleReferenceParser;
-    private handler: BibleEventHandlers;
     private settings: PluginSettings;
     
     constructor(
@@ -49,15 +46,11 @@ export class BibleReferenceRenderer {
         bookNameService: BookNameService, 
         fontSizeForVerses: string = '100%', 
         vaultPath: string = 'Bible/ESV',
-        handler: BibleEventHandlers,
         plugin: DisciplesJournalPlugin
     ) {
         this.app = app;
         this.bibleContentService = bibleContentService;
-        this.fontSizeForVerses = fontSizeForVerses;
-        this.vaultPath = vaultPath;
         this.plugin = plugin;
-        this.handler = handler;
         this.bibleNavigation = new BibleNavigation(
             app, 
             bookNameService, 
@@ -78,7 +71,6 @@ export class BibleReferenceRenderer {
      * Set the font size for displayed verses
      */
     public setFontSize(fontSize: string): void {
-        this.fontSizeForVerses = fontSize;
         this.settings.bibleTextFontSize = fontSize;
     }
     
@@ -86,7 +78,6 @@ export class BibleReferenceRenderer {
      * Set the vault path for Bible content
      */
     public setVaultPath(path: string): void {
-        this.vaultPath = path;
         this.bibleNavigation.setVaultPath(path);
     }
     
@@ -101,7 +92,7 @@ export class BibleReferenceRenderer {
     /**
      * Format chapter content as Markdown
      */
-    public formatChapterContent(passage: any, reference?: BibleReference): string {
+    public formatChapterContent(passage: any): string {
         return BibleFormatter.formatChapterContent(passage);
     }
     
@@ -200,7 +191,7 @@ export class BibleReferenceRenderer {
             const headingEl = el.doc.createElement('h3');
             headingEl.classList.add('bible-passage-heading');
             const referenceLink = headingEl.createEl('a', { text: passage.reference });
-            referenceLink.onClickEvent(async l => {
+            referenceLink.onClickEvent(async () => {
                 await this.bibleNavigation.navigateToChapter(parsedRef.book, parsedRef.chapter);
             });
 
@@ -400,7 +391,7 @@ export class BibleReferenceRenderer {
     /**
      * Process a Bible reference and return the corresponding HTML
      */
-    async processReference(referenceString: string, ctx: MarkdownPostProcessorContext): Promise<string> {
+    async processReference(referenceString: string): Promise<string> {
         try {
             // Try to parse the reference
             const bibleRef = this.parser.parse(referenceString);

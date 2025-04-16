@@ -1,15 +1,12 @@
-import { App, Plugin, MarkdownPostProcessorContext, MarkdownView, HoverParent, debounce, Workspace, MarkdownRenderer, TFile, Notice } from 'obsidian';
+import { Plugin, MarkdownView, Notice } from 'obsidian';
 import { BookNameService } from '../services/BookNameService';
 import { ESVApiService } from '../services/ESVApiService';
 import { BibleContentService } from '../services/BibleContentService';
 import { BibleReferenceParser } from './BibleReferenceParser';
-import { BibleReference } from './BibleReference';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 import { BibleStyles } from '../components/BibleStyles';
 import { DisciplesJournalSettings, DEFAULT_SETTINGS, DisciplesJournalSettingsTab } from '../settings/DisciplesJournalSettings';
-import { BibleFormatter } from "../utils/BibleFormatter";
 import { NoteCreationService } from 'src/services/NoteCreationService';
-import { BibleEventHandlers } from './BibleEventHandlers';
 import { BibleMarkupProcessor } from './BibleMarkupProcessor';
 
 /**
@@ -29,13 +26,7 @@ export default class DisciplesJournalPlugin extends Plugin {
     private bibleStyles: BibleStyles;
     private bibleReferenceRenderer: BibleReferenceRenderer;
     private bibleReferenceParser: BibleReferenceParser;
-    private bibleEventHandlers: BibleEventHandlers;
     private bibleMarkupProcessor: BibleMarkupProcessor;
-    
-    // State
-    private markdownPostProcessor: any;
-    private bibleCodeBlockProcessor: any;
-    private previewPopper: HTMLElement | null = null;
     
     async onload() {
         console.log('Loading Disciples Journal plugin');
@@ -69,7 +60,6 @@ export default class DisciplesJournalPlugin extends Plugin {
             this.bookNameService, 
             this.settings.bibleTextFontSize,
             this.settings.bibleContentVaultPath,
-            this.bibleEventHandlers,
             this
         );
         
@@ -81,12 +71,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         );
         
         // Initialize markup processor
-        this.bibleMarkupProcessor = new BibleMarkupProcessor(
-            this.app,
-            this.bibleReferenceRenderer,
-            this.bibleReferenceParser,
-            this.settings
-        );
+        this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
         
         // Register bible reference processor
         this.registerMarkdownCodeBlockProcessor('bible', this.bibleMarkupProcessor.processBibleCodeBlock.bind(this.bibleMarkupProcessor));

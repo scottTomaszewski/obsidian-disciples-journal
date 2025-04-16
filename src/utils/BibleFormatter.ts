@@ -1,5 +1,4 @@
 import { BiblePassage } from "../services/BibleContentService";
-import { BibleReference } from "../core/BibleReference";
 
 /**
  * Utility for formatting Bible content consistently across the application

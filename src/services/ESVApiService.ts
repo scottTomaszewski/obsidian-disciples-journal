@@ -1,7 +1,6 @@
-import { App, Notice, requestUrl } from "obsidian";
+import { App, requestUrl } from "obsidian";
 import { BiblePassage } from "./BibleContentService";
 import { BookNameService } from "./BookNameService";
-import { BibleFormatter } from "../utils/BibleFormatter";
 
 /**
  * Interface for ESV API Response
@@ -35,7 +34,6 @@ export class ESVApiService {
     private apiToken: string = '';
     private bibleContentVaultPath: string = 'Bible';  // Root path for all Bible versions
     private bibleVersion: string = 'ESV';  // Default version
-    private bookNameService: BookNameService;
     
     // Store HTML formatted Bible chapters
     private htmlFormattedBible: {
@@ -47,7 +45,6 @@ export class ESVApiService {
 
     constructor(app: App, bookNameService: BookNameService) {
         this.app = app;
-        this.bookNameService = bookNameService;
     }
 
     /**

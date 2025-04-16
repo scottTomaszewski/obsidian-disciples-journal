@@ -273,7 +273,5 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                     button.setDisabled(false);
                     this.display(); // Refresh the settings panel
                 }));
-
-        // Copyright & Attribution
     }
 } 
