@@ -6,6 +6,7 @@ import { BookNameService } from "../services/BookNameService";
 import { BibleFormatter } from "../utils/BibleFormatter";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
 import { BibleReferenceParser } from '../core/BibleReferenceParser';
+import { BibleEventHandlers } from "src/core/BibleEventHandlers";
 
 /**
  * Interface for Bible passage content
@@ -39,6 +40,7 @@ export class BibleReferenceRenderer {
     private downloadOnDemand: boolean = true;
     private plugin: DisciplesJournalPlugin;
     private parser: BibleReferenceParser;
+    private handler: BibleEventHandlers;
     private settings: PluginSettings;
     
     constructor(
@@ -47,6 +49,7 @@ export class BibleReferenceRenderer {
         bookNameService: BookNameService, 
         fontSizeForVerses: string = '100%', 
         vaultPath: string = 'Bible/ESV',
+        handler: BibleEventHandlers,
         plugin: DisciplesJournalPlugin
     ) {
         this.app = app;
@@ -54,6 +57,7 @@ export class BibleReferenceRenderer {
         this.fontSizeForVerses = fontSizeForVerses;
         this.vaultPath = vaultPath;
         this.plugin = plugin;
+        this.handler = handler;
         this.bibleNavigation = new BibleNavigation(
             app, 
             bookNameService, 
@@ -131,6 +135,13 @@ export class BibleReferenceRenderer {
                 const referenceEl = element.doc.createElement('span');
                 referenceEl.classList.add('bible-reference');
                 referenceEl.textContent = codeText;
+
+                referenceEl.addEventListener('mouseover', (e) => {
+                    new BibleEventHandlers(this).handleBibleReferenceHover(e);
+                });
+                referenceEl.addEventListener('mouseout', (e) => {
+                    new BibleEventHandlers(this).handleBibleReferenceMouseOut(e);
+                });
                 
                 // Replace the code block with our reference element
                 codeBlock.parentElement?.replaceChild(referenceEl, codeBlock);

@@ -69,6 +69,7 @@ export default class DisciplesJournalPlugin extends Plugin {
             this.bookNameService, 
             this.settings.bibleTextFontSize,
             this.settings.bibleContentVaultPath,
+            this.bibleEventHandlers,
             this
         );
         
@@ -79,15 +80,6 @@ export default class DisciplesJournalPlugin extends Plugin {
             this.settings
         );
         
-        // Initialize event handlers
-        this.bibleEventHandlers = new BibleEventHandlers(
-            this.app,
-            this,
-            this.bibleReferenceParser,
-            this.bibleReferenceRenderer,
-            this.bibleContentService
-        );
-        
         // Initialize markup processor
         this.bibleMarkupProcessor = new BibleMarkupProcessor(
             this.app,
@@ -95,11 +87,6 @@ export default class DisciplesJournalPlugin extends Plugin {
             this.bibleReferenceParser,
             this.settings
         );
-        
-        // Register event handlers
-        this.registerDomEvent(document, 'click', this.bibleEventHandlers.handleBibleReferenceClick.bind(this.bibleEventHandlers));
-        this.registerDomEvent(document, 'mouseover', this.bibleEventHandlers.handleBibleReferenceHover.bind(this.bibleEventHandlers));
-        this.registerDomEvent(document, 'mouseout', this.bibleEventHandlers.handleBibleReferenceMouseOut.bind(this.bibleEventHandlers));
         
         // Register bible reference processor
         this.registerMarkdownCodeBlockProcessor('bible', this.bibleMarkupProcessor.processBibleCodeBlock.bind(this.bibleMarkupProcessor));

@@ -1,32 +1,14 @@
-import { App } from 'obsidian';
-import { BibleReferenceParser } from './BibleReferenceParser';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
-import { BibleContentService } from '../services/BibleContentService';
-import DisciplesJournalPlugin from './DisciplesJournalPlugin';
 
 /**
  * Handles all Bible reference-related DOM events
  */
 export class BibleEventHandlers {
-    private app: App;
-    private plugin: DisciplesJournalPlugin;
-    private bibleReferenceParser: BibleReferenceParser;
     private bibleReferenceRenderer: BibleReferenceRenderer;
-    private bibleContentService: BibleContentService;
     private previewPopper: HTMLElement | null = null;
     
-    constructor(
-        app: App,
-        plugin: DisciplesJournalPlugin,
-        bibleReferenceParser: BibleReferenceParser,
-        bibleReferenceRenderer: BibleReferenceRenderer,
-        bibleContentService: BibleContentService
-    ) {
-        this.app = app;
-        this.plugin = plugin;
-        this.bibleReferenceParser = bibleReferenceParser;
+    constructor(bibleReferenceRenderer: BibleReferenceRenderer) {
         this.bibleReferenceRenderer = bibleReferenceRenderer;
-        this.bibleContentService = bibleContentService;
     }
     
     /**
@@ -65,6 +47,7 @@ export class BibleEventHandlers {
      * Handle hover on Bible references
      */
     async handleBibleReferenceHover(event: MouseEvent) {
+        console.log("hi");
         // Don't create new preview if we already have one active
         if (this.previewPopper) return;
         
