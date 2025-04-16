@@ -110,8 +110,8 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .setValue(this.plugin.settings.bibleTextFontSize)
                 .onChange(async (value) => {
                     this.plugin.settings.bibleTextFontSize = value;
-                    this.plugin.updateFontSize(value);
                     await this.plugin.saveSettings();
+                    this.plugin.updateBibleStyles();
                 })
             );
         

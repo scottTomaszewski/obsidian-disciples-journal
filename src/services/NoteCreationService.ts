@@ -68,7 +68,7 @@ export class NoteCreationService {
                 if (parsedRef.verse) {
                     setTimeout(() => {
                         // Find the verse element and scroll to it
-                        const verseEl = document.querySelector(`.verse-${parsedRef.verse}`);
+                        const verseEl = leaf.getContainer().doc.querySelector(`.verse-${parsedRef.verse}`);
                         if (verseEl) {
                             verseEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }

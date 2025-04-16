@@ -161,42 +161,42 @@ export class ESVApiService {
     /**
      * Create a DOM-friendly error message for missing token or API errors
      */
-    private createErrorMessageContent(type: 'missing-token' | 'api-error', message: string = '', details: string = ''): HTMLElement {
+    private createErrorMessageContent(doc: Document, type: 'missing-token' | 'api-error', message: string = '', details: string = ''): HTMLElement {
         // We're required to return a string here because it's part of the ESV API response structure
         // This method creates the content in a DOM-safe way then serializes to a string
-        const container = document.createElement('div');
+        const container = doc.createElement('div');
         container.className = type === 'missing-token' ? 'bible-missing-token-warning' : 'bible-api-error';
         
-        const titleEl = document.createElement('p');
-        const titleStrong = document.createElement('strong');
+        const titleEl = doc.createElement('p');
+        const titleStrong = doc.createElement('strong');
         titleStrong.textContent = type === 'missing-token' ? 'ESV API Token Not Set' : 'Error Loading Bible Passage';
         titleEl.appendChild(titleStrong);
         container.appendChild(titleEl);
         
         if (message) {
-            const messageEl = document.createElement('p');
+            const messageEl = doc.createElement('p');
             messageEl.textContent = message;
             container.appendChild(messageEl);
         }
         
         if (details) {
-            const detailsEl = document.createElement('p');
+            const detailsEl = doc.createElement('p');
             detailsEl.textContent = details;
             container.appendChild(detailsEl);
         }
         
         // For the API token link
         if (type === 'missing-token') {
-            const linkPara = document.createElement('p');
+            const linkPara = doc.createElement('p');
             linkPara.textContent = 'You can request a free token from ';
             
-            const link = document.createElement('a');
+            const link = doc.createElement('a');
             link.textContent = 'api.esv.org';
             link.href = 'https://api.esv.org/docs/';
             link.target = '_blank';
             
             linkPara.appendChild(link);
-            linkPara.appendChild(document.createTextNode('.'));
+            linkPara.appendChild(doc.createTextNode('.'));
             container.appendChild(linkPara);
         }
         
@@ -214,6 +214,7 @@ export class ESVApiService {
                 reference: reference,
                 verses: [],
                 htmlContent: this.createErrorMessageContent(
+                    document,
                     'missing-token',
                     'To display Bible passages, you need to set up an ESV API token in the plugin settings.'
                 ).outerHTML,
@@ -257,6 +258,7 @@ export class ESVApiService {
                     reference: reference,
                     verses: [],
                     htmlContent: this.createErrorMessageContent(
+                        document,
                         'api-error',
                         'Failed to load the passage from the ESV API.',
                         `Status: ${response.status}. Please check your API token in the plugin settings.`
@@ -270,6 +272,7 @@ export class ESVApiService {
                 reference: reference,
                 verses: [],
                 htmlContent: this.createErrorMessageContent(
+                    document,
                     'api-error',
                     'An error occurred when trying to access the ESV API.',
                     'Please check your internet connection and API token.'

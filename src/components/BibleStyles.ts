@@ -86,7 +86,7 @@ export class BibleStyles {
     /**
      * Apply styles by updating CSS variables based on theme, preset, and settings.
      */
-    public applyStyles(theme: 'light' | 'dark', presetName: string = 'default', fontSize: string = '100%', settings?: {
+    public applyStyles(doc: Document, theme: 'light' | 'dark', presetName: string = 'default', fontSize: string = '100%', settings?: {
         wordsOfChristColor?: string;
         verseNumberColor?: string;
         headingColor?: string;
@@ -115,7 +115,7 @@ export class BibleStyles {
         }
 
         // Update the CSS variables on the root element
-        const rootStyle = document.documentElement.style;
+        const rootStyle = doc.body.style;
         rootStyle.setProperty('--dj-font-size', options.fontSize);
         rootStyle.setProperty('--dj-heading-color', options.headingColor);
         rootStyle.setProperty('--dj-verse-number-color', options.verseNumberColor);
@@ -127,8 +127,8 @@ export class BibleStyles {
      * Resets the custom styles potentially set by this class by removing the CSS variables.
      * This allows the default styles in styles.css to take effect.
      */
-    public resetStyles(): void {
-        const rootStyle = document.documentElement.style;
+    public resetStyles(doc: Document): void {
+        const rootStyle = doc.body.style;
         rootStyle.removeProperty('--dj-font-size');
         rootStyle.removeProperty('--dj-heading-color');
         rootStyle.removeProperty('--dj-verse-number-color');

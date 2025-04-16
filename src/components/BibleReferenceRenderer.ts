@@ -128,7 +128,7 @@ export class BibleReferenceRenderer {
                 }
                 
                 // Create a Bible reference element
-                const referenceEl = document.createElement('span');
+                const referenceEl = element.doc.createElement('span');
                 referenceEl.classList.add('bible-reference');
                 referenceEl.textContent = codeText;
                 
@@ -149,7 +149,7 @@ export class BibleReferenceRenderer {
         const passage = await this.bibleContentService.getBibleContent(reference);
         
         if (passage) {
-            const containerEl = document.createElement('div');
+            const containerEl = el.doc.createElement('div');
             containerEl.classList.add('bible-passage-container');
         
             const parsedRef = this.parser.parse(reference);
@@ -186,7 +186,7 @@ export class BibleReferenceRenderer {
             // }
             
             // Add reference heading
-            const headingEl = document.createElement('h3');
+            const headingEl = el.doc.createElement('h3');
             headingEl.classList.add('bible-passage-heading');
             const referenceLink = headingEl.createEl('a', { text: passage.reference });
             referenceLink.onClickEvent(async l => {
@@ -196,7 +196,7 @@ export class BibleReferenceRenderer {
             containerEl.appendChild(headingEl);
             
             // Add verses
-            const passageEl = document.createElement('div');
+            const passageEl = el.doc.createElement('div');
             passageEl.classList.add('bible-passage-text');
             
             // Check if we have HTML content
@@ -206,14 +206,14 @@ export class BibleReferenceRenderer {
             } else {
                 // Fallback to traditional verse rendering
                 for (const verse of passage.verses) {
-                    const verseEl = document.createElement('p');
+                    const verseEl = el.doc.createElement('p');
                     verseEl.classList.add('bible-verse');
                     
-                    const verseNumEl = document.createElement('span');
+                    const verseNumEl = el.doc.createElement('span');
                     verseNumEl.classList.add('bible-verse-number');
                     verseNumEl.textContent = `${verse.verse} `;
                     
-                    const verseTextEl = document.createElement('span');
+                    const verseTextEl = el.doc.createElement('span');
                     verseTextEl.classList.add('bible-verse-text');
                     verseTextEl.textContent = verse.text;
                     
@@ -228,7 +228,7 @@ export class BibleReferenceRenderer {
             el.appendChild(containerEl);
         } else {
             // If reference not found, show error
-            const errorEl = document.createElement('div');
+            const errorEl = el.doc.createElement('div');
             errorEl.classList.add('bible-reference-error');
             errorEl.textContent = `Bible reference "${reference}" not found.`;
             el.appendChild(errorEl);
@@ -243,11 +243,11 @@ export class BibleReferenceRenderer {
         if (!passage) return null;
         
         // Create verse preview element
-        const versePreviewEl = document.createElement('div');
+        const versePreviewEl = element.doc.createElement('div');
         versePreviewEl.classList.add('bible-verse-preview');
         
         // Add reference heading (make it clickable)
-        const headingEl = document.createElement('div');
+        const headingEl = element.doc.createElement('div');
         headingEl.classList.add('bible-verse-preview-heading', 'bible-reference-clickable');
         headingEl.textContent = passage.reference;
         
@@ -263,7 +263,7 @@ export class BibleReferenceRenderer {
                 
                 // Close the preview - using a method available in BibleEventHandlers
                 // Remove the popup directly instead of trying to access the private property
-                const previewPoppers = document.querySelectorAll('.bible-verse-preview');
+                const previewPoppers = element.doc.querySelectorAll('.bible-verse-preview');
                 if (previewPoppers) {
                     previewPoppers.forEach(p => p.remove());
                 }
@@ -278,7 +278,7 @@ export class BibleReferenceRenderer {
         versePreviewEl.appendChild(headingEl);
         
         // Add verse content
-        const contentEl = document.createElement('div');
+        const contentEl = element.doc.createElement('div');
         contentEl.classList.add('bible-verse-preview-content');
         
         // Check if we have HTML content
@@ -287,7 +287,7 @@ export class BibleReferenceRenderer {
             // for the preview (to avoid showing footnotes, chapter headings, etc.)
             try {
                 // Create a temporary element to parse the HTML
-                const tempEl = document.createElement('div');
+                const tempEl = element.doc.createElement('div');
                 tempEl.innerHTML = passage.htmlContent;
                 
                 // Find and extract the main verse content (paragraphs)
@@ -307,16 +307,16 @@ export class BibleReferenceRenderer {
         } else {
             // Fallback to traditional verse rendering
             for (const verse of passage.verses) {
-                const verseEl = document.createElement('p');
+                const verseEl = element.doc.createElement('p');
                 
                 if (passage.verses.length > 1) {
-                    const verseNumEl = document.createElement('span');
+                    const verseNumEl = element.doc.createElement('span');
                     verseNumEl.classList.add('bible-verse-number');
                     verseNumEl.textContent = `${verse.verse} `;
                     verseEl.appendChild(verseNumEl);
                 }
                 
-                const verseTextEl = document.createElement('span');
+                const verseTextEl = element.doc.createElement('span');
                 verseTextEl.textContent = verse.text;
                 verseEl.appendChild(verseTextEl);
                 
@@ -335,7 +335,7 @@ export class BibleReferenceRenderer {
         versePreviewEl.style.top = `${rect.bottom - 3}px`;
         
         // Add popup to document
-        document.body.appendChild(versePreviewEl);
+        element.doc.body.appendChild(versePreviewEl);
         
         return versePreviewEl;
     }

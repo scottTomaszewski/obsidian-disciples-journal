@@ -8,8 +8,8 @@ import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 import { BibleStyles } from '../components/BibleStyles';
 import { DisciplesJournalSettings, DEFAULT_SETTINGS, DisciplesJournalSettingsTab } from '../settings/DisciplesJournalSettings';
 import { BibleFormatter } from "../utils/BibleFormatter";
+import { NoteCreationService } from 'src/services/NoteCreationService';
 import { BibleEventHandlers } from './BibleEventHandlers';
-import { NoteCreationService } from '../services/NoteCreationService';
 import { BibleMarkupProcessor } from './BibleMarkupProcessor';
 
 /**
@@ -62,7 +62,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         
         // Initialize components
         this.bibleReferenceParser = new BibleReferenceParser(this.bookNameService);
-        this.bibleStyles = new BibleStyles(this.settings.bibleTextFontSize);
+        this.bibleStyles = new BibleStyles();
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.app, 
             this.bibleContentService, 
@@ -118,8 +118,6 @@ export default class DisciplesJournalPlugin extends Plugin {
     }
     
     onunload() {
-        console.log('Unloading Disciples Journal plugin');
-        this.bibleStyles.removeStyles();
     }
     
     async loadSettings() {
@@ -167,47 +165,25 @@ export default class DisciplesJournalPlugin extends Plugin {
         const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeLeaf) return;
         
-        const isDarkMode = document.body.classList.contains('theme-dark');
-        const theme = isDarkMode ? 'dark' : 'light';
-        
-        // Pass custom settings from DisciplesJournalSettings
-        this.bibleStyles.applyStyles(
-            theme, 
-            this.settings.stylePreset, 
-            this.settings.bibleTextFontSize,
-            {
-                wordsOfChristColor: this.settings.wordsOfChristColor,
-                verseNumberColor: this.settings.verseNumberColor,
-                headingColor: this.settings.headingColor,
-                blockIndentation: this.settings.blockIndentation
-            }
-        );
-    }
-    
-    /**
-     * Update font size for Bible verses (legacy method for compatibility)
-     */
-    public updateFontSize(fontSize: string): void {
-        this.bibleStyles.setFontSize(fontSize);
-        
-        // Refresh the styles with the new font size and current settings
-        const isDarkMode = document.body.classList.contains('theme-dark');
-        const theme = isDarkMode ? 'dark' : 'light';
-        
-        // Apply styles with the new font size and current settings
-        this.bibleStyles.applyStyles(
-            theme, 
-            this.settings.stylePreset, 
-            fontSize,
-            {
-                wordsOfChristColor: this.settings.wordsOfChristColor,
-                verseNumberColor: this.settings.verseNumberColor,
-                headingColor: this.settings.headingColor,
-                blockIndentation: this.settings.blockIndentation
-            }
-        );
-        
-        this.bibleReferenceRenderer.setFontSize(fontSize);
+        // Each popup window has a unique document, so we need to apply styles to each one
+        const docList: Document[] = [];
+        this.app.workspace.iterateAllLeaves(leaf => docList.push(leaf.getContainer().doc));
+        docList.unique().forEach(doc => {
+            const isDarkMode = activeLeaf.containerEl.doc.body.classList.contains('theme-dark');
+            const theme = isDarkMode ? 'dark' : 'light';
+            this.bibleStyles.applyStyles(
+                doc,
+                theme, 
+                this.settings.stylePreset, 
+                this.settings.bibleTextFontSize,
+                {
+                    wordsOfChristColor: this.settings.wordsOfChristColor,
+                    verseNumberColor: this.settings.verseNumberColor,
+                    headingColor: this.settings.headingColor,
+                    blockIndentation: this.settings.blockIndentation
+                }
+            );
+        });
     }
     
     /**

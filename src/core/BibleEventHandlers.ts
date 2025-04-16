@@ -100,7 +100,7 @@ export class BibleEventHandlers {
                         !relatedTarget.classList.contains('bible-reference') && 
                         !relatedTarget.closest('.bible-verse-preview')) {
                         this.previewPopper?.classList.remove('popup-locked');
-                        this.removePreviewPopper();
+                        this.removePreviewPopper(relatedTarget.doc);
                     }
                 });
             }
@@ -125,7 +125,7 @@ export class BibleEventHandlers {
                         if (!this.previewPopper || this.previewPopper.classList.contains('popup-locked')) {
                             return;
                         }
-                        this.removePreviewPopper();
+                        this.removePreviewPopper(relatedTarget.doc);
                     }, 100);
                 }
             });
@@ -163,20 +163,20 @@ export class BibleEventHandlers {
         }
         
         // In all other cases, remove the popup
-        this.removePreviewPopper();
+        this.removePreviewPopper(target.doc);
     }
     
     /**
      * Remove the preview popper if it exists
      */
-    removePreviewPopper() {
+    removePreviewPopper(doc: Document) {
         if (this.previewPopper) {
             // Remove any hover gap elements
-            const hoverGaps = document.querySelectorAll('.bible-hover-gap');
+            const hoverGaps = doc.querySelectorAll('.bible-hover-gap');
             hoverGaps.forEach(gap => gap.remove());
             
             this.previewPopper.remove();
             this.previewPopper = null;
         }
     }
-} 
+}
