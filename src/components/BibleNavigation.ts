@@ -1,6 +1,6 @@
-import { App, ButtonComponent, DropdownComponent, Notice, Setting, TFile } from "obsidian";
+import { App, ButtonComponent, DropdownComponent, Notice, TFile } from "obsidian";
 import { BibleReference } from "../core/BibleReference";
-import { BookNameService } from "../services/BookNameService";
+import { BookNames } from "../services/BookNames";
 import { BibleContentService } from "../services/BibleContentService";
 import { BibleFormatter } from "../utils/BibleFormatter";
 
@@ -9,7 +9,6 @@ import { BibleFormatter } from "../utils/BibleFormatter";
  */
 export class BibleNavigation {
     private app: App;
-    private bookNameService: BookNameService;
     private vaultPath: string;
     private bibleContentService: BibleContentService;
     private downloadOnDemand: boolean = true;
@@ -58,13 +57,11 @@ export class BibleNavigation {
     
     constructor(
         app: App, 
-        bookNameService: BookNameService, 
         bibleContentService: BibleContentService,
         vaultPath: string = 'Bible/ESV',
         downloadOnDemand: boolean = true
     ) {
         this.app = app;
-        this.bookNameService = bookNameService;
         this.bibleContentService = bibleContentService;
         this.vaultPath = vaultPath;
         this.downloadOnDemand = downloadOnDemand;
@@ -88,7 +85,7 @@ export class BibleNavigation {
      * Create navigation elements for a Bible chapter
      */
     public createNavigationElements(containerEl: HTMLElement, reference: BibleReference): void {
-        const book = this.bookNameService.standardizeBookName(reference.book) || reference.book;
+        const book = BookNames.normalizedBookName(reference.book) || reference.book;
         const chapter = reference.chapter;
         
         // Get book chapter count

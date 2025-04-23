@@ -1,4 +1,4 @@
-import { App, MarkdownPostProcessorContext } from 'obsidian';
+import { MarkdownPostProcessorContext } from 'obsidian';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 import { DisciplesJournalSettings } from '../settings/DisciplesJournalSettings';
 

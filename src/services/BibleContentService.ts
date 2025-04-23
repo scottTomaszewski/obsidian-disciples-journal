@@ -1,6 +1,6 @@
 import { BibleReference } from "../core/BibleReference";
 import { BibleReferenceParser } from "../core/BibleReferenceParser";
-import { BookNameService } from "./BookNameService";
+import { BookNames } from "./BookNames";
 import { ESVApiService } from "./ESVApiService";
 import { BibleDataConverter } from "./BibleDataConverter";
 
@@ -29,17 +29,15 @@ export interface BiblePassage {
  */
 export class BibleContentService {
     private bible: any = null;
-    private bookNameService: BookNameService;
     private esvApiService: ESVApiService;
     private downloadOnDemand: boolean = true;
     private bibleReferenceParser: BibleReferenceParser;
     private dataConverter: BibleDataConverter;
 
-    constructor(bookNameService: BookNameService, esvApiService: ESVApiService) {
-        this.bookNameService = bookNameService;
+    constructor(esvApiService: ESVApiService) {
         this.esvApiService = esvApiService;
-        this.bibleReferenceParser = new BibleReferenceParser(bookNameService);
-        this.dataConverter = new BibleDataConverter(bookNameService);
+        this.bibleReferenceParser = new BibleReferenceParser();
+        this.dataConverter = new BibleDataConverter();
     }
 
     /**
@@ -74,7 +72,7 @@ export class BibleContentService {
         if (!this.bible) return null;
         
         try {
-            const normalizedBook = this.bookNameService.getNormalizedBookName(book);
+            const normalizedBook = BookNames.normalizedBookName(book);
             if (!normalizedBook) return null;
             
             // Check if the book exists in the Bible data
@@ -109,7 +107,7 @@ export class BibleContentService {
         if (!this.bible) return null;
         
         try {
-            const normalizedBook = this.bookNameService.getNormalizedBookName(reference.book);
+            const normalizedBook = BookNames.normalizedBookName(reference.book);
             if (!normalizedBook) return null;
             
             // Prepare the result

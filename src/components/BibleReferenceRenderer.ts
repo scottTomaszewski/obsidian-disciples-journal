@@ -1,8 +1,6 @@
 import { App, MarkdownPostProcessorContext, MarkdownView, Notice } from "obsidian";
 import { BibleContentService } from "../services/BibleContentService";
-import { BibleReference } from "../core/BibleReference";
 import { BibleNavigation } from "./BibleNavigation";
-import { BookNameService } from "../services/BookNameService";
 import { BibleFormatter } from "../utils/BibleFormatter";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
 import { BibleReferenceParser } from '../core/BibleReferenceParser';
@@ -43,7 +41,6 @@ export class BibleReferenceRenderer {
     constructor(
         app: App, 
         bibleContentService: BibleContentService, 
-        bookNameService: BookNameService, 
         fontSizeForVerses: string = '100%', 
         vaultPath: string = 'Bible/ESV',
         plugin: DisciplesJournalPlugin
@@ -53,12 +50,11 @@ export class BibleReferenceRenderer {
         this.plugin = plugin;
         this.bibleNavigation = new BibleNavigation(
             app, 
-            bookNameService, 
             bibleContentService,
             vaultPath, 
             this.downloadOnDemand
         );
-        this.parser = new BibleReferenceParser(bookNameService);
+        this.parser = new BibleReferenceParser();
         this.settings = {
             displayInlineVerses: true,
             displayFullPassages: true,

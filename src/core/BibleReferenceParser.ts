@@ -1,18 +1,14 @@
-import { BookNameService } from "../services/BookNameService";
+import { BookNames } from "../services/BookNames";
 import { BibleReference } from "./BibleReference";
 
 /**
  * Utility for parsing Bible references from text
  */
 export class BibleReferenceParser {
-    private bookNameService: BookNameService;
-    
     /**
      * Creates a new BibleReferenceParser
      */
-    constructor(bookNameService: BookNameService) {
-        this.bookNameService = bookNameService;
-    }
+    constructor() {}
     
     /**
      * Parse a string into a BibleReference object
@@ -31,13 +27,13 @@ export class BibleReferenceParser {
         
         try {
             // Extract book name
-            const book = this.bookNameService.extractBookFromReference(reference);
+            const book = BookNames.extractBookFromReference(reference);
             if (!book) {
                 return null;
             }
             
             // Standardize the book name
-            const standardizedBook = this.bookNameService.standardizeBookName(book);
+            const standardizedBook = BookNames.normalizedBookName(book);
             if (!standardizedBook) {
                 return null;
             }

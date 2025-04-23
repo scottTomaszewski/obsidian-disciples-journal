@@ -1,12 +1,107 @@
 /**
  * Service for handling Bible book name standardization and mapping
  */
-export class BookNameService {
+export class BookNames {
+    /**
+     * Standardize a book name to its canonical form
+     */
+    public static normalizedBookName(bookName: string): string | null {
+        if (!bookName) {
+            return null;
+        }
+        
+        // Clean up the book name
+        const cleanedName = bookName.trim();
+        
+        // First try a direct lookup
+        if (BookNames._instance.bookNameMap.has(cleanedName.toLowerCase())) {
+            return BookNames._instance.bookNameMap.get(cleanedName.toLowerCase()) as string;
+        }
+        
+        // Try to find a partial match
+        for (const [key, value] of BookNames._instance.bookNameMap.entries()) {
+            // Check if the key is a substring of the cleaned name
+            if (cleanedName.toLowerCase().startsWith(key)) {
+                return value;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Extract a book name from a reference string
+     */
+    public static extractBookFromReference(reference: string): string {
+        if (!reference) {
+            return "";
+        }
+        
+        // First try to match book names with numbers (e.g., "1 John")
+        const numberedBookRegex = /^(\d+\s*[A-Za-z]+)/;
+        const numberedMatch = reference.match(numberedBookRegex);
+        if (numberedMatch) {
+            return numberedMatch[1];
+        }
+        
+        // If no numbered book was found, try to match a regular book name
+        // We iterate through all keys in the book name map to find the longest matching book name
+        let longestMatch = "";
+        let bookName = "";
+        
+        // Start by extracting the first word (potential book name)
+        const firstWordMatch = reference.match(/^([A-Za-z]+)/);
+        if (firstWordMatch) {
+            bookName = firstWordMatch[1];
+            
+            // Check if this is a valid book name
+            const standardizedName = BookNames.normalizedBookName(bookName);
+            if (standardizedName) {
+                longestMatch = bookName;
+            }
+        }
+        
+        // Try matching with two words (for books like "Song of")
+        const twoWordsMatch = reference.match(/^([A-Za-z]+\s+[A-Za-z]+)/);
+        if (twoWordsMatch) {
+            bookName = twoWordsMatch[1];
+            
+            // Check if this is a valid book name
+            const standardizedName = BookNames.normalizedBookName(bookName);
+            if (standardizedName) {
+                longestMatch = bookName;
+            }
+        }
+        
+        // Try matching with three words (for books like "Song of Solomon")
+        const threeWordsMatch = reference.match(/^([A-Za-z]+\s+[A-Za-z]+\s+[A-Za-z]+)/);
+        if (threeWordsMatch) {
+            bookName = threeWordsMatch[1];
+            
+            // Check if this is a valid book name
+            const standardizedName = BookNames.normalizedBookName(bookName);
+            if (standardizedName) {
+                longestMatch = bookName;
+            }
+        }
+        
+        return longestMatch;
+    }
+    
+    private static _instance:BookNames = new BookNames();
+
     private bookNameMap: Map<string, string> = new Map();
 
-    constructor() {
+    private constructor() {
         this.initializeBookNameMap();
     }
+
+    // public static getInstance(): BookNames {
+    //     if (!BookNames.instance) {
+    //         BookNames.instance = new BookNames();
+    //     }
+    //     return BookNames.instance;
+    // }
 
     /**
      * Initialize the map of standardized book names
@@ -94,98 +189,5 @@ export class BookNameService {
         for (const alternateName of alternateNames) {
             this.bookNameMap.set(alternateName.toLowerCase(), standardName);
         }
-    }
-
-    /**
-     * Standardize a book name to its canonical form
-     */
-    public standardizeBookName(bookName: string): string | null {
-        if (!bookName) {
-            return null;
-        }
-        
-        // Clean up the book name
-        const cleanedName = bookName.trim();
-        
-        // First try a direct lookup
-        if (this.bookNameMap.has(cleanedName.toLowerCase())) {
-            return this.bookNameMap.get(cleanedName.toLowerCase()) as string;
-        }
-        
-        // Try to find a partial match
-        for (const [key, value] of this.bookNameMap.entries()) {
-            // Check if the key is a substring of the cleaned name
-            if (cleanedName.toLowerCase().startsWith(key)) {
-                return value;
-            }
-        }
-        
-        return null;
-    }
-    
-    /**
-     * Get normalized book name (alias for standardizeBookName for clarity)
-     */
-    public getNormalizedBookName(bookName: string): string | null {
-        return this.standardizeBookName(bookName);
-    }
-    
-    /**
-     * Extract a book name from a reference string
-     */
-    public extractBookFromReference(reference: string): string {
-        if (!reference) {
-            return "";
-        }
-        
-        // First try to match book names with numbers (e.g., "1 John")
-        const numberedBookRegex = /^(\d+\s*[A-Za-z]+)/;
-        const numberedMatch = reference.match(numberedBookRegex);
-        if (numberedMatch) {
-            return numberedMatch[1];
-        }
-        
-        // If no numbered book was found, try to match a regular book name
-        // We iterate through all keys in the book name map to find the longest matching book name
-        let longestMatch = "";
-        let bookName = "";
-        
-        // Start by extracting the first word (potential book name)
-        const firstWordMatch = reference.match(/^([A-Za-z]+)/);
-        if (firstWordMatch) {
-            bookName = firstWordMatch[1];
-            
-            // Check if this is a valid book name
-            const standardizedName = this.standardizeBookName(bookName);
-            if (standardizedName) {
-                longestMatch = bookName;
-            }
-        }
-        
-        // Try matching with two words (for books like "Song of")
-        const twoWordsMatch = reference.match(/^([A-Za-z]+\s+[A-Za-z]+)/);
-        if (twoWordsMatch) {
-            bookName = twoWordsMatch[1];
-            
-            // Check if this is a valid book name
-            const standardizedName = this.standardizeBookName(bookName);
-            if (standardizedName) {
-                longestMatch = bookName;
-            }
-        }
-        
-        // Try matching with three words (for books like "Song of Solomon")
-        const threeWordsMatch = reference.match(/^([A-Za-z]+\s+[A-Za-z]+\s+[A-Za-z]+)/);
-        if (threeWordsMatch) {
-            bookName = threeWordsMatch[1];
-            
-            // Check if this is a valid book name
-            const standardizedName = this.standardizeBookName(bookName);
-            if (standardizedName) {
-                longestMatch = bookName;
-            }
-        }
-        
-        return longestMatch;
     }
 } 

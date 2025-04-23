@@ -1,4 +1,4 @@
-import { BookNameService } from "./BookNameService";
+import { BookNames } from "./BookNames";
 import { BibleReferenceParser } from "../core/BibleReferenceParser";
 
 /**
@@ -18,8 +18,8 @@ interface Bible {
 export class BibleDataConverter {
     private bibleReferenceParser: BibleReferenceParser;
     
-    constructor(bookNameService: BookNameService) {
-        this.bibleReferenceParser = new BibleReferenceParser(bookNameService);
+    constructor() {
+        this.bibleReferenceParser = new BibleReferenceParser();
     }
     
     /**

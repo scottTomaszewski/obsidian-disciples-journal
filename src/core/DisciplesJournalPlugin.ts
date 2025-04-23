@@ -1,5 +1,4 @@
 import { Plugin, MarkdownView, Notice } from 'obsidian';
-import { BookNameService } from '../services/BookNameService';
 import { ESVApiService } from '../services/ESVApiService';
 import { BibleContentService } from '../services/BibleContentService';
 import { BibleReferenceParser } from './BibleReferenceParser';
@@ -17,7 +16,6 @@ export default class DisciplesJournalPlugin extends Plugin {
     settings: DisciplesJournalSettings;
     
     // Services
-    private bookNameService: BookNameService;
     private esvApiService: ESVApiService;
     private bibleContentService: BibleContentService;
     private noteCreationService: NoteCreationService;
@@ -35,9 +33,8 @@ export default class DisciplesJournalPlugin extends Plugin {
         await this.loadSettings();
         
         // Initialize services
-        this.bookNameService = new BookNameService();
-        this.esvApiService = new ESVApiService(this.app, this.bookNameService);
-        this.bibleContentService = new BibleContentService(this.bookNameService, this.esvApiService);
+        this.esvApiService = new ESVApiService(this.app);
+        this.bibleContentService = new BibleContentService(this.esvApiService);
         
         // Configure services from settings
         this.esvApiService.setApiToken(this.settings.esvApiToken);
@@ -52,12 +49,11 @@ export default class DisciplesJournalPlugin extends Plugin {
         }
         
         // Initialize components
-        this.bibleReferenceParser = new BibleReferenceParser(this.bookNameService);
+        this.bibleReferenceParser = new BibleReferenceParser();
         this.bibleStyles = new BibleStyles();
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.app, 
             this.bibleContentService, 
-            this.bookNameService, 
             this.settings.bibleTextFontSize,
             this.settings.bibleContentVaultPath,
             this
@@ -138,6 +134,8 @@ export default class DisciplesJournalPlugin extends Plugin {
         if (!activeLeaf) return;
         
         // Each popup window has a unique document, so we need to apply styles to each one
+        // See https://discord.com/channels/686053708261228577/840286264964022302/1362059117190975519
+        // Note: this doesnt completely work.  When a new popout is created the style cars arent ported over
         const docList: Document[] = [];
         this.app.workspace.iterateAllLeaves(leaf => docList.push(leaf.getContainer().doc));
         docList.unique().forEach(doc => {

@@ -1,6 +1,6 @@
 import { App, requestUrl } from "obsidian";
 import { BiblePassage } from "./BibleContentService";
-import { BookNameService } from "./BookNameService";
+import { BookNames } from "./BookNames";
 
 /**
  * Interface for ESV API Response
@@ -43,7 +43,7 @@ export class ESVApiService {
         }
     } = {};
 
-    constructor(app: App, bookNameService: BookNameService) {
+    constructor(app: App) {
         this.app = app;
     }
 
