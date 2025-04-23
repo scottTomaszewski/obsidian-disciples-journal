@@ -13,48 +13,6 @@ export class BibleNavigation {
     private bibleContentService: BibleContentService;
     private downloadOnDemand: boolean = true;
     
-    // Bible book structure (book name and chapter count)
-    private bibleStructure: {[book: string]: number} = {
-        // Old Testament
-        "Genesis": 50, "Exodus": 40, "Leviticus": 27, "Numbers": 36, "Deuteronomy": 34,
-        "Joshua": 24, "Judges": 21, "Ruth": 4, "1 Samuel": 31, "2 Samuel": 24,
-        "1 Kings": 22, "2 Kings": 25, "1 Chronicles": 29, "2 Chronicles": 36,
-        "Ezra": 10, "Nehemiah": 13, "Esther": 10, "Job": 42, "Psalms": 150,
-        "Proverbs": 31, "Ecclesiastes": 12, "Song of Solomon": 8, "Isaiah": 66,
-        "Jeremiah": 52, "Lamentations": 5, "Ezekiel": 48, "Daniel": 12, "Hosea": 14,
-        "Joel": 3, "Amos": 9, "Obadiah": 1, "Jonah": 4, "Micah": 7,
-        "Nahum": 3, "Habakkuk": 3, "Zephaniah": 3, "Haggai": 2, "Zechariah": 14,
-        "Malachi": 4,
-        // New Testament
-        "Matthew": 28, "Mark": 16, "Luke": 24, "John": 21, "Acts": 28,
-        "Romans": 16, "1 Corinthians": 16, "2 Corinthians": 13, "Galatians": 6,
-        "Ephesians": 6, "Philippians": 4, "Colossians": 4, "1 Thessalonians": 5,
-        "2 Thessalonians": 3, "1 Timothy": 6, "2 Timothy": 4, "Titus": 3,
-        "Philemon": 1, "Hebrews": 13, "James": 5, "1 Peter": 5, "2 Peter": 3,
-        "1 John": 5, "2 John": 1, "3 John": 1, "Jude": 1, "Revelation": 22
-    };
-    
-    // Order of books in the Bible
-    private bookOrder: string[] = [
-        // Old Testament
-        "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy",
-        "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel",
-        "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles",
-        "Ezra", "Nehemiah", "Esther", "Job", "Psalms",
-        "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah",
-        "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea",
-        "Joel", "Amos", "Obadiah", "Jonah", "Micah",
-        "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah",
-        "Malachi",
-        // New Testament
-        "Matthew", "Mark", "Luke", "John", "Acts",
-        "Romans", "1 Corinthians", "2 Corinthians", "Galatians",
-        "Ephesians", "Philippians", "Colossians", "1 Thessalonians",
-        "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus",
-        "Philemon", "Hebrews", "James", "1 Peter", "2 Peter",
-        "1 John", "2 John", "3 John", "Jude", "Revelation"
-    ];
-    
     constructor(
         app: App, 
         bibleContentService: BibleContentService,
@@ -89,16 +47,17 @@ export class BibleNavigation {
         const chapter = reference.chapter;
         
         // Get book chapter count
-        const chapterCount = this.bibleStructure[book] || 1;
+        const chapterCount = BookNames.getChapterCount(book);
         
         // Determine if we're at the first or last chapter of the book
         const isFirstChapter = chapter === 1;
         const isLastChapter = chapter === chapterCount;
         
         // Determine if we're at the first or last book of the Bible
-        const bookIndex = this.bookOrder.indexOf(book);
+        const bookOrder = BookNames.getBookOrder();
+        const bookIndex = bookOrder.indexOf(book);
         const isFirstBook = bookIndex === 0;
-        const isLastBook = bookIndex === this.bookOrder.length - 1;
+        const isLastBook = bookIndex === bookOrder.length - 1;
         
         // Create the navigation container
         const navEl = containerEl.createDiv({ cls: 'bible-navigation' });
@@ -112,8 +71,8 @@ export class BibleNavigation {
             });
         } else if (isFirstChapter) {
             // Previous book, last chapter
-            const prevBook = this.bookOrder[bookIndex - 1];
-            const prevChapter = this.bibleStructure[prevBook];
+            const prevBook = bookOrder[bookIndex - 1];
+            const prevChapter = BookNames.getChapterCount(prevBook);
             
             const prevButton = new ButtonComponent(navEl)
                 .setButtonText(`◄ ${prevBook} ${prevChapter}`)
@@ -152,7 +111,7 @@ export class BibleNavigation {
         const bookDropdown = new DropdownComponent(bookDropdownContainer);
         
         // Add all books to the dropdown
-        for (const bookName of this.bookOrder) {
+        for (const bookName of bookOrder) {
             bookDropdown.addOption(bookName, bookName);
         }
         bookDropdown.setValue(book);
@@ -195,7 +154,7 @@ export class BibleNavigation {
             });
         } else if (isLastChapter) {
             // Next book, first chapter
-            const nextBook = this.bookOrder[bookIndex + 1];
+            const nextBook = bookOrder[bookIndex + 1];
             
             const nextButton = new ButtonComponent(navEl)
                 .setButtonText(`► ${nextBook} 1`)
@@ -232,7 +191,7 @@ export class BibleNavigation {
         dropdown.selectEl.empty();
         
         // Get the chapter count for this book
-        const chapterCount = this.bibleStructure[book] || 1;
+        const chapterCount = BookNames.getChapterCount(book);
         
         // Add chapter options
         for (let i = 1; i <= chapterCount; i++) {
