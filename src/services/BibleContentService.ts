@@ -1,6 +1,7 @@
 import { BibleReference } from "../core/BibleReference";
 import { BookNames } from "./BookNames";
 import { ESVApiService } from "./ESVApiService";
+import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 
 /**
  * Interface for a single Bible verse
@@ -26,26 +27,15 @@ export interface BiblePassage {
  * Main service for retrieving Bible content
  */
 export class BibleContentService {
+	private plugin: DisciplesJournalPlugin;
     private bible: any = null;
     private esvApiService: ESVApiService;
-    private downloadOnDemand: boolean = true;
 
-	constructor(esvApiService: ESVApiService) {
+	constructor(plugin: DisciplesJournalPlugin, esvApiService: ESVApiService) {
+		this.plugin = plugin;
 		this.esvApiService = esvApiService;
 	}
 
-    /**
-     * Set whether to use HTML format or plain text
-     */
-    public setUseHtmlFormat(use: boolean): void {
-    }
-
-    /**
-     * Set whether to download content on demand
-     */
-    public setDownloadOnDemand(download: boolean): void {
-        this.downloadOnDemand = download;
-    }
 	/**
      * Get a single verse by reference
      */
@@ -159,7 +149,7 @@ export class BibleContentService {
             let passage = this.getPassage(parsedRef);
             
             // If not available locally and download on demand is enabled, try the API
-            if (!passage && this.downloadOnDemand) {
+            if (!passage && this.plugin.settings.downloadOnDemand) {
                 // Try to get from the ESV API
                 passage = await this.esvApiService.downloadFromESVApi(referenceString);
             }

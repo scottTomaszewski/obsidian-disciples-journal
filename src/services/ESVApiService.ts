@@ -1,5 +1,6 @@
-import { App, requestUrl } from "obsidian";
+import { requestUrl } from "obsidian";
 import { BiblePassage } from "./BibleContentService";
+import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 
 /**
  * Interface for ESV API Response
@@ -29,11 +30,8 @@ export interface ESVPassageMeta {
  * Service for interacting with the ESV API
  */
 export class ESVApiService {
-    private app: App;
-    private apiToken: string = '';
-    private bibleContentVaultPath: string = 'Bible';  // Root path for all Bible versions
-    private bibleVersion: string = 'ESV';  // Default version
-    
+    private plugin: DisciplesJournalPlugin;
+
     // Store HTML formatted Bible chapters
     private htmlFormattedBible: {
         [reference: string]: {
@@ -42,36 +40,15 @@ export class ESVApiService {
         }
     } = {};
 
-    constructor(app: App) {
-        this.app = app;
+    constructor(plugin: DisciplesJournalPlugin) {
+        this.plugin = plugin;
     }
 
-    /**
-     * Set the ESV API token
-     */
-    public setApiToken(token: string): void {
-        this.apiToken = token;
-    }
-
-    /**
-     * Set the root path where Bible content will be stored in the vault
-     */
-    public setContentPath(path: string): void {
-        this.bibleContentVaultPath = path;
-    }
-    
-    /**
-     * Set the Bible version to use (affects the subdirectory)
-     */
-    public setBibleVersion(version: string): void {
-        this.bibleVersion = version;
-    }
-    
     /**
      * Get the full vault path including version subdirectory
      */
     private getFullContentPath(): string {
-        return `${this.bibleContentVaultPath}/${this.bibleVersion}`;
+        return `${this.plugin.settings.bibleContentVaultPath}/${this.plugin.settings.preferredBibleVersion}`;
     }
 
     /**
@@ -97,25 +74,25 @@ export class ESVApiService {
             const fullPath = this.getFullContentPath();
             
             // Check if path exists
-            if (!(await this.app.vault.adapter.exists(fullPath))) {
+            if (!(await this.plugin.app.vault.adapter.exists(fullPath))) {
                 console.log(`Bible content directory ${fullPath} does not exist yet`);
                 return;
             }
             
             // Get all book directories
-            const bookDirs = await this.app.vault.adapter.list(fullPath);
+            const bookDirs = await this.plugin.app.vault.adapter.list(fullPath);
             
             // Process each book directory
             for (const bookDir of bookDirs.folders) {
                 // Get all chapter files
-                const files = await this.app.vault.adapter.list(bookDir);
+                const files = await this.plugin.app.vault.adapter.list(bookDir);
                 
                 // Process each chapter file
                 for (const file of files.files) {
                     if (file.endsWith('.json')) {
                         try {
                             // Read and parse the file
-                            const content = await this.app.vault.adapter.read(file);
+                            const content = await this.plugin.app.vault.adapter.read(file);
                             const data = JSON.parse(content);
                             
                             // Process the data if it's in the expected format
@@ -203,7 +180,7 @@ export class ESVApiService {
      * Download Bible content from the ESV API
      */
     public async downloadFromESVApi(reference: string): Promise<BiblePassage | null> {
-        if (!this.apiToken) {
+        if (!this.plugin.settings.esvApiToken) {
             console.warn('ESV API token not set. Cannot download content.');
             
             return {
@@ -230,7 +207,7 @@ export class ESVApiService {
                 url: apiUrl,
                 method: 'GET',
                 headers: {
-                    'Authorization': `Token ${this.apiToken}`
+                    'Authorization': `Token ${this.plugin.settings.esvApiToken}`
                 }
             });
             
@@ -295,7 +272,7 @@ export class ESVApiService {
             
             // Save the raw API response as JSON
             const jsonPath = `${bookPath}/${data.canonical}.json`;
-            await this.app.vault.adapter.write(jsonPath, JSON.stringify(data));
+            await this.plugin.app.vault.adapter.write(jsonPath, JSON.stringify(data));
         } catch (error) {
             console.error('Error saving ESV API response:', error);
         }
@@ -310,8 +287,8 @@ export class ESVApiService {
         
         for (const part of parts) {
             currentPath += (currentPath ? '/' : '') + part;
-            if (!(await this.app.vault.adapter.exists(currentPath))) {
-                await this.app.vault.adapter.mkdir(currentPath);
+            if (!(await this.plugin.app.vault.adapter.exists(currentPath))) {
+                await this.plugin.app.vault.adapter.mkdir(currentPath);
             }
         }
     }
@@ -343,7 +320,7 @@ export class ESVApiService {
         try {
             // Check for a common book like Genesis
             const genesisPath = `${this.getFullContentPath()}/Genesis/Genesis 1.md`;
-            return await this.app.vault.adapter.exists(genesisPath);
+            return await this.plugin.app.vault.adapter.exists(genesisPath);
         } catch (error) {
             console.error('Error checking if Bible data exists:', error);
             return false;

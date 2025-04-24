@@ -176,7 +176,6 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.preferredBibleVersion = value;
                     await this.plugin.saveSettings();
-                    this.plugin.setBibleVersion(value);
                 })
             );
         
@@ -189,7 +188,6 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.bibleContentVaultPath = value || 'Bible';
                     await this.plugin.saveSettings();
-                    this.plugin.setContentPath(value || 'Bible');
                 }));
         
         new Setting(containerEl).setName('ESV API').setHeading();
@@ -241,8 +239,6 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.esvApiToken = value;
                     await this.plugin.saveSettings();
-                    this.plugin.setESVApiToken(value);
-                    
                     if (value) {
                         new Notice('ESV API token updated', 2000);
                     }
@@ -256,7 +252,6 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
                 .onChange(async (value) => {
                     this.plugin.settings.downloadOnDemand = value;
                     await this.plugin.saveSettings();
-                    this.plugin.setDownloadOnDemand(value);
                 }));
         
         

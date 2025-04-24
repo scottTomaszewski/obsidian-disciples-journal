@@ -31,16 +31,9 @@ export default class DisciplesJournalPlugin extends Plugin {
         await this.loadSettings();
         
         // Initialize services
-        this.esvApiService = new ESVApiService(this.app);
-        this.bibleContentService = new BibleContentService(this.esvApiService);
-        
-        // Configure services from settings
-        this.esvApiService.setApiToken(this.settings.esvApiToken);
-        this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
-        this.esvApiService.setBibleVersion(this.settings.preferredBibleVersion);
-        this.bibleContentService.setUseHtmlFormat(true);
-        this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
-        
+        this.esvApiService = new ESVApiService(this);
+        this.bibleContentService = new BibleContentService(this, this.esvApiService);
+
         // Check if ESV API token is set and show a notice if it's not
         if (!this.settings.esvApiToken) {
             new Notice('Disciples Journal: ESV API token not set. Bible content may not load correctly. Visit the plugin settings to add your API token.', 10000);
@@ -88,12 +81,6 @@ export default class DisciplesJournalPlugin extends Plugin {
     
     async saveSettings() {
         await this.saveData(this.settings);
-        
-        // Update services with new settings
-        this.esvApiService.setApiToken(this.settings.esvApiToken);
-        this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
-        this.esvApiService.setBibleVersion(this.settings.preferredBibleVersion);
-        this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
     }
     
     /**
@@ -146,37 +133,7 @@ export default class DisciplesJournalPlugin extends Plugin {
             );
         });
     }
-    
-    /**
-     * Set the API token for the ESV API
-     */
-    public setESVApiToken(token: string): void {
-        this.esvApiService.setApiToken(token);
-    }
-    
-    /**
-     * Set the content path for Bible files
-     */
-    public setContentPath(path: string): void {
-        this.settings.bibleContentVaultPath = path;
-        this.esvApiService.setContentPath(path);
-    }
-    
-    /**
-     * Set the preferred Bible version
-     */
-    public setBibleVersion(version: string): void {
-        this.settings.preferredBibleVersion = version;
-        this.esvApiService.setBibleVersion(version);
-    }
-    
-    /**
-     * Set whether to download Bible content on demand
-     */
-    public setDownloadOnDemand(value: boolean): void {
-        this.bibleContentService.setDownloadOnDemand(value);
-    }
-    
+
     /**
      * Open or create a chapter note (Public method for external access)
      */
