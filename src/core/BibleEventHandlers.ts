@@ -10,40 +10,7 @@ export class BibleEventHandlers {
     constructor(bibleReferenceRenderer: BibleReferenceRenderer) {
         this.bibleReferenceRenderer = bibleReferenceRenderer;
     }
-    
-    /**
-     * Handle click on Bible references
-     */
-    async handleBibleReferenceClick(event: MouseEvent) {
-        const target = event.target as HTMLElement;
-        if (!target || !target.closest) return;
-        
-        const referenceEl = target.closest('.bible-reference') as HTMLElement;
-        if (!referenceEl) return;
-        
-        // If this is from the popup's clickable heading, allow the click handler there to process
-        if (referenceEl.classList.contains('bible-reference-clickable')) {
-            return;
-        }
-        
-        const referenceText = referenceEl.textContent;
-        if (!referenceText) return;
-        
-        try {
-            // Just show the preview if it's not already showing
-            if (!this.previewPopper) {
-                this.previewPopper = await this.bibleReferenceRenderer.showVersePreview(
-                    referenceEl, 
-                    referenceText,
-                    event
-                );
-            }
-        } catch (error) {
-            console.error('Error handling Bible reference click:', error);
-        }
-    }
-    
-    /**
+	/**
      * Handle hover on Bible references
      */
     async handleBibleReferenceHover(event: MouseEvent) {

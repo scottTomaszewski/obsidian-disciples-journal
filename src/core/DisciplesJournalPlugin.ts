@@ -82,7 +82,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.registerEvent(this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this)));
         
         // Load Bible data
-        this.loadBibleData();
+        await this.loadBibleData();
     }
     
     onunload() {

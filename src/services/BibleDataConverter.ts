@@ -1,4 +1,3 @@
-import { BookNames } from "./BookNames";
 import { BibleReferenceParser } from "../core/BibleReferenceParser";
 
 /**

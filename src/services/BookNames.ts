@@ -106,15 +106,7 @@ export class BookNames {
         return [...BookNames.bookOrder]; // Return a copy to prevent modification
     }
 
-    /**
-     * Get the entire Bible structure object
-     */
-    public static getBibleStructure(): { [book: string]: number } {
-        // Return a shallow copy to prevent modification
-        return { ...BookNames.bibleStructure };
-    }
-    
-    // Bible book structure (book name and chapter count)
+	// Bible book structure (book name and chapter count)
     private static bibleStructure: {[book: string]: number} = {
         // Old Testament
         "Genesis": 50,"Exodus": 40, "Leviticus": 27, "Numbers": 36, "Deuteronomy": 34,

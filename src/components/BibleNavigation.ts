@@ -73,30 +73,29 @@ export class BibleNavigation {
             // Previous book, last chapter
             const prevBook = bookOrder[bookIndex - 1];
             const prevChapter = BookNames.getChapterCount(prevBook);
-            
-            const prevButton = new ButtonComponent(navEl)
-                .setButtonText(`◄ ${prevBook} ${prevChapter}`)
-                .setClass('nav-prev')
-                .setClass('nav-button')
-                .onClick(async () => {
-                    const loadingNotice = new Notice("Loading chapter...", 0);
-                    await this.navigateToChapter(prevBook, prevChapter);
-                    loadingNotice.hide();
-                });
-        } else {
-            // Previous chapter in same book
-            const prevButton = new ButtonComponent(navEl)
-                .setButtonText(`◄ ${book} ${chapter - 1}`)
-                .setClass('nav-prev')
-                .setClass('nav-button')
-                .onClick(async () => {
-                    const loadingNotice = new Notice("Loading chapter...", 0);
-                    await this.navigateToChapter(book, chapter - 1);
-                    loadingNotice.hide();
-                });
-        }
-        
-        // Book and chapter selector
+			new ButtonComponent(navEl)
+				.setButtonText(`◄ ${prevBook} ${prevChapter}`)
+				.setClass('nav-prev')
+				.setClass('nav-button')
+				.onClick(async () => {
+					const loadingNotice = new Notice("Loading chapter...", 0);
+					await this.navigateToChapter(prevBook, prevChapter);
+					loadingNotice.hide();
+				});
+		} else {
+			// Previous chapter in same book
+			new ButtonComponent(navEl)
+				.setButtonText(`◄ ${book} ${chapter - 1}`)
+				.setClass('nav-prev')
+				.setClass('nav-button')
+				.onClick(async () => {
+					const loadingNotice = new Notice("Loading chapter...", 0);
+					await this.navigateToChapter(book, chapter - 1);
+					loadingNotice.hide();
+				});
+		}
+
+		// Book and chapter selector
         const selectorEl = navEl.createSpan({
             cls: 'nav-book-selector',
             text: `📖 ${book} ${chapter}`
@@ -129,18 +128,17 @@ export class BibleNavigation {
         });
         
         // Add Go button
-        const goButton = new ButtonComponent(selectorContainer)
-            .setButtonText('Go')
-            .setClass('nav-go-button')
-            .onClick(async () => {
-                const selectedBook = bookDropdown.getValue();
-                const selectedChapter = parseInt(chapterDropdown.getValue());
-                const loadingNotice = new Notice("Loading chapter...", 0);
-                await this.navigateToChapter(selectedBook, selectedChapter);
-                loadingNotice.hide();
-            });
-        
-        // Toggle selector on click
+		new ButtonComponent(selectorContainer)
+			.setButtonText('Go')
+			.setClass('nav-go-button')
+			.onClick(async () => {
+				const selectedBook = bookDropdown.getValue();
+				const selectedChapter = parseInt(chapterDropdown.getValue());
+				const loadingNotice = new Notice("Loading chapter...", 0);
+				await this.navigateToChapter(selectedBook, selectedChapter);
+				loadingNotice.hide();
+			});
+		// Toggle selector on click
         selectorEl.addEventListener('click', () => {
             selectorContainer.classList.toggle('dj-hidden');
         });
@@ -155,31 +153,30 @@ export class BibleNavigation {
         } else if (isLastChapter) {
             // Next book, first chapter
             const nextBook = bookOrder[bookIndex + 1];
-            
-            const nextButton = new ButtonComponent(navEl)
-                .setButtonText(`► ${nextBook} 1`)
-                .setClass('nav-next')
-                .setClass('nav-button')
-                .onClick(async () => {
-                    const loadingNotice = new Notice("Loading chapter...", 0);
-                    await this.navigateToChapter(nextBook, 1);
-                    loadingNotice.hide();
-                });
-        } else {
-            // Next chapter in same book
-            const nextButton = new ButtonComponent(navEl)
-                .setButtonText(`${book} ${chapter + 1} ►`)
-                .setClass('nav-next')
-                .setClass('nav-button')
-                .onClick(async () => {
-                    const loadingNotice = new Notice("Loading chapter...", 0);
-                    await this.navigateToChapter(book, chapter + 1);
-                    loadingNotice.hide();
-                });
-        }
-    }
-    
-    /**
+			new ButtonComponent(navEl)
+				.setButtonText(`► ${nextBook} 1`)
+				.setClass('nav-next')
+				.setClass('nav-button')
+				.onClick(async () => {
+					const loadingNotice = new Notice("Loading chapter...", 0);
+					await this.navigateToChapter(nextBook, 1);
+					loadingNotice.hide();
+				});
+		} else {
+			// Next chapter in same book
+			new ButtonComponent(navEl)
+				.setButtonText(`${book} ${chapter + 1} ►`)
+				.setClass('nav-next')
+				.setClass('nav-button')
+				.onClick(async () => {
+					const loadingNotice = new Notice("Loading chapter...", 0);
+					await this.navigateToChapter(book, chapter + 1);
+					loadingNotice.hide();
+				});
+		}
+	}
+
+	/**
      * Populate the chapter dropdown for a specific book
      */
     private populateChapterDropdown(

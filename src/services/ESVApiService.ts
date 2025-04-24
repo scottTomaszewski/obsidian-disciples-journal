@@ -1,6 +1,5 @@
 import { App, requestUrl } from "obsidian";
 import { BiblePassage } from "./BibleContentService";
-import { BookNames } from "./BookNames";
 
 /**
  * Interface for ESV API Response
@@ -286,9 +285,7 @@ export class ESVApiService {
             // Extract book and chapter from the canonical reference
             const parts = data.canonical.split(' ');
             if (parts.length < 2) return;
-            
-            const chapter = parts[parts.length - 1];
-            const book = parts.slice(0, -1).join(' ');
+			const book = parts.slice(0, -1).join(' ');
             
             // Create the directory structure with version subdirectory
             const fullPath = this.getFullContentPath();
