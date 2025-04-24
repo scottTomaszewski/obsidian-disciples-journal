@@ -13,23 +13,23 @@ import { BibleMarkupProcessor } from './BibleMarkupProcessor';
  */
 export default class DisciplesJournalPlugin extends Plugin {
     settings: DisciplesJournalSettings;
-    
+
     // Services
     private esvApiService: ESVApiService;
     private bibleContentService: BibleContentService;
     private bibleBookFiles: BibleBookFiles;
-    
+
     // Components
     private bibleStyles: BibleStyles;
     private bibleReferenceRenderer: BibleReferenceRenderer;
     private bibleMarkupProcessor: BibleMarkupProcessor;
-    
+
     async onload() {
         console.log('Loading Disciples Journal plugin');
-        
+
         // Initialize settings
         await this.loadSettings();
-        
+
         // Initialize services
         this.esvApiService = new ESVApiService(this);
         this.bibleContentService = new BibleContentService(this, this.esvApiService);
@@ -38,14 +38,10 @@ export default class DisciplesJournalPlugin extends Plugin {
         if (!this.settings.esvApiToken) {
             new Notice('Disciples Journal: ESV API token not set. Bible content may not load correctly. Visit the plugin settings to add your API token.', 10000);
         }
-        
+
         // Initialize components
         this.bibleStyles = new BibleStyles();
-		this.bibleBookFiles = new BibleBookFiles(
-			this.app,
-			this.bibleContentService,
-			this.settings
-		);
+		this.bibleBookFiles = new BibleBookFiles(this, this.bibleContentService);
 
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.bibleContentService,
@@ -55,34 +51,34 @@ export default class DisciplesJournalPlugin extends Plugin {
 
         // Initialize markup processor
         this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
-        
+
         // Register bible reference processor
         this.registerMarkdownCodeBlockProcessor('bible', this.bibleMarkupProcessor.processBibleCodeBlock.bind(this.bibleMarkupProcessor));
-        
+
         // Register markdown post processor for inline references
         this.registerMarkdownPostProcessor(this.bibleMarkupProcessor.processInlineBibleReferences.bind(this.bibleMarkupProcessor));
-        
+
         // Register settings tab
         this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this));
-        
+
         // Register active leaf change to update styles
         this.registerEvent(this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this)));
-        
+
         // Load Bible data
         await this.loadBibleData();
     }
-    
+
     onunload() {
     }
-    
+
     async loadSettings() {
         this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
     }
-    
+
     async saveSettings() {
         await this.saveData(this.settings);
     }
-    
+
     /**
      * Load the Bible data from source
      */
@@ -95,7 +91,7 @@ export default class DisciplesJournalPlugin extends Plugin {
             console.error('Error loading Bible data:', error);
         }
     }
-    
+
     /**
      * Handle leaf change event to check for verse references in the URL
      */
@@ -103,14 +99,14 @@ export default class DisciplesJournalPlugin extends Plugin {
         // Refresh theme/styling when active leaf changes
         this.updateBibleStyles();
     }
-    
+
     /**
      * Update Bible styles with current settings
      */
     public updateBibleStyles(): void {
         const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (!activeLeaf) return;
-        
+
         // Each popup window has a unique document, so we need to apply styles to each one
         // See https://discord.com/channels/686053708261228577/840286264964022302/1362059117190975519
         // Note: this doesnt completely work.  When a new popout is created the style cars arent ported over
@@ -121,8 +117,8 @@ export default class DisciplesJournalPlugin extends Plugin {
             const theme = isDarkMode ? 'dark' : 'light';
             this.bibleStyles.applyStyles(
                 doc,
-                theme, 
-                this.settings.stylePreset, 
+                theme,
+                this.settings.stylePreset,
                 this.settings.bibleTextFontSize,
                 {
                     wordsOfChristColor: this.settings.wordsOfChristColor,

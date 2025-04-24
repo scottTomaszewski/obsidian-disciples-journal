@@ -1,25 +1,22 @@
-import { App, TFile } from 'obsidian';
+import { TFile } from 'obsidian';
 import { BibleContentService } from './BibleContentService';
 import { BibleReference } from '../core/BibleReference';
 import { BibleFormatter } from '../utils/BibleFormatter';
-import { DisciplesJournalSettings } from '../settings/DisciplesJournalSettings';
+import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 
 /**
  * Service for creating and opening Bible chapter notes
  */
 export class BibleBookFiles {
-    private app: App;
+    private plugin: DisciplesJournalPlugin;
     private bibleContentService: BibleContentService;
-    private settings: DisciplesJournalSettings;
-    
+
     constructor(
-        app: App,
+		plugin: DisciplesJournalPlugin,
         bibleContentService: BibleContentService,
-        settings: DisciplesJournalSettings
     ) {
-        this.app = app;
+        this.plugin = plugin;
         this.bibleContentService = bibleContentService;
-        this.settings = settings;
     }
     
     /**
@@ -39,18 +36,18 @@ export class BibleBookFiles {
             const chapterPath = `${fullPath}/${parsedRef.book}/${parsedRef.book} ${parsedRef.chapter}.md`;
 
             // Check if note exists
-            const fileExists = await this.app.vault.adapter.exists(chapterPath);
+            const fileExists = await this.plugin.app.vault.adapter.exists(chapterPath);
 
-            if (!fileExists && this.settings.downloadOnDemand) {
+            if (!fileExists && this.plugin.settings.downloadOnDemand) {
                 // Create the note with content from the API
                 await this.createChapterNote(parsedRef);
             }
 
             // Try opening the note
-            const file = this.app.vault.getAbstractFileByPath(chapterPath);
+            const file = this.plugin.app.vault.getAbstractFileByPath(chapterPath);
 
             if (file && file instanceof TFile) {
-                const leaf = this.app.workspace.getLeaf(false);
+                const leaf = this.plugin.app.workspace.getLeaf(false);
                 await leaf.openFile(file);
 
                 // If there's a specific verse, scroll to it
@@ -97,10 +94,10 @@ export class BibleBookFiles {
             const chapterPath = `${fullPath}/${reference.book}/${reference.book} ${reference.chapter}.md`;
 
             // Ensure the directory exists
-            await this.app.vault.adapter.mkdir(bookPath);
+            await this.plugin.app.vault.adapter.mkdir(bookPath);
 
             // Create the note
-            await this.app.vault.create(chapterPath, content);
+            await this.plugin.app.vault.create(chapterPath, content);
 
             return chapterPath;
         } catch (error) {
@@ -113,6 +110,6 @@ export class BibleBookFiles {
 	 * Get the full path with version
 	 */
 	private getFullContentPath(): string {
-		return `${this.settings.bibleContentVaultPath}/${this.settings.preferredBibleVersion}`;
+		return `${this.plugin.settings.bibleContentVaultPath}/${this.plugin.settings.preferredBibleVersion}`;
 	}
 }
