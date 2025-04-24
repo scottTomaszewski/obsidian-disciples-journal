@@ -1,139 +1,143 @@
-import { Plugin, MarkdownView, Notice } from 'obsidian';
-import { ESVApiService } from '../services/ESVApiService';
-import { BibleContentService } from '../services/BibleContentService';
-import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
-import { BibleStyles } from '../components/BibleStyles';
-import { DisciplesJournalSettings, DEFAULT_SETTINGS, DisciplesJournalSettingsTab } from '../settings/DisciplesJournalSettings';
-import { BibleBookFiles } from 'src/services/BibleBookFiles';
-import { BibleMarkupProcessor } from './BibleMarkupProcessor';
+import {Plugin, MarkdownView, Notice} from 'obsidian';
+import {ESVApiService} from '../services/ESVApiService';
+import {BibleContentService} from '../services/BibleContentService';
+import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
+import {BibleStyles} from '../components/BibleStyles';
+import {
+	DisciplesJournalSettings,
+	DEFAULT_SETTINGS,
+	DisciplesJournalSettingsTab
+} from '../settings/DisciplesJournalSettings';
+import {BibleBookFiles} from 'src/services/BibleBookFiles';
+import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 
 /**
  * Disciples Journal Plugin for Obsidian
  * Enhances Bible references with hover previews and in-note embedding
  */
 export default class DisciplesJournalPlugin extends Plugin {
-    settings: DisciplesJournalSettings;
+	settings: DisciplesJournalSettings;
 
-    // Services
-    private esvApiService: ESVApiService;
-    private bibleContentService: BibleContentService;
-    private bibleBookFiles: BibleBookFiles;
+	// Services
+	private esvApiService: ESVApiService;
+	private bibleContentService: BibleContentService;
+	private bibleBookFiles: BibleBookFiles;
 
-    // Components
-    private bibleStyles: BibleStyles;
-    private bibleReferenceRenderer: BibleReferenceRenderer;
-    private bibleMarkupProcessor: BibleMarkupProcessor;
+	// Components
+	private bibleStyles: BibleStyles;
+	private bibleReferenceRenderer: BibleReferenceRenderer;
+	private bibleMarkupProcessor: BibleMarkupProcessor;
 
-    async onload() {
-        console.log('Loading Disciples Journal plugin');
+	async onload() {
+		console.log('Loading Disciples Journal plugin');
 
-        // Initialize settings
-        await this.loadSettings();
+		// Initialize settings
+		await this.loadSettings();
 
-        // Initialize services
-        this.esvApiService = new ESVApiService(this);
-        this.bibleContentService = new BibleContentService(this, this.esvApiService);
+		// Initialize services
+		this.esvApiService = new ESVApiService(this);
+		this.bibleContentService = new BibleContentService(this, this.esvApiService);
 
-        // Check if ESV API token is set and show a notice if it's not
-        if (!this.settings.esvApiToken) {
-            new Notice('Disciples Journal: ESV API token not set. Bible content may not load correctly. Visit the plugin settings to add your API token.', 10000);
-        }
+		// Check if ESV API token is set and show a notice if it's not
+		if (!this.settings.esvApiToken) {
+			new Notice('Disciples Journal: ESV API token not set. Bible content may not load correctly. Visit the plugin settings to add your API token.', 10000);
+		}
 
-        // Initialize components
-        this.bibleStyles = new BibleStyles();
+		// Initialize components
+		this.bibleStyles = new BibleStyles();
 		this.bibleBookFiles = new BibleBookFiles(this, this.bibleContentService);
 
-        this.bibleReferenceRenderer = new BibleReferenceRenderer(
-            this.bibleContentService,
+		this.bibleReferenceRenderer = new BibleReferenceRenderer(
+			this.bibleContentService,
 			this.bibleBookFiles,
-            this
-        );
+			this
+		);
 
-        // Initialize markup processor
-        this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
+		// Initialize markup processor
+		this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
 
-        // Register bible reference processor
-        this.registerMarkdownCodeBlockProcessor('bible', this.bibleMarkupProcessor.processBibleCodeBlock.bind(this.bibleMarkupProcessor));
+		// Register bible reference processor
+		this.registerMarkdownCodeBlockProcessor('bible', this.bibleMarkupProcessor.processBibleCodeBlock.bind(this.bibleMarkupProcessor));
 
-        // Register markdown post processor for inline references
-        this.registerMarkdownPostProcessor(this.bibleMarkupProcessor.processInlineBibleReferences.bind(this.bibleMarkupProcessor));
+		// Register markdown post processor for inline references
+		this.registerMarkdownPostProcessor(this.bibleMarkupProcessor.processInlineBibleReferences.bind(this.bibleMarkupProcessor));
 
-        // Register settings tab
-        this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this));
+		// Register settings tab
+		this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this));
 
-        // Register active leaf change to update styles
-        this.registerEvent(this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this)));
+		// Register active leaf change to update styles
+		this.registerEvent(this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this)));
 
-        // Load Bible data
-        await this.loadBibleData();
-    }
+		// Load Bible data
+		await this.loadBibleData();
+	}
 
-    onunload() {
-    }
+	onunload() {
+	}
 
-    async loadSettings() {
-        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    }
+	async loadSettings() {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	}
 
-    async saveSettings() {
-        await this.saveData(this.settings);
-    }
+	async saveSettings() {
+		await this.saveData(this.settings);
+	}
 
-    /**
-     * Load the Bible data from source
-     */
-    async loadBibleData() {
-        try {
-            console.log('Loading Bible data...');
-            await this.esvApiService.ensureBibleData();
-            console.log('Bible data loaded successfully');
-        } catch (error) {
-            console.error('Error loading Bible data:', error);
-        }
-    }
+	/**
+	 * Load the Bible data from source
+	 */
+	async loadBibleData() {
+		try {
+			console.log('Loading Bible data...');
+			await this.esvApiService.ensureBibleData();
+			console.log('Bible data loaded successfully');
+		} catch (error) {
+			console.error('Error loading Bible data:', error);
+		}
+	}
 
-    /**
-     * Handle leaf change event to check for verse references in the URL
-     */
-    handleActiveLeafChange() {
-        // Refresh theme/styling when active leaf changes
-        this.updateBibleStyles();
-    }
+	/**
+	 * Handle leaf change event to check for verse references in the URL
+	 */
+	handleActiveLeafChange() {
+		// Refresh theme/styling when active leaf changes
+		this.updateBibleStyles();
+	}
 
-    /**
-     * Update Bible styles with current settings
-     */
-    public updateBibleStyles(): void {
-        const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (!activeLeaf) return;
+	/**
+	 * Update Bible styles with current settings
+	 */
+	public updateBibleStyles(): void {
+		const activeLeaf = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (!activeLeaf) return;
 
-        // Each popup window has a unique document, so we need to apply styles to each one
-        // See https://discord.com/channels/686053708261228577/840286264964022302/1362059117190975519
-        // Note: this doesnt completely work.  When a new popout is created the style cars arent ported over
-        const docList: Document[] = [];
-        this.app.workspace.iterateAllLeaves(leaf => docList.push(leaf.getContainer().doc));
-        docList.unique().forEach(doc => {
-            const isDarkMode = activeLeaf.containerEl.doc.body.classList.contains('theme-dark');
-            const theme = isDarkMode ? 'dark' : 'light';
-            this.bibleStyles.applyStyles(
-                doc,
-                theme,
-                this.settings.stylePreset,
-                this.settings.bibleTextFontSize,
-                {
-                    wordsOfChristColor: this.settings.wordsOfChristColor,
-                    verseNumberColor: this.settings.verseNumberColor,
-                    headingColor: this.settings.headingColor,
-                    blockIndentation: this.settings.blockIndentation
-                }
-            );
-        });
-    }
+		// Each popup window has a unique document, so we need to apply styles to each one
+		// See https://discord.com/channels/686053708261228577/840286264964022302/1362059117190975519
+		// Note: this doesnt completely work.  When a new popout is created the style cars arent ported over
+		const docList: Document[] = [];
+		this.app.workspace.iterateAllLeaves(leaf => docList.push(leaf.getContainer().doc));
+		docList.unique().forEach(doc => {
+			const isDarkMode = activeLeaf.containerEl.doc.body.classList.contains('theme-dark');
+			const theme = isDarkMode ? 'dark' : 'light';
+			this.bibleStyles.applyStyles(
+				doc,
+				theme,
+				this.settings.stylePreset,
+				this.settings.bibleTextFontSize,
+				{
+					wordsOfChristColor: this.settings.wordsOfChristColor,
+					verseNumberColor: this.settings.verseNumberColor,
+					headingColor: this.settings.headingColor,
+					blockIndentation: this.settings.blockIndentation
+				}
+			);
+		});
+	}
 
-    /**
-     * Open or create a chapter note (Public method for external access)
-     */
-    public async openChapterNote(reference: string) {
-        return this.bibleBookFiles.openChapterNote(reference);
-    }
+	/**
+	 * Open or create a chapter note (Public method for external access)
+	 */
+	public async openChapterNote(reference: string) {
+		return this.bibleBookFiles.openChapterNote(reference);
+	}
 } 

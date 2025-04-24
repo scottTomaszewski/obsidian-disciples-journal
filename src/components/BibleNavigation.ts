@@ -1,6 +1,6 @@
-import { ButtonComponent, DropdownComponent, Notice } from "obsidian";
-import { BibleReference } from "../core/BibleReference";
-import { BookNames } from "../services/BookNames";
+import {ButtonComponent, DropdownComponent, Notice} from "obsidian";
+import {BibleReference} from "../core/BibleReference";
+import {BookNames} from "../services/BookNames";
 import {BibleBookFiles} from "../services/BibleBookFiles";
 
 /**
@@ -9,44 +9,44 @@ import {BibleBookFiles} from "../services/BibleBookFiles";
 export class BibleNavigation {
 	private bibleBookFiles: BibleBookFiles;
 
-    constructor(noteCreationService: BibleBookFiles) {
+	constructor(noteCreationService: BibleBookFiles) {
 		this.bibleBookFiles = noteCreationService;
-    }
-    
-    /**
-     * Create navigation elements for a Bible chapter
-     */
-    public createNavigationElements(containerEl: HTMLElement, reference: BibleReference): void {
-        const book = BookNames.normalize(reference.book) || reference.book;
-        const chapter = reference.chapter;
-        
-        // Get book chapter count
-        const chapterCount = BookNames.getChapterCount(book);
-        
-        // Determine if we're at the first or last chapter of the book
-        const isFirstChapter = chapter === 1;
-        const isLastChapter = chapter === chapterCount;
-        
-        // Determine if we're at the first or last book of the Bible
-        const bookOrder = BookNames.getBookOrder();
-        const bookIndex = bookOrder.indexOf(book);
-        const isFirstBook = bookIndex === 0;
-        const isLastBook = bookIndex === bookOrder.length - 1;
-        
-        // Create the navigation container
-        const navEl = containerEl.createDiv({ cls: 'bible-navigation' });
-        
-        // Previous chapter button
-        if (isFirstChapter && isFirstBook) {
-            // No previous chapter if we're at Genesis 1
-            navEl.createSpan({ 
-                cls: 'nav-prev nav-disabled', 
-                text: '◄ Previous' 
-            });
-        } else if (isFirstChapter) {
-            // Previous book, last chapter
-            const prevBook = bookOrder[bookIndex - 1];
-            const prevChapter = BookNames.getChapterCount(prevBook);
+	}
+
+	/**
+	 * Create navigation elements for a Bible chapter
+	 */
+	public createNavigationElements(containerEl: HTMLElement, reference: BibleReference): void {
+		const book = BookNames.normalize(reference.book) || reference.book;
+		const chapter = reference.chapter;
+
+		// Get book chapter count
+		const chapterCount = BookNames.getChapterCount(book);
+
+		// Determine if we're at the first or last chapter of the book
+		const isFirstChapter = chapter === 1;
+		const isLastChapter = chapter === chapterCount;
+
+		// Determine if we're at the first or last book of the Bible
+		const bookOrder = BookNames.getBookOrder();
+		const bookIndex = bookOrder.indexOf(book);
+		const isFirstBook = bookIndex === 0;
+		const isLastBook = bookIndex === bookOrder.length - 1;
+
+		// Create the navigation container
+		const navEl = containerEl.createDiv({cls: 'bible-navigation'});
+
+		// Previous chapter button
+		if (isFirstChapter && isFirstBook) {
+			// No previous chapter if we're at Genesis 1
+			navEl.createSpan({
+				cls: 'nav-prev nav-disabled',
+				text: '◄ Previous'
+			});
+		} else if (isFirstChapter) {
+			// Previous book, last chapter
+			const prevBook = bookOrder[bookIndex - 1];
+			const prevChapter = BookNames.getChapterCount(prevBook);
 			new ButtonComponent(navEl)
 				.setButtonText(`◄ ${prevBook} ${prevChapter}`)
 				.setClass('nav-prev')
@@ -70,38 +70,38 @@ export class BibleNavigation {
 		}
 
 		// Book and chapter selector
-        const selectorEl = navEl.createSpan({
-            cls: 'nav-book-selector',
-            text: `📖 ${book} ${chapter}`
-        });
-        
-        const selectorContainer = navEl.createDiv({
-            cls: 'nav-book-data dj-hidden'
-        });
-        
-        // Create the book dropdown
-        const bookDropdownContainer = selectorContainer.createDiv();
-        const bookDropdown = new DropdownComponent(bookDropdownContainer);
-        
-        // Add all books to the dropdown
-        for (const bookName of bookOrder) {
-            bookDropdown.addOption(bookName, bookName);
-        }
-        bookDropdown.setValue(book);
-        
-        // Create the chapter dropdown
-        const chapterDropdownContainer = selectorContainer.createDiv({ cls: 'nav-chapter-container' });
-        const chapterDropdown = new DropdownComponent(chapterDropdownContainer);
-        
-        // Add current book's chapters to the dropdown
-        this.populateChapterDropdown(chapterDropdown, book, chapter);
-        
-        // When book selection changes, update chapter dropdown
-        bookDropdown.onChange(value => {
-            this.populateChapterDropdown(chapterDropdown, value, 1);
-        });
-        
-        // Add Go button
+		const selectorEl = navEl.createSpan({
+			cls: 'nav-book-selector',
+			text: `📖 ${book} ${chapter}`
+		});
+
+		const selectorContainer = navEl.createDiv({
+			cls: 'nav-book-data dj-hidden'
+		});
+
+		// Create the book dropdown
+		const bookDropdownContainer = selectorContainer.createDiv();
+		const bookDropdown = new DropdownComponent(bookDropdownContainer);
+
+		// Add all books to the dropdown
+		for (const bookName of bookOrder) {
+			bookDropdown.addOption(bookName, bookName);
+		}
+		bookDropdown.setValue(book);
+
+		// Create the chapter dropdown
+		const chapterDropdownContainer = selectorContainer.createDiv({cls: 'nav-chapter-container'});
+		const chapterDropdown = new DropdownComponent(chapterDropdownContainer);
+
+		// Add current book's chapters to the dropdown
+		this.populateChapterDropdown(chapterDropdown, book, chapter);
+
+		// When book selection changes, update chapter dropdown
+		bookDropdown.onChange(value => {
+			this.populateChapterDropdown(chapterDropdown, value, 1);
+		});
+
+		// Add Go button
 		new ButtonComponent(selectorContainer)
 			.setButtonText('Go')
 			.setClass('nav-go-button')
@@ -113,20 +113,20 @@ export class BibleNavigation {
 				loadingNotice.hide();
 			});
 		// Toggle selector on click
-        selectorEl.addEventListener('click', () => {
-            selectorContainer.classList.toggle('dj-hidden');
-        });
-        
-        // Next chapter button
-        if (isLastChapter && isLastBook) {
-            // No next chapter if we're at Revelation 22
-            navEl.createSpan({ 
-                cls: 'nav-next nav-disabled', 
-                text: 'Next ►' 
-            });
-        } else if (isLastChapter) {
-            // Next book, first chapter
-            const nextBook = bookOrder[bookIndex + 1];
+		selectorEl.addEventListener('click', () => {
+			selectorContainer.classList.toggle('dj-hidden');
+		});
+
+		// Next chapter button
+		if (isLastChapter && isLastBook) {
+			// No next chapter if we're at Revelation 22
+			navEl.createSpan({
+				cls: 'nav-next nav-disabled',
+				text: 'Next ►'
+			});
+		} else if (isLastChapter) {
+			// Next book, first chapter
+			const nextBook = bookOrder[bookIndex + 1];
 			new ButtonComponent(navEl)
 				.setButtonText(`► ${nextBook} 1`)
 				.setClass('nav-next')
@@ -151,37 +151,37 @@ export class BibleNavigation {
 	}
 
 	/**
-     * Populate the chapter dropdown for a specific book
-     */
-    private populateChapterDropdown(
-        dropdown: DropdownComponent, 
-        book: string, 
-        selectedChapter: number
-    ): void {
-        // Clear existing options
-        dropdown.selectEl.empty();
-        
-        // Get the chapter count for this book
-        const chapterCount = BookNames.getChapterCount(book);
-        
-        // Add chapter options
-        for (let i = 1; i <= chapterCount; i++) {
-            dropdown.addOption(i.toString(), i.toString());
-        }
-        
-        // Set the selected chapter
-        dropdown.setValue(selectedChapter.toString());
-    }
-    
-    /**
-     * Navigate to a specific chapter
-     */
-    public async navigateToChapter(book: string, chapter: number): Promise<void> {
-        try {
+	 * Populate the chapter dropdown for a specific book
+	 */
+	private populateChapterDropdown(
+		dropdown: DropdownComponent,
+		book: string,
+		selectedChapter: number
+	): void {
+		// Clear existing options
+		dropdown.selectEl.empty();
+
+		// Get the chapter count for this book
+		const chapterCount = BookNames.getChapterCount(book);
+
+		// Add chapter options
+		for (let i = 1; i <= chapterCount; i++) {
+			dropdown.addOption(i.toString(), i.toString());
+		}
+
+		// Set the selected chapter
+		dropdown.setValue(selectedChapter.toString());
+	}
+
+	/**
+	 * Navigate to a specific chapter
+	 */
+	public async navigateToChapter(book: string, chapter: number): Promise<void> {
+		try {
 			await this.bibleBookFiles.openChapterNote(new BibleReference(book, chapter).toString());
-        } catch (error) {
-            console.error('Error navigating to chapter:', error);
-            new Notice(`Error navigating to chapter: ${error.message}`);
-        }
-    }
+		} catch (error) {
+			console.error('Error navigating to chapter:', error);
+			new Notice(`Error navigating to chapter: ${error.message}`);
+		}
+	}
 } 
