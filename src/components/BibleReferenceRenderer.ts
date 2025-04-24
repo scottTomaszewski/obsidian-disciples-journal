@@ -34,31 +34,16 @@ export class BibleReferenceRenderer {
 	private bibleNavigation: BibleNavigation;
 	private plugin: DisciplesJournalPlugin;
 	private parser: BibleReferenceParser;
-	private settings: PluginSettings;
 
 	constructor(
 		bibleContentService: BibleContentService,
 		noteCreationService: NoteCreationService,
-		fontSizeForVerses: string = '100%',
 		plugin: DisciplesJournalPlugin
 	) {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
 		this.bibleNavigation = new BibleNavigation(noteCreationService);
 		this.parser = new BibleReferenceParser();
-		this.settings = {
-			displayInlineVerses: true,
-			displayFullPassages: true,
-			bibleTextFontSize: fontSizeForVerses,
-			stylePreset: 'default'
-		};
-	}
-
-	/**
-	 * Set the font size for displayed verses
-	 */
-	public setFontSize(fontSize: string): void {
-		this.settings.bibleTextFontSize = fontSize;
 	}
 
 	/**

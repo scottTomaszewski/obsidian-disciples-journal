@@ -61,7 +61,6 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.bibleContentService,
 			this.noteCreationService,
-            this.settings.bibleTextFontSize,
             this
         );
 
@@ -98,7 +97,6 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.esvApiService.setApiToken(this.settings.esvApiToken);
         this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
         this.esvApiService.setBibleVersion(this.settings.preferredBibleVersion);
-        this.bibleReferenceRenderer.setFontSize(this.settings.bibleTextFontSize);
         this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
     }
     
