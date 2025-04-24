@@ -45,27 +45,6 @@ export class ESVApiService {
 	}
 
 	/**
-	 * Get the full vault path including version subdirectory
-	 */
-	private getFullContentPath(): string {
-		return `${this.plugin.settings.bibleContentVaultPath}/${this.plugin.settings.preferredBibleVersion}`;
-	}
-
-	/**
-	 * Get HTML formatted Bible content from in-memory storage
-	 */
-	public getHTMLContent(reference: string): BiblePassage | null {
-		if (this.htmlFormattedBible[reference]) {
-			return {
-				reference: this.htmlFormattedBible[reference].canonical,
-				verses: [], // Empty since we're using HTML
-				htmlContent: this.htmlFormattedBible[reference].htmlContent
-			};
-		}
-		return null;
-	}
-
-	/**
 	 * Load a collection of HTML formatted Bible chapters from files in the vault
 	 */
 	public async loadBibleChaptersFromVault(): Promise<void> {
@@ -118,7 +97,6 @@ export class ESVApiService {
 			console.error('Error loading Bible chapters from vault:', error);
 		}
 	}
-
 	/**
 	 * Check if data is in ESV API format
 	 */
@@ -129,6 +107,13 @@ export class ESVApiService {
 			data.passages !== undefined &&
 			Array.isArray(data.passages) &&
 			data.passages.length > 0;
+	}
+
+	/**
+	 * Get the full vault path including version subdirectory
+	 */
+	private getFullContentPath(): string {
+		return `${this.plugin.settings.bibleContentVaultPath}/ESV`;
 	}
 
 	/**
