@@ -5,7 +5,7 @@ export class BookNames {
     /**
      * Standardize a book name to its canonical form
      */
-    public static normalizedBookName(bookName: string): string | null {
+    public static normalize(bookName: string): string | null {
         if (!bookName) {
             return null;
         }
@@ -55,7 +55,7 @@ export class BookNames {
             bookName = firstWordMatch[1];
             
             // Check if this is a valid book name
-            const standardizedName = BookNames.normalizedBookName(bookName);
+            const standardizedName = BookNames.normalize(bookName);
             if (standardizedName) {
                 longestMatch = bookName;
             }
@@ -67,7 +67,7 @@ export class BookNames {
             bookName = twoWordsMatch[1];
             
             // Check if this is a valid book name
-            const standardizedName = BookNames.normalizedBookName(bookName);
+            const standardizedName = BookNames.normalize(bookName);
             if (standardizedName) {
                 longestMatch = bookName;
             }
@@ -79,7 +79,7 @@ export class BookNames {
             bookName = threeWordsMatch[1];
             
             // Check if this is a valid book name
-            const standardizedName = BookNames.normalizedBookName(bookName);
+            const standardizedName = BookNames.normalize(bookName);
             if (standardizedName) {
                 longestMatch = bookName;
             }
@@ -92,7 +92,7 @@ export class BookNames {
      * Get the chapter count for a given book name
      */
     public static getChapterCount(bookName: string): number {
-        const standardizedName = BookNames.normalizedBookName(bookName);
+        const standardizedName = BookNames.normalize(bookName);
         if (standardizedName) {
             return BookNames.bibleStructure[standardizedName] || 1;
         }
@@ -155,13 +155,6 @@ export class BookNames {
     private constructor() {
         this.initializeBookNameMap();
     }
-
-    // public static getInstance(): BookNames {
-    //     if (!BookNames.instance) {
-    //         BookNames.instance = new BookNames();
-    //     }
-    //     return BookNames.instance;
-    // }
 
     /**
      * Initialize the map of standardized book names

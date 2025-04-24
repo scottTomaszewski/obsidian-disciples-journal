@@ -53,7 +53,7 @@ export class BibleContentService {
         if (!this.bible) return null;
         
         try {
-            const normalizedBook = BookNames.normalizedBookName(book);
+            const normalizedBook = BookNames.normalize(book);
             if (!normalizedBook) return null;
             
             // Check if the book exists in the Bible data
@@ -88,7 +88,7 @@ export class BibleContentService {
         if (!this.bible) return null;
         
         try {
-            const normalizedBook = BookNames.normalizedBookName(reference.book);
+            const normalizedBook = BookNames.normalize(reference.book);
             if (!normalizedBook) return null;
             
             // Prepare the result

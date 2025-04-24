@@ -4,7 +4,7 @@ import { BibleContentService } from '../services/BibleContentService';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 import { BibleStyles } from '../components/BibleStyles';
 import { DisciplesJournalSettings, DEFAULT_SETTINGS, DisciplesJournalSettingsTab } from '../settings/DisciplesJournalSettings';
-import { NoteCreationService } from 'src/services/NoteCreationService';
+import { BibleBookFiles } from 'src/services/BibleBookFiles';
 import { BibleMarkupProcessor } from './BibleMarkupProcessor';
 
 /**
@@ -17,7 +17,7 @@ export default class DisciplesJournalPlugin extends Plugin {
     // Services
     private esvApiService: ESVApiService;
     private bibleContentService: BibleContentService;
-    private noteCreationService: NoteCreationService;
+    private bibleBookFiles: BibleBookFiles;
     
     // Components
     private bibleStyles: BibleStyles;
@@ -48,7 +48,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         
         // Initialize components
         this.bibleStyles = new BibleStyles();
-		this.noteCreationService = new NoteCreationService(
+		this.bibleBookFiles = new BibleBookFiles(
 			this.app,
 			this.bibleContentService,
 			this.settings
@@ -56,7 +56,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
             this.bibleContentService,
-			this.noteCreationService,
+			this.bibleBookFiles,
             this
         );
 
@@ -181,6 +181,6 @@ export default class DisciplesJournalPlugin extends Plugin {
      * Open or create a chapter note (Public method for external access)
      */
     public async openChapterNote(reference: string) {
-        return this.noteCreationService.openChapterNote(reference);
+        return this.bibleBookFiles.openChapterNote(reference);
     }
 } 

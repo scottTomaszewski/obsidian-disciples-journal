@@ -7,7 +7,7 @@ import { DisciplesJournalSettings } from '../settings/DisciplesJournalSettings';
 /**
  * Service for creating and opening Bible chapter notes
  */
-export class NoteCreationService {
+export class BibleBookFiles {
     private app: App;
     private bibleContentService: BibleContentService;
     private settings: DisciplesJournalSettings;
@@ -23,13 +23,6 @@ export class NoteCreationService {
     }
     
     /**
-     * Get the full path with version
-     */
-    private getFullContentPath(): string {
-        return `${this.settings.bibleContentVaultPath}/${this.settings.preferredBibleVersion}`;
-    }
-    
-    /**
      * Open or create a chapter note
      */
     public async openChapterNote(reference: string) {
@@ -40,26 +33,26 @@ export class NoteCreationService {
                 console.error(`Invalid reference: ${reference}`);
                 return;
             }
-            
+
             // Get full content path including version
             const fullPath = this.getFullContentPath();
             const chapterPath = `${fullPath}/${parsedRef.book}/${parsedRef.book} ${parsedRef.chapter}.md`;
-            
+
             // Check if note exists
             const fileExists = await this.app.vault.adapter.exists(chapterPath);
-            
+
             if (!fileExists && this.settings.downloadOnDemand) {
                 // Create the note with content from the API
                 await this.createChapterNote(parsedRef);
             }
-            
+
             // Try opening the note
             const file = this.app.vault.getAbstractFileByPath(chapterPath);
 
             if (file && file instanceof TFile) {
                 const leaf = this.app.workspace.getLeaf(false);
                 await leaf.openFile(file);
-                
+
                 // If there's a specific verse, scroll to it
                 if (parsedRef.verse) {
                     setTimeout(() => {
@@ -77,42 +70,49 @@ export class NoteCreationService {
             console.error('Error opening chapter note:', error);
         }
     }
-    
+
     /**
      * Create a new chapter note
      */
-    async createChapterNote(reference: BibleReference) {
+	private async createChapterNote(reference: BibleReference) {
         try {
             // Create a properly formatted reference string
             const referenceStr = reference.toString();
-            
+
             // Get the content from the Bible API and format it for a note
             const passage = await this.bibleContentService.getBibleContent(referenceStr);
-            
+
             // Check if passage is null
             if (!passage) {
                 console.error(`Failed to get Bible content for ${referenceStr}`);
                 throw new Error(`Failed to get Bible content for ${referenceStr}`);
             }
-            
+
             // Use the formatter utility to format the content
             const content = BibleFormatter.formatChapterContent(passage);
-            
+
             // Save the content to a note with the version path
             const fullPath = this.getFullContentPath();
             const bookPath = `${fullPath}/${reference.book}`;
             const chapterPath = `${fullPath}/${reference.book}/${reference.book} ${reference.chapter}.md`;
-            
+
             // Ensure the directory exists
             await this.app.vault.adapter.mkdir(bookPath);
-            
+
             // Create the note
             await this.app.vault.create(chapterPath, content);
-            
+
             return chapterPath;
         } catch (error) {
             console.error('Error creating chapter note:', error);
             throw error;
         }
     }
-} 
+
+	/**
+	 * Get the full path with version
+	 */
+	private getFullContentPath(): string {
+		return `${this.settings.bibleContentVaultPath}/${this.settings.preferredBibleVersion}`;
+	}
+}

@@ -26,12 +26,4 @@ export class BibleFormatter {
         
         return content;
     }
-    
-    /**
-     * Build file path for a Bible chapter
-     * Note: vaultPath should already include the translation subdirectory
-     */
-    public static buildChapterPath(vaultPath: string, book: string, chapter: number): string {
-        return `${vaultPath}/${book}/${book} ${chapter}.md`;
-    }
 }

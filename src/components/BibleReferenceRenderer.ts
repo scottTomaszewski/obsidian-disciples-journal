@@ -3,7 +3,7 @@ import {BibleContentService} from "../services/BibleContentService";
 import {BibleNavigation} from "./BibleNavigation";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
 import {BibleEventHandlers} from "src/core/BibleEventHandlers";
-import {NoteCreationService} from "../services/NoteCreationService";
+import {BibleBookFiles} from "../services/BibleBookFiles";
 import {BibleReference} from "../core/BibleReference";
 
 /**
@@ -16,7 +16,7 @@ export class BibleReferenceRenderer {
 
 	constructor(
 		bibleContentService: BibleContentService,
-		noteCreationService: NoteCreationService,
+		noteCreationService: BibleBookFiles,
 		plugin: DisciplesJournalPlugin
 	) {
 		this.bibleContentService = bibleContentService;

@@ -1,23 +1,23 @@
 import { ButtonComponent, DropdownComponent, Notice } from "obsidian";
 import { BibleReference } from "../core/BibleReference";
 import { BookNames } from "../services/BookNames";
-import {NoteCreationService} from "../services/NoteCreationService";
+import {BibleBookFiles} from "../services/BibleBookFiles";
 
 /**
  * Component for generating Bible navigation elements
  */
 export class BibleNavigation {
-	private noteCreationService: NoteCreationService;
+	private bibleBookFiles: BibleBookFiles;
 
-    constructor(noteCreationService: NoteCreationService) {
-		this.noteCreationService = noteCreationService;
+    constructor(noteCreationService: BibleBookFiles) {
+		this.bibleBookFiles = noteCreationService;
     }
     
     /**
      * Create navigation elements for a Bible chapter
      */
     public createNavigationElements(containerEl: HTMLElement, reference: BibleReference): void {
-        const book = BookNames.normalizedBookName(reference.book) || reference.book;
+        const book = BookNames.normalize(reference.book) || reference.book;
         const chapter = reference.chapter;
         
         // Get book chapter count
@@ -178,7 +178,7 @@ export class BibleNavigation {
      */
     public async navigateToChapter(book: string, chapter: number): Promise<void> {
         try {
-			await this.noteCreationService.openChapterNote(new BibleReference(book, chapter).toString());
+			await this.bibleBookFiles.openChapterNote(new BibleReference(book, chapter).toString());
         } catch (error) {
             console.error('Error navigating to chapter:', error);
             new Notice(`Error navigating to chapter: ${error.message}`);

@@ -44,7 +44,7 @@ export class BibleReference {
 			}
 
 			// Standardize the book name
-			const standardizedBook = BookNames.normalizedBookName(book);
+			const standardizedBook = BookNames.normalize(book);
 			if (!standardizedBook) {
 				return null;
 			}
