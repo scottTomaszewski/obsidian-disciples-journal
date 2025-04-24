@@ -1,6 +1,5 @@
 import { App, TFile } from 'obsidian';
 import { BibleContentService } from './BibleContentService';
-import { BibleReferenceParser } from '../core/BibleReferenceParser';
 import { BibleReference } from '../core/BibleReference';
 import { BibleFormatter } from '../utils/BibleFormatter';
 import { DisciplesJournalSettings } from '../settings/DisciplesJournalSettings';
@@ -11,18 +10,15 @@ import { DisciplesJournalSettings } from '../settings/DisciplesJournalSettings';
 export class NoteCreationService {
     private app: App;
     private bibleContentService: BibleContentService;
-    private bibleReferenceParser: BibleReferenceParser;
     private settings: DisciplesJournalSettings;
     
     constructor(
         app: App,
         bibleContentService: BibleContentService,
-        bibleReferenceParser: BibleReferenceParser,
         settings: DisciplesJournalSettings
     ) {
         this.app = app;
         this.bibleContentService = bibleContentService;
-        this.bibleReferenceParser = bibleReferenceParser;
         this.settings = settings;
     }
     
@@ -39,7 +35,7 @@ export class NoteCreationService {
     public async openChapterNote(reference: string) {
         try {
             // Parse the reference string to ensure it's valid
-            const parsedRef = this.bibleReferenceParser.parse(reference);
+            const parsedRef = BibleReference.parse(reference);
             if (!parsedRef) {
                 console.error(`Invalid reference: ${reference}`);
                 return;

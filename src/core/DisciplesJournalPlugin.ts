@@ -1,7 +1,6 @@
 import { Plugin, MarkdownView, Notice } from 'obsidian';
 import { ESVApiService } from '../services/ESVApiService';
 import { BibleContentService } from '../services/BibleContentService';
-import { BibleReferenceParser } from './BibleReferenceParser';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 import { BibleStyles } from '../components/BibleStyles';
 import { DisciplesJournalSettings, DEFAULT_SETTINGS, DisciplesJournalSettingsTab } from '../settings/DisciplesJournalSettings';
@@ -23,7 +22,6 @@ export default class DisciplesJournalPlugin extends Plugin {
     // Components
     private bibleStyles: BibleStyles;
     private bibleReferenceRenderer: BibleReferenceRenderer;
-    private bibleReferenceParser: BibleReferenceParser;
     private bibleMarkupProcessor: BibleMarkupProcessor;
     
     async onload() {
@@ -49,12 +47,10 @@ export default class DisciplesJournalPlugin extends Plugin {
         }
         
         // Initialize components
-        this.bibleReferenceParser = new BibleReferenceParser();
         this.bibleStyles = new BibleStyles();
 		this.noteCreationService = new NoteCreationService(
 			this.app,
 			this.bibleContentService,
-			this.bibleReferenceParser,
 			this.settings
 		);
 

@@ -1,8 +1,6 @@
 import { BibleReference } from "../core/BibleReference";
-import { BibleReferenceParser } from "../core/BibleReferenceParser";
 import { BookNames } from "./BookNames";
 import { ESVApiService } from "./ESVApiService";
-import { BibleDataConverter } from "./BibleDataConverter";
 
 /**
  * Interface for a single Bible verse
@@ -31,11 +29,9 @@ export class BibleContentService {
     private bible: any = null;
     private esvApiService: ESVApiService;
     private downloadOnDemand: boolean = true;
-    private bibleReferenceParser: BibleReferenceParser;
 
 	constructor(esvApiService: ESVApiService) {
 		this.esvApiService = esvApiService;
-		this.bibleReferenceParser = new BibleReferenceParser();
 	}
 
     /**
@@ -153,7 +149,7 @@ export class BibleContentService {
     public async getBibleContent(referenceString: string): Promise<BiblePassage | null> {
         try {
             // Parse the reference
-            const parsedRef = this.bibleReferenceParser.parse(referenceString);
+            const parsedRef = BibleReference.parse(referenceString);
             if (!parsedRef) {
                 console.error(`Invalid reference: ${referenceString}`);
                 return null;

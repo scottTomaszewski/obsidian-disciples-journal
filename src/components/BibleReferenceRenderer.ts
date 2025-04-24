@@ -2,29 +2,9 @@ import {MarkdownPostProcessorContext, Notice} from "obsidian";
 import {BibleContentService} from "../services/BibleContentService";
 import {BibleNavigation} from "./BibleNavigation";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
-import {BibleReferenceParser} from '../core/BibleReferenceParser';
 import {BibleEventHandlers} from "src/core/BibleEventHandlers";
 import {NoteCreationService} from "../services/NoteCreationService";
-
-/**
- * Interface for Bible passage content
- */
-export interface BiblePassage {
-	reference: string;
-	verses: any[];
-	htmlContent?: string;
-	missingToken?: boolean;
-}
-
-/**
- * Interface for plugin settings
- */
-export interface PluginSettings {
-	displayInlineVerses: boolean;
-	displayFullPassages: boolean;
-	bibleTextFontSize: string;
-	stylePreset: string;
-}
+import {BibleReference} from "../core/BibleReference";
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -33,7 +13,6 @@ export class BibleReferenceRenderer {
 	private bibleContentService: BibleContentService;
 	private bibleNavigation: BibleNavigation;
 	private plugin: DisciplesJournalPlugin;
-	private parser: BibleReferenceParser;
 
 	constructor(
 		bibleContentService: BibleContentService,
@@ -43,7 +22,6 @@ export class BibleReferenceRenderer {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
 		this.bibleNavigation = new BibleNavigation(noteCreationService);
-		this.parser = new BibleReferenceParser();
 	}
 
 	/**
@@ -104,7 +82,7 @@ export class BibleReferenceRenderer {
 			const containerEl = el.doc.createElement('div');
 			containerEl.classList.add('bible-passage-container');
 
-			const parsedRef = this.parser.parse(reference);
+			const parsedRef = BibleReference.parse(reference);
 			// TODO - this cant happen if getBibleContent passed...
 			if (!parsedRef) {
 				console.error("Failed to parse reference: " + reference);
