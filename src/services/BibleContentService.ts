@@ -32,13 +32,11 @@ export class BibleContentService {
     private esvApiService: ESVApiService;
     private downloadOnDemand: boolean = true;
     private bibleReferenceParser: BibleReferenceParser;
-    private dataConverter: BibleDataConverter;
 
-    constructor(esvApiService: ESVApiService) {
-        this.esvApiService = esvApiService;
-        this.bibleReferenceParser = new BibleReferenceParser();
-        this.dataConverter = new BibleDataConverter();
-    }
+	constructor(esvApiService: ESVApiService) {
+		this.esvApiService = esvApiService;
+		this.bibleReferenceParser = new BibleReferenceParser();
+	}
 
     /**
      * Set whether to use HTML format or plain text
@@ -52,20 +50,7 @@ export class BibleContentService {
     public setDownloadOnDemand(download: boolean): void {
         this.downloadOnDemand = download;
     }
-
-    /**
-     * Load Bible data into memory
-     */
-    public loadBible(bibleData: any): void {
-        if (!bibleData) {
-            this.bible = null;
-            return;
-        }
-        
-        this.bible = this.dataConverter.convertToBibleData(bibleData);
-    }
-
-    /**
+	/**
      * Get a single verse by reference
      */
     public getVerse(book: string, chapter: number, verse: number): BibleVerse | null {
@@ -162,16 +147,7 @@ export class BibleContentService {
             return null;
         }
     }
-
-    /**
-     * Get a full chapter
-     */
-    public getChapter(book: string, chapter: number): BiblePassage | null {
-        const reference = new BibleReference(book, chapter);
-        return this.getPassage(reference);
-    }
-
-    /**
+	/**
      * Get Bible content from any source (local or API)
      */
     public async getBibleContent(referenceString: string): Promise<BiblePassage | null> {

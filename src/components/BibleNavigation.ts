@@ -1,42 +1,16 @@
-import { App, ButtonComponent, DropdownComponent, Notice, TFile } from "obsidian";
+import { ButtonComponent, DropdownComponent, Notice } from "obsidian";
 import { BibleReference } from "../core/BibleReference";
 import { BookNames } from "../services/BookNames";
-import { BibleContentService } from "../services/BibleContentService";
-import { BibleFormatter } from "../utils/BibleFormatter";
+import {NoteCreationService} from "../services/NoteCreationService";
 
 /**
  * Component for generating Bible navigation elements
  */
 export class BibleNavigation {
-    private app: App;
-    private vaultPath: string;
-    private bibleContentService: BibleContentService;
-    private downloadOnDemand: boolean = true;
-    
-    constructor(
-        app: App, 
-        bibleContentService: BibleContentService,
-        vaultPath: string = 'Bible/ESV',
-        downloadOnDemand: boolean = true
-    ) {
-        this.app = app;
-        this.bibleContentService = bibleContentService;
-        this.vaultPath = vaultPath;
-        this.downloadOnDemand = downloadOnDemand;
-    }
-    
-    /**
-     * Set the vault path for Bible content
-     */
-    public setVaultPath(path: string): void {
-        this.vaultPath = path;
-    }
-    
-    /**
-     * Set whether to download content on demand
-     */
-    public setDownloadOnDemand(value: boolean): void {
-        this.downloadOnDemand = value;
+	private noteCreationService: NoteCreationService;
+
+    constructor(noteCreationService: NoteCreationService) {
+		this.noteCreationService = noteCreationService;
     }
     
     /**
@@ -204,54 +178,7 @@ export class BibleNavigation {
      */
     public async navigateToChapter(book: string, chapter: number): Promise<void> {
         try {
-            // Create the file path using the utility
-            const filePath = BibleFormatter.buildChapterPath(this.vaultPath, book, chapter);
-            
-            // Try to find the file
-            let abstractFile = this.app.vault.getAbstractFileByPath(filePath);
-            
-            // If file exists, open it
-            if (abstractFile && abstractFile instanceof TFile) {
-                const leaf = this.app.workspace.getLeaf();
-                await leaf.openFile(abstractFile);
-                return;
-            }
-            
-            // File doesn't exist, try to create it if download on demand is enabled
-            if (this.downloadOnDemand) {
-                try {
-                    // Create a BibleReference
-                    const reference = new BibleReference(book, chapter);
-                    const referenceStr = reference.toString();
-                    
-                    // Get the Bible content
-                    const passage = await this.bibleContentService.getBibleContent(referenceStr);
-                    
-                    if (!passage) {
-                        new Notice(`Failed to load content for ${book} ${chapter}`);
-                        return;
-                    }
-                    
-                    // Format the content
-                    const content = BibleFormatter.formatChapterContent(passage);
-                    
-                    // Ensure the book directory exists
-                    const bookPath = `${this.vaultPath}/${book}`;
-                    await this.app.vault.adapter.mkdir(bookPath);
-                    
-                    // Create the file
-                    const newFile = await this.app.vault.create(filePath, content);
-                    
-                    // Open the new file
-                    const leaf = this.app.workspace.getLeaf();
-                    await leaf.openFile(newFile);
-                } catch (error) {
-                    new Notice(`Error creating chapter note: ${error.message}`);
-                    console.error('Error creating chapter note:', error);
-                }
-            } else {
-                new Notice(`Chapter ${book} ${chapter} not found.`);
-            }
+			await this.noteCreationService.openChapterNote(new BibleReference(book, chapter).toString());
         } catch (error) {
             console.error('Error navigating to chapter:', error);
             new Notice(`Error navigating to chapter: ${error.message}`);

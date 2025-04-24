@@ -1,9 +1,10 @@
-import {App, MarkdownPostProcessorContext, Notice} from "obsidian";
+import {MarkdownPostProcessorContext, Notice} from "obsidian";
 import {BibleContentService} from "../services/BibleContentService";
 import {BibleNavigation} from "./BibleNavigation";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
 import {BibleReferenceParser} from '../core/BibleReferenceParser';
 import {BibleEventHandlers} from "src/core/BibleEventHandlers";
+import {NoteCreationService} from "../services/NoteCreationService";
 
 /**
  * Interface for Bible passage content
@@ -31,26 +32,19 @@ export interface PluginSettings {
 export class BibleReferenceRenderer {
 	private bibleContentService: BibleContentService;
 	private bibleNavigation: BibleNavigation;
-	private downloadOnDemand: boolean = true;
 	private plugin: DisciplesJournalPlugin;
 	private parser: BibleReferenceParser;
 	private settings: PluginSettings;
 
 	constructor(
-		app: App,
 		bibleContentService: BibleContentService,
+		noteCreationService: NoteCreationService,
 		fontSizeForVerses: string = '100%',
-		vaultPath: string = 'Bible/ESV',
 		plugin: DisciplesJournalPlugin
 	) {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
-		this.bibleNavigation = new BibleNavigation(
-			app,
-			bibleContentService,
-			vaultPath,
-			this.downloadOnDemand
-		);
+		this.bibleNavigation = new BibleNavigation(noteCreationService);
 		this.parser = new BibleReferenceParser();
 		this.settings = {
 			displayInlineVerses: true,
@@ -65,21 +59,6 @@ export class BibleReferenceRenderer {
 	 */
 	public setFontSize(fontSize: string): void {
 		this.settings.bibleTextFontSize = fontSize;
-	}
-
-	/**
-	 * Set the vault path for Bible content
-	 */
-	public setVaultPath(path: string): void {
-		this.bibleNavigation.setVaultPath(path);
-	}
-
-	/**
-	 * Set whether to download Bible content on demand
-	 */
-	public setDownloadOnDemand(download: boolean): void {
-		this.downloadOnDemand = download;
-		this.bibleNavigation.setDownloadOnDemand(download);
 	}
 
 	/**

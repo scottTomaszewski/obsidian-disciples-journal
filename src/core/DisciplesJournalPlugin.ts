@@ -51,21 +51,20 @@ export default class DisciplesJournalPlugin extends Plugin {
         // Initialize components
         this.bibleReferenceParser = new BibleReferenceParser();
         this.bibleStyles = new BibleStyles();
+		this.noteCreationService = new NoteCreationService(
+			this.app,
+			this.bibleContentService,
+			this.bibleReferenceParser,
+			this.settings
+		);
+
         this.bibleReferenceRenderer = new BibleReferenceRenderer(
-            this.app, 
-            this.bibleContentService, 
+            this.bibleContentService,
+			this.noteCreationService,
             this.settings.bibleTextFontSize,
-            this.settings.bibleContentVaultPath,
             this
         );
-        
-        this.noteCreationService = new NoteCreationService(
-            this.app,
-            this.bibleContentService,
-            this.bibleReferenceParser,
-            this.settings
-        );
-        
+
         // Initialize markup processor
         this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
         
@@ -99,9 +98,7 @@ export default class DisciplesJournalPlugin extends Plugin {
         this.esvApiService.setApiToken(this.settings.esvApiToken);
         this.esvApiService.setContentPath(this.settings.bibleContentVaultPath);
         this.esvApiService.setBibleVersion(this.settings.preferredBibleVersion);
-        this.bibleReferenceRenderer.setVaultPath(this.settings.bibleContentVaultPath);
         this.bibleReferenceRenderer.setFontSize(this.settings.bibleTextFontSize);
-        this.bibleReferenceRenderer.setDownloadOnDemand(this.settings.downloadOnDemand);
         this.bibleContentService.setDownloadOnDemand(this.settings.downloadOnDemand);
     }
     
@@ -169,7 +166,6 @@ export default class DisciplesJournalPlugin extends Plugin {
     public setContentPath(path: string): void {
         this.settings.bibleContentVaultPath = path;
         this.esvApiService.setContentPath(path);
-        this.bibleReferenceRenderer.setVaultPath(path);
     }
     
     /**
@@ -185,7 +181,6 @@ export default class DisciplesJournalPlugin extends Plugin {
      */
     public setDownloadOnDemand(value: boolean): void {
         this.bibleContentService.setDownloadOnDemand(value);
-        this.bibleReferenceRenderer.setDownloadOnDemand(value);
     }
     
     /**

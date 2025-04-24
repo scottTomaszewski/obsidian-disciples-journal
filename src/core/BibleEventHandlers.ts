@@ -14,7 +14,6 @@ export class BibleEventHandlers {
      * Handle hover on Bible references
      */
     async handleBibleReferenceHover(event: MouseEvent) {
-        console.log("hi");
         // Don't create new preview if we already have one active
         if (this.previewPopper) return;
         
