@@ -253,20 +253,5 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 					this.plugin.settings.downloadOnDemand = value;
 					await this.plugin.saveSettings();
 				}));
-
-
-		new Setting(containerEl)
-			.setName('Bible Data Status')
-			.setDesc('Click to reload Bible data from source')
-			.addButton(button => button
-				.setButtonText('Reload Bible Data')
-				.onClick(async () => {
-					button.setButtonText('Loading...');
-					button.setDisabled(true);
-					await this.plugin.loadBibleData();
-					button.setButtonText('Reload Bible Data');
-					button.setDisabled(false);
-					this.display(); // Refresh the settings panel
-				}));
 	}
 } 

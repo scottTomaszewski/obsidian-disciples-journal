@@ -73,8 +73,8 @@ export class BibleBookFiles {
 	 */
 	private async createChapterNote(reference: BibleReference) {
 		try {
-			// Create a properly formatted reference string
-			const referenceStr = reference.toString();
+			// Create reference string only from book+chapter
+			const referenceStr = new BibleReference(reference.book, reference.chapter).toString();
 
 			// Get the content from the Bible API and format it for a note
 			const passage = await this.bibleContentService.getBibleContent(referenceStr);

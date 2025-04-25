@@ -67,9 +67,6 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Register active leaf change to update styles
 		this.registerEvent(this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this)));
-
-		// Load Bible data
-		await this.loadBibleData();
 	}
 
 	onunload() {
@@ -81,19 +78,6 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 	async saveSettings() {
 		await this.saveData(this.settings);
-	}
-
-	/**
-	 * Load the Bible data from source
-	 */
-	async loadBibleData() {
-		try {
-			console.log('Loading Bible data...');
-			await this.esvApiService.ensureBibleData();
-			console.log('Bible data loaded successfully');
-		} catch (error) {
-			console.error('Error loading Bible data:', error);
-		}
 	}
 
 	/**

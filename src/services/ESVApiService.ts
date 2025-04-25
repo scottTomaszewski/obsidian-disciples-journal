@@ -1,6 +1,8 @@
 import {requestUrl} from "obsidian";
 import {BiblePassage} from "./BibleContentService";
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
+import {BibleReference} from "../core/BibleReference";
+import {BookNames} from "./BookNames";
 
 /**
  * Interface for ESV API Response
@@ -33,82 +35,9 @@ export class ESVApiService {
 	private plugin: DisciplesJournalPlugin;
 
 	// Store HTML formatted Bible chapters
-	private htmlFormattedBible: {
-		[reference: string]: {
-			canonical: string;
-			htmlContent: string;
-		}
-	} = {};
-
 	constructor(plugin: DisciplesJournalPlugin) {
 		this.plugin = plugin;
 	}
-
-	/**
-	 * Load a collection of HTML formatted Bible chapters from files in the vault
-	 */
-	public async loadBibleChaptersFromVault(): Promise<void> {
-		try {
-			// Get the path where Bible content is stored
-			const fullPath = this.getFullContentPath();
-
-			// Check if path exists
-			if (!(await this.plugin.app.vault.adapter.exists(fullPath))) {
-				console.log(`Bible content directory ${fullPath} does not exist yet`);
-				return;
-			}
-
-			// Get all book directories
-			const bookDirs = await this.plugin.app.vault.adapter.list(fullPath);
-
-			// Process each book directory
-			for (const bookDir of bookDirs.folders) {
-				// Get all chapter files
-				const files = await this.plugin.app.vault.adapter.list(bookDir);
-
-				// Process each chapter file
-				for (const file of files.files) {
-					if (file.endsWith('.json')) {
-						try {
-							// Read and parse the file
-							const content = await this.plugin.app.vault.adapter.read(file);
-							const data = JSON.parse(content);
-
-							// Process the data if it's in the expected format
-							if (this.isESVApiFormat(data)) {
-								// Store the chapter content
-								const canonical = data.canonical;
-								const htmlContent = data.passages[0];
-
-								this.htmlFormattedBible[canonical] = {
-									canonical,
-									htmlContent
-								};
-							}
-						} catch (error) {
-							console.error(`Error processing file ${file}:`, error);
-						}
-					}
-				}
-			}
-
-			console.log(`Loaded ${Object.keys(this.htmlFormattedBible).length} Bible chapters from vault`);
-		} catch (error) {
-			console.error('Error loading Bible chapters from vault:', error);
-		}
-	}
-	/**
-	 * Check if data is in ESV API format
-	 */
-	public isESVApiFormat(data: any): boolean {
-		return data &&
-			typeof data === 'object' &&
-			data.canonical !== undefined &&
-			data.passages !== undefined &&
-			Array.isArray(data.passages) &&
-			data.passages.length > 0;
-	}
-
 	/**
 	 * Get the full vault path including version subdirectory
 	 */
@@ -180,9 +109,29 @@ export class ESVApiService {
 			};
 		}
 
+		let br = BibleReference.parse(reference);
+		if (!br) {
+			return {
+				reference: reference,
+				verses: [],
+				htmlContent: this.createErrorMessageContent(
+					document,
+					'api-error',
+					`Failed to parse reference ${reference}.`,
+					'Please correct the bible reference.'
+				).outerHTML
+			};
+		}
+
+		// ESV API has a strange bug where if you request "Obadiah 1" it will only return the first verse. Requesting
+		// 999 verses seems to be a workaround
+		if (br.isChapterReference() && BookNames.getChapterCount(br.book) == 1) {
+			br = new BibleReference(br.book, br.chapter, 1, 999);
+		}
+
 		try {
 			// Encode the reference for the URL
-			const encodedRef = encodeURIComponent(reference);
+			const encodedRef = encodeURIComponent(br.toString());
 
 			// Build the API URL with parameters
 			const apiUrl = `https://api.esv.org/v3/passage/html/?q=${encodedRef}&include-passage-references=false&include-verse-numbers=true&include-first-verse-numbers=true&include-footnotes=true&include-headings=true`;
@@ -277,38 +226,4 @@ export class ESVApiService {
 			}
 		}
 	}
-
-	/**
-	 * Ensures Bible data is loaded, downloading if necessary
-	 */
-	public async ensureBibleData(): Promise<void> {
-		try {
-			// Check if we have data by looking for specific files in the vault
-			const hasData = await this.checkBibleDataExists();
-
-			if (!hasData) {
-				console.log('Bible data not found, loading from vault...');
-				await this.loadBibleChaptersFromVault();
-			} else {
-				console.log('Bible data already exists');
-			}
-		} catch (error) {
-			console.error('Error ensuring Bible data:', error);
-			throw error;
-		}
-	}
-
-	/**
-	 * Check if Bible data exists in the vault
-	 */
-	private async checkBibleDataExists(): Promise<boolean> {
-		try {
-			// Check for a common book like Genesis
-			const genesisPath = `${this.getFullContentPath()}/Genesis/Genesis 1.md`;
-			return await this.plugin.app.vault.adapter.exists(genesisPath);
-		} catch (error) {
-			console.error('Error checking if Bible data exists:', error);
-			return false;
-		}
-	}
-} 
+}

@@ -151,6 +151,7 @@ export class BibleContentService {
 
 			// If not available locally and download on demand is enabled, try the API
 			if (!passage && this.plugin.settings.downloadOnDemand) {
+				console.log(`Pulling passage(s) (${referenceString}) from ESV API`)
 				// Try to get from the ESV API
 				passage = await this.esvApiService.downloadFromESVApi(referenceString);
 			}
