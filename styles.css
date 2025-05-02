@@ -385,7 +385,7 @@ body {
 .bible-reference-error {
     color: var(--text-error);
     font-style: italic;
-    background-color: var(--background-modifier-error);
+    border: 1px solid var(--background-modifier-error);
     padding: 8px 12px;
     border-radius: 4px;
     display: inline-block;

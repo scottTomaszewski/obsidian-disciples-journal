@@ -1,3 +1,4 @@
+import { BiblePassage } from 'src/utils/BiblePassage';
 import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
 
 /**
@@ -14,7 +15,7 @@ export class BibleEventHandlers {
 	/**
 	 * Handle hover on Bible references
 	 */
-	async handleBibleReferenceHover(event: MouseEvent) {
+	async handleBibleReferenceHover(event: MouseEvent, passage: BiblePassage) {
 		// Don't create new preview if we already have one active
 		if (this.previewPopper) return;
 
@@ -31,7 +32,7 @@ export class BibleEventHandlers {
 			// Create new preview
 			this.previewPopper = await this.bibleReferenceRenderer.showVersePreview(
 				referenceEl,
-				referenceText,
+				passage,
 				event
 			);
 

@@ -14,7 +14,11 @@ export class BibleReference {
 	 * Create a new Bible reference
 	 */
 	constructor(book: string, chapter: number, verse?: number, endVerse?: number, endChapter?: number) {
-		this.book = book;
+		const normalizedBook = BookNames.normalize(book);
+		if (!normalizedBook) {
+			throw new Error(`Illegal book name: ${book}`)
+		}
+		this.book = normalizedBook;
 		this.chapter = chapter;
 		this.verse = verse;
 		this.endVerse = endVerse;

@@ -3,11 +3,12 @@ import {BibleContentService} from './BibleContentService';
 import {BibleReference} from '../core/BibleReference';
 import {BibleFormatter} from '../utils/BibleFormatter';
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
+import {BibleApiResponse} from "../utils/BibleApiResponse";
 
 /**
- * Service for creating and opening Bible chapter notes
+ * Service for creating and opening Bible (chapter) files
  */
-export class BibleBookFiles {
+export class BibleFiles {
 	private plugin: DisciplesJournalPlugin;
 	private bibleContentService: BibleContentService;
 
@@ -73,20 +74,21 @@ export class BibleBookFiles {
 	 */
 	private async createChapterNote(reference: BibleReference) {
 		try {
-			// Create reference string only from book+chapter
-			const referenceStr = new BibleReference(reference.book, reference.chapter).toString();
+			// Create reference only from book+chapter
+			const bookChapter = new BibleReference(reference.book, reference.chapter);
 
 			// Get the content from the Bible API and format it for a note
-			const passage = await this.bibleContentService.getBibleContent(referenceStr);
+			const response: BibleApiResponse = await this.bibleContentService.getBibleContent(bookChapter);
 
 			// Check if passage is null
-			if (!passage) {
-				console.error(`Failed to get Bible content for ${referenceStr}`);
-				throw new Error(`Failed to get Bible content for ${referenceStr}`);
+			if (response.isError()) {
+				// TODO - handle this better with a dialog box or Notice or something.
+				console.error(`Failed to get Bible content for ${bookChapter}`);
+				throw new Error(`Failed to get Bible content for ${bookChapter}`);
 			}
 
 			// Use the formatter utility to format the content
-			const content = BibleFormatter.formatChapterContent(passage);
+			const content = BibleFormatter.formatChapterContent(response.passage);
 
 			// Save the content to a note with the version path
 			const fullPath = this.getFullContentPath();

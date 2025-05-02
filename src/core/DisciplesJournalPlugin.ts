@@ -8,7 +8,7 @@ import {
 	DEFAULT_SETTINGS,
 	DisciplesJournalSettingsTab
 } from '../settings/DisciplesJournalSettings';
-import {BibleBookFiles} from 'src/services/BibleBookFiles';
+import {BibleFiles} from 'src/services/BibleFiles';
 import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 
 /**
@@ -21,7 +21,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 	// Services
 	private esvApiService: ESVApiService;
 	private bibleContentService: BibleContentService;
-	private bibleBookFiles: BibleBookFiles;
+	private bibleBookFiles: BibleFiles;
 
 	// Components
 	private bibleStyles: BibleStyles;
@@ -45,7 +45,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Initialize components
 		this.bibleStyles = new BibleStyles();
-		this.bibleBookFiles = new BibleBookFiles(this, this.bibleContentService);
+		this.bibleBookFiles = new BibleFiles(this, this.bibleContentService);
 
 		this.bibleReferenceRenderer = new BibleReferenceRenderer(
 			this.bibleContentService,

@@ -1,8 +1,9 @@
-import {BiblePassage} from "../services/BibleContentService";
+import {BiblePassage} from "./BiblePassage";
 
 /**
  * Utility for formatting Bible content consistently across the application
  */
+// TODO - this probably belongs somewhere else
 export class BibleFormatter {
 	/**
 	 * Format chapter content as Markdown
@@ -14,15 +15,8 @@ export class BibleFormatter {
 
 		// Add code block for rendering
 		content += "```bible\n";
-		content += passage.reference;
+		content += passage.reference.toString();
 		content += "\n```\n\n";
-
-		// Alternatively, add each verse separately
-		if (passage.verses && passage.verses.length > 0) {
-			for (const verse of passage.verses) {
-				content += `**${verse.verse}** ${verse.text}\n\n`;
-			}
-		}
 
 		return content;
 	}

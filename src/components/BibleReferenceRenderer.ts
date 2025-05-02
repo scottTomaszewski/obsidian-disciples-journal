@@ -1,10 +1,11 @@
-import {MarkdownPostProcessorContext, Notice} from "obsidian";
+import {Notice} from "obsidian";
 import {BibleContentService} from "../services/BibleContentService";
 import {BibleNavigation} from "./BibleNavigation";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
 import {BibleEventHandlers} from "src/core/BibleEventHandlers";
-import {BibleBookFiles} from "../services/BibleBookFiles";
+import {BibleFiles} from "../services/BibleFiles";
 import {BibleReference} from "../core/BibleReference";
+import {BiblePassage} from "../utils/BiblePassage";
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -16,7 +17,7 @@ export class BibleReferenceRenderer {
 
 	constructor(
 		bibleContentService: BibleContentService,
-		noteCreationService: BibleBookFiles,
+		noteCreationService: BibleFiles,
 		plugin: DisciplesJournalPlugin
 	) {
 		this.bibleContentService = bibleContentService;
@@ -27,7 +28,7 @@ export class BibleReferenceRenderer {
 	/**
 	 * Process inline code blocks for Bible references
 	 */
-	public async processInlineCodeBlocks(element: HTMLElement, context: MarkdownPostProcessorContext): Promise<void> {
+	public async processInlineCodeBlocks(element: HTMLElement): Promise<void> {
 		const codeBlocks = element.querySelectorAll('code');
 
 		for (let i = 0; i < codeBlocks.length; i++) {
@@ -43,10 +44,13 @@ export class BibleReferenceRenderer {
 			}
 
 			try {
-				// Try to parse as Bible reference
-				const reference = await this.bibleContentService.getBibleContent(codeText);
-
+				const reference = BibleReference.parse(codeText);
 				if (!reference) {
+					continue;
+				}
+				const response = await this.bibleContentService.getBibleContent(reference);
+				if (response.isError()) {
+					new Notice(response.errorMessage, 10000);
 					continue;
 				}
 
@@ -56,7 +60,7 @@ export class BibleReferenceRenderer {
 				referenceEl.textContent = codeText;
 
 				referenceEl.addEventListener('mouseover', (e) => {
-					new BibleEventHandlers(this).handleBibleReferenceHover(e);
+					new BibleEventHandlers(this).handleBibleReferenceHover(e, response.passage);
 				});
 				referenceEl.addEventListener('mouseout', (e) => {
 					new BibleEventHandlers(this).handleBibleReferenceMouseOut(e);
@@ -74,81 +78,61 @@ export class BibleReferenceRenderer {
 	 * Process full Bible passage code blocks
 	 */
 	public async processFullBiblePassage(source: string, el: HTMLElement): Promise<void> {
+		// Parse the reference
 		const reference = source.trim();
-		// TODO - this should be overlaoded with a form that takes the BibleReference
-		const passage = await this.bibleContentService.getBibleContent(reference);
-
-		if (passage) {
-			const containerEl = el.doc.createElement('div');
-			containerEl.classList.add('bible-passage-container');
-
-			const parsedRef = BibleReference.parse(reference);
-			// TODO - this cant happen if getBibleContent passed...
-			if (!parsedRef) {
-				console.error("Failed to parse reference: " + reference);
-				return;
-			}
-			if (parsedRef.isChapterReference() || this.plugin.settings.showNavigationForVerses) {
-				this.bibleNavigation.createNavigationElements(containerEl, parsedRef);
-			}
-
-			// Add reference heading
-			const headingEl = el.doc.createElement('h3');
-			headingEl.classList.add('bible-passage-heading');
-			const referenceLink = headingEl.createEl('a', {text: passage.reference});
-			referenceLink.onClickEvent(async () => {
-				await this.bibleNavigation.navigateToChapter(parsedRef.book, parsedRef.chapter);
-			});
-
-			containerEl.appendChild(headingEl);
-
-			// Add verses
-			const passageEl = el.doc.createElement('div');
-			passageEl.classList.add('bible-passage-text');
-
-			// Check if we have HTML content
-			if (passage.htmlContent) {
-				// Use the HTML content directly
-				passageEl.innerHTML = passage.htmlContent;
-			} else {
-				// Fallback to traditional verse rendering
-				for (const verse of passage.verses) {
-					const verseEl = el.doc.createElement('p');
-					verseEl.classList.add('bible-verse');
-
-					const verseNumEl = el.doc.createElement('span');
-					verseNumEl.classList.add('bible-verse-number');
-					verseNumEl.textContent = `${verse.verse} `;
-
-					const verseTextEl = el.doc.createElement('span');
-					verseTextEl.classList.add('bible-verse-text');
-					verseTextEl.textContent = verse.text;
-
-					verseEl.appendChild(verseNumEl);
-					verseEl.appendChild(verseTextEl);
-					passageEl.appendChild(verseEl);
-				}
-			}
-
-			containerEl.appendChild(passageEl);
-
-			el.appendChild(containerEl);
-		} else {
-			// If reference not found, show error
-			const errorEl = el.doc.createElement('div');
-			errorEl.classList.add('bible-reference-error');
-			errorEl.textContent = `Bible reference "${reference}" not found.`;
-			el.appendChild(errorEl);
+		const parsedRef = BibleReference.parse(reference);
+		if (!parsedRef) {
+			const message = `Invalid bible reference: ${source}`;
+			console.error(message);
+			const errorContainer = el.createEl('div');
+			errorContainer.classList.add('bible-reference-error');
+			errorContainer.textContent = message;
+			return;
 		}
+
+		// Grab the content
+		const response = await this.bibleContentService.getBibleContent(parsedRef);
+
+		if (response.isError()) {
+			const errorContainer = el.createEl('div');
+			errorContainer.classList.add('bible-reference-error');
+			errorContainer.textContent = response.errorMessage;
+			return;
+		}
+
+		const canonicalRef = response.passage.reference
+
+		const containerEl = el.doc.createElement('div');
+		containerEl.classList.add('bible-passage-container');
+
+		// Add navigation if chapter passage
+		if (canonicalRef.isChapterReference() || this.plugin.settings.showNavigationForVerses) {
+			this.bibleNavigation.createNavigationElements(containerEl, canonicalRef);
+		}
+
+		// Add reference heading
+		const headingEl = el.doc.createElement('h3');
+		headingEl.classList.add('bible-passage-heading');
+		const referenceLink = headingEl.createEl('a', {text: canonicalRef.toString()});
+		referenceLink.onClickEvent(async () => {
+			await this.bibleNavigation.navigateToChapter(canonicalRef.book, canonicalRef.chapter);
+		});
+
+		containerEl.appendChild(headingEl);
+
+		// Add verses
+		const passageEl = el.doc.createElement('div');
+		passageEl.classList.add('bible-passage-text');
+		passageEl.innerHTML = response.passage.html;
+
+		containerEl.appendChild(passageEl);
+		el.appendChild(containerEl);
 	}
 
 	/**
 	 * Show a verse preview in a hover popup
 	 */
-	public async showVersePreview(element: HTMLElement, referenceText: string, event: MouseEvent): Promise<HTMLElement | null> {
-		const passage = await this.bibleContentService.getBibleContent(referenceText);
-		if (!passage) return null;
-
+	public async showVersePreview(element: HTMLElement, passage: BiblePassage, event: MouseEvent): Promise<HTMLElement | null> {
 		// Create verse preview element
 		const versePreviewEl = element.doc.createElement('div');
 		versePreviewEl.classList.add('bible-verse-preview');
@@ -156,7 +140,7 @@ export class BibleReferenceRenderer {
 		// Add reference heading (make it clickable)
 		const headingEl = element.doc.createElement('div');
 		headingEl.classList.add('bible-verse-preview-heading', 'bible-reference-clickable');
-		headingEl.textContent = passage.reference;
+		headingEl.textContent = passage.reference.toString();
 
 		// Add click handler to the heading
 		headingEl.addEventListener('click', (e) => {
@@ -166,7 +150,8 @@ export class BibleReferenceRenderer {
 
 			try {
 				// Call the method to open the chapter note
-				this.plugin.openChapterNote(passage.reference);
+				// TODO - openChapterNote should take in a BibleReference instead of string
+				this.plugin.openChapterNote(passage.reference.toString());
 
 				// Close the preview - using a method available in BibleEventHandlers
 				// Remove the popup directly instead of trying to access the private property
@@ -188,47 +173,26 @@ export class BibleReferenceRenderer {
 		const contentEl = element.doc.createElement('div');
 		contentEl.classList.add('bible-verse-preview-content');
 
-		// Check if we have HTML content
-		if (passage.htmlContent) {
-			// Use the HTML content directly, but try to extract just the portion we need
-			// for the preview (to avoid showing footnotes, chapter headings, etc.)
-			try {
-				// Create a temporary element to parse the HTML
-				const tempEl = element.doc.createElement('div');
-				tempEl.innerHTML = passage.htmlContent;
+		// Use the HTML content directly, but try to extract just the portion we need
+		// for the preview (to avoid showing footnotes, chapter headings, etc.)
+		try {
+			// Create a temporary element to parse the HTML
+			const tempEl = element.doc.createElement('div');
+			tempEl.innerHTML = passage.html;
 
-				// Find and extract the main verse content (paragraphs)
-				const paragraphs = tempEl.querySelectorAll('p:not(.extra_text)');
-				if (paragraphs.length > 0) {
-					for (let i = 0; i < paragraphs.length; i++) {
-						contentEl.appendChild(paragraphs[i].cloneNode(true));
-					}
-				} else {
-					// Fallback if we can't extract the verses properly
-					contentEl.innerHTML = passage.htmlContent;
+			// Find and extract the main verse content (paragraphs)
+			const paragraphs = tempEl.querySelectorAll('p:not(.extra_text)');
+			if (paragraphs.length > 0) {
+				for (let i = 0; i < paragraphs.length; i++) {
+					contentEl.appendChild(paragraphs[i].cloneNode(true));
 				}
-			} catch (error) {
-				console.error("Error extracting verse content from HTML:", error);
-				contentEl.innerHTML = passage.htmlContent;
+			} else {
+				// Fallback if we can't extract the verses properly
+				contentEl.innerHTML = passage.html;
 			}
-		} else {
-			// Fallback to traditional verse rendering
-			for (const verse of passage.verses) {
-				const verseEl = element.doc.createElement('p');
-
-				if (passage.verses.length > 1) {
-					const verseNumEl = element.doc.createElement('span');
-					verseNumEl.classList.add('bible-verse-number');
-					verseNumEl.textContent = `${verse.verse} `;
-					verseEl.appendChild(verseNumEl);
-				}
-
-				const verseTextEl = element.doc.createElement('span');
-				verseTextEl.textContent = verse.text;
-				verseEl.appendChild(verseTextEl);
-
-				contentEl.appendChild(verseEl);
-			}
+		} catch (error) {
+			console.error("Error extracting verse content from HTML:", error);
+			contentEl.innerHTML = passage.html;
 		}
 
 		versePreviewEl.appendChild(contentEl);

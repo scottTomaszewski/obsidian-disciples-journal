@@ -47,7 +47,7 @@ export class BibleMarkupProcessor {
 		}
 
 		try {
-			await this.bibleReferenceRenderer.processInlineCodeBlocks(el, ctx);
+			await this.bibleReferenceRenderer.processInlineCodeBlocks(el);
 		} catch (error) {
 			console.error('Error processing inline Bible references:', error);
 		}

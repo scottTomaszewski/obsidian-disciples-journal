@@ -1,15 +1,15 @@
 import {ButtonComponent, DropdownComponent, Notice} from "obsidian";
 import {BibleReference} from "../core/BibleReference";
 import {BookNames} from "../services/BookNames";
-import {BibleBookFiles} from "../services/BibleBookFiles";
+import {BibleFiles} from "../services/BibleFiles";
 
 /**
  * Component for generating Bible navigation elements
  */
 export class BibleNavigation {
-	private bibleBookFiles: BibleBookFiles;
+	private bibleBookFiles: BibleFiles;
 
-	constructor(noteCreationService: BibleBookFiles) {
+	constructor(noteCreationService: BibleFiles) {
 		this.bibleBookFiles = noteCreationService;
 	}
 
