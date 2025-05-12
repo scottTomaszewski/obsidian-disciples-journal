@@ -1,7 +1,7 @@
 {
 	"id": "disciples-journal",
 	"name": "Disciples Journal",
-	"version": "0.5.0",
+	"version": "0.5.1",
 	"minAppVersion": "0.15.0",
 	"description": "Embed Bible references and passages in your notes and read the Bible in Obsidian.",
 	"author": "Scott Tomaszewski (Xentis)",
