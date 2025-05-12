@@ -48,17 +48,18 @@ export class BibleReferenceRenderer {
 				if (!reference) {
 					continue;
 				}
-				const response = await this.bibleContentService.getBibleContent(reference);
-				if (response.isError()) {
-					new Notice(response.errorMessage, 10000);
-					continue;
-				}
-
+				
 				// Create a Bible reference element
 				const referenceEl = element.doc.createElement('span');
 				referenceEl.classList.add('bible-reference');
 				referenceEl.textContent = codeText;
 
+				const response = await this.bibleContentService.getBibleContent(reference);
+				if (response.isError()) {
+					new Notice(response.errorMessage, 10000);
+					continue;
+				}
+				
 				referenceEl.addEventListener('mouseover', (e) => {
 					new BibleEventHandlers(this).handleBibleReferenceHover(e, response.passage);
 				});

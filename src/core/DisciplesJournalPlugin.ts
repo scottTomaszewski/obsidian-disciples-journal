@@ -10,6 +10,8 @@ import {
 } from '../settings/DisciplesJournalSettings';
 import {BibleFiles} from 'src/services/BibleFiles';
 import {BibleMarkupProcessor} from './BibleMarkupProcessor';
+import {createBibleReferenceEditorExtension} from '../components/BibleReferenceEditorExtension';
+import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
 
 /**
  * Disciples Journal Plugin for Obsidian
@@ -61,6 +63,11 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Register markdown post processor for inline references
 		this.registerMarkdownPostProcessor(this.bibleMarkupProcessor.processInlineBibleReferences.bind(this.bibleMarkupProcessor));
+
+		// Register editor extension for Live Preview
+		if (this.settings.displayInlineVerses) {
+			this.registerEditorExtension(createInlineReferenceExtension());
+		}
 
 		// Register settings tab
 		this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this));
