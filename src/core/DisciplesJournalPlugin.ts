@@ -10,7 +10,6 @@ import {
 } from '../settings/DisciplesJournalSettings';
 import {BibleFiles} from 'src/services/BibleFiles';
 import {BibleMarkupProcessor} from './BibleMarkupProcessor';
-import {createBibleReferenceEditorExtension} from '../components/BibleReferenceEditorExtension';
 import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
 
 /**
@@ -66,7 +65,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Register editor extension for Live Preview
 		if (this.settings.displayInlineVerses) {
-			this.registerEditorExtension(createInlineReferenceExtension());
+			this.registerEditorExtension(createInlineReferenceExtension(this.bibleReferenceRenderer, this.bibleContentService));
 		}
 
 		// Register settings tab

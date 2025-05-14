@@ -1,14 +1,15 @@
 import { ViewUpdate, EditorView, ViewPlugin, Decoration, DecorationSet } from "@codemirror/view";
-import { RangeSetBuilder } from "@codemirror/state";
+import {RangeSet, RangeSetBuilder} from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 import { BibleReference } from "src/core/BibleReference";
 import { BibleEventHandlers } from "src/core/BibleEventHandlers";
 import { BibleReferenceRenderer } from "./BibleReferenceRenderer";
-import { Notice } from "obsidian";
+import {editorLivePreviewField, Notice} from "obsidian";
+import {BibleContentService} from "../services/BibleContentService";
 
 // Plugin/Extension to handle live-preview rendering of Inline Admonitions.
 // Reference: https://github.com/liamcain/obsidian-lapel/blob/main/src/headingWidget.ts
-export function createInlineReferenceExtension(renderer: BibleReferenceRenderer) {
+export function createInlineReferenceExtension(renderer: BibleReferenceRenderer, contentService: BibleContentService) {
 	return ViewPlugin.fromClass(
 		class {
 			decorations: DecorationSet;
@@ -24,13 +25,17 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer)
 			}
 
 			buildDecorations(view: EditorView): DecorationSet {
+				if (!view.state.field(editorLivePreviewField)) {
+					console.log("skipping live preview");
+					return RangeSet.empty;
+				}
 				const builder = new RangeSetBuilder<Decoration>();
 
 				for (const { from, to } of view.visibleRanges) {
 					syntaxTree(view.state).iterate({
 						from,
 						to,
-						enter: (node) => {
+						enter: (node: any) => {
 							if (node.type.name.contains("inline-code")) {
 								const content = view.state.doc.sliceString(node.from, node.to);
 								// Try to parse as a Bible reference
@@ -46,7 +51,6 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer)
 								} catch (error) {
 									console.error(`Error parsing Bible reference in editor: ${content}`, error);
 								}
-								return false;
 							}
 						},
 					});
@@ -58,7 +62,7 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer)
 		{
 			decorations: v => v.decorations,
 			eventHandlers: {
-				mouseover: async (e, view) => {
+				mouseover: (e, view) => {
 					const t = e.target as HTMLElement;
 					if (t.classList.contains("bible-reference")) {
 						if (!t.textContent) {
@@ -70,8 +74,8 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer)
 							new Notice("Invalid Bible reference: " + t.textContent, 10000);
 							return;
 						}
-						
-						this.bibleContentService.getBibleContent(reference).then(response:  => {
+
+						contentService.getBibleContent(reference).then(response  => {
 							if (response.isError()) {
 								new Notice(response.errorMessage, 10000);
 								return;
