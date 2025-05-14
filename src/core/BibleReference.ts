@@ -54,7 +54,8 @@ export class BibleReference {
 			}
 
 			// Remove the book name to parse the chapter and verse
-			const chapterVerseText = reference.substring(book.length).trim();
+			let chapterVerseText = reference.substring(book.length).trim();
+			chapterVerseText = chapterVerseText.replace("–", "-");
 
 			// Cross-chapter reference pattern (e.g., "1:2-3:4")
 			const crossChapterPattern = /^(\d+):(\d+)-(\d+):(\d+)$/;
