@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- Adds support for Live-Preview mode
+
 ## 0.5.1
 
 - Corrects parsing issue with hyphens
