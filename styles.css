@@ -11,6 +11,21 @@ body {
     display: none !important; /* Use !important to ensure override */
 }
 
+button.clear-input-button {
+	position: absolute;
+	top: 50%;
+	right: 0.3em;
+	transform: translateY(-50%);
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	fontSize: 1em;
+	lineHeight: 1;
+	padding: 0;
+	height: 1rem;
+	width: 1rem;
+}
+
 /* Bible Navigation Styles */
 .bible-navigation {
     display: flex;
@@ -57,6 +72,14 @@ body {
 .nav-disabled {
     color: var(--text-muted);
     cursor: not-allowed;
+}
+
+.nav-book-select-container {
+	width: 100%;
+	margin-bottom: 8px;
+}
+.nav-book-select-container input {
+	width: 100%;
 }
 
 .nav-book-selector {

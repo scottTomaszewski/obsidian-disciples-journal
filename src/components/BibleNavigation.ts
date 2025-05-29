@@ -1,16 +1,19 @@
-import {ButtonComponent, DropdownComponent, Notice} from "obsidian";
+import {App, ButtonComponent, DropdownComponent, Notice} from "obsidian";
 import {BibleReference} from "../core/BibleReference";
 import {BookNames} from "../services/BookNames";
 import {BibleFiles} from "../services/BibleFiles";
+import { BookSuggest } from "./BookSuggest";
 
 /**
  * Component for generating Bible navigation elements
  */
 export class BibleNavigation {
 	private bibleBookFiles: BibleFiles;
+	private app: App;
 
-	constructor(noteCreationService: BibleFiles) {
+	constructor(noteCreationService: BibleFiles, app: App) {
 		this.bibleBookFiles = noteCreationService;
+		this.app = app;
 	}
 
 	/**
@@ -79,15 +82,19 @@ export class BibleNavigation {
 			cls: 'nav-book-data dj-hidden'
 		});
 
-		// Create the book dropdown
-		const bookDropdownContainer = selectorContainer.createDiv();
-		const bookDropdown = new DropdownComponent(bookDropdownContainer);
+		// Create the book input element
+		const bookSelectionContainer = selectorContainer.createEl('div', {cls: 'nav-book-select-container'});
+		const bookInputEl = bookSelectionContainer.createEl('input', {
+			type: 'text',
+			attr: { placeholder: 'Search book...' },
+			value: book
+		});
 
-		// Add all books to the dropdown
-		for (const bookName of bookOrder) {
-			bookDropdown.addOption(bookName, bookName);
-		}
-		bookDropdown.setValue(book);
+		// Instantiate BookSuggest
+		new BookSuggest(this.app, bookInputEl, (bookName: string) => {
+			this.populateChapterDropdown(chapterDropdown, bookName, 1);
+			bookInputEl.value = bookName; // Ensure input value is updated on select
+		});
 
 		// Create the chapter dropdown
 		const chapterDropdownContainer = selectorContainer.createDiv({cls: 'nav-chapter-container'});
@@ -96,22 +103,23 @@ export class BibleNavigation {
 		// Add current book's chapters to the dropdown
 		this.populateChapterDropdown(chapterDropdown, book, chapter);
 
-		// When book selection changes, update chapter dropdown
-		bookDropdown.onChange(value => {
-			this.populateChapterDropdown(chapterDropdown, value, 1);
-		});
-
 		// Add Go button
 		new ButtonComponent(selectorContainer)
 			.setButtonText('Go')
 			.setClass('nav-go-button')
 			.onClick(async () => {
-				const selectedBook = bookDropdown.getValue();
+				const selectedBook = bookInputEl.value; // Use bookInputEl value
+				const normalizedBook = BookNames.normalize(selectedBook);
+				if (!normalizedBook || !bookOrder.includes(normalizedBook)) {
+					new Notice("Invalid book selected.");
+					return;
+				}
 				const selectedChapter = parseInt(chapterDropdown.getValue());
 				const loadingNotice = new Notice("Loading chapter...", 0);
-				await this.navigateToChapter(selectedBook, selectedChapter);
+				await this.navigateToChapter(normalizedBook, selectedChapter);
 				loadingNotice.hide();
 			});
+
 		// Toggle selector on click
 		selectorEl.addEventListener('click', () => {
 			selectorContainer.classList.toggle('dj-hidden');

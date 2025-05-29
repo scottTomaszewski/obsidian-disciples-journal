@@ -22,7 +22,7 @@ export class BibleReferenceRenderer {
 	) {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
-		this.bibleNavigation = new BibleNavigation(noteCreationService);
+		this.bibleNavigation = new BibleNavigation(noteCreationService, plugin.app);
 	}
 
 	/**

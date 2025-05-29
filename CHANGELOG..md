@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+
+- Adds autocompletion search for book names in nav container
+
 ## 0.6.0
 
 - Adds support for Live-Preview mode
