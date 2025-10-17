@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- Corrects an issue with hover previews not vanishing properly
+
 ## 0.7.0
 
 - Adds autocompletion search for book names in nav container

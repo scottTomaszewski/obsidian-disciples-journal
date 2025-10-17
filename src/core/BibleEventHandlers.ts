@@ -1,5 +1,5 @@
 import { BiblePassage } from 'src/utils/BiblePassage';
-import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
+import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 
 /**
  * Handles all Bible reference-related DOM events
@@ -7,26 +7,65 @@ import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
 export class BibleEventHandlers {
 	private bibleReferenceRenderer: BibleReferenceRenderer;
 	private previewPopper: HTMLElement | null = null;
+	private activeReferenceEl: HTMLElement | null = null;
+	private mouseTrackingInterval: number | null = null;
+	private lastMouseX: number = 0;
+	private lastMouseY: number = 0;
+	private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
+	private clickHandler: ((e: MouseEvent) => void) | null = null;
 
 	constructor(bibleReferenceRenderer: BibleReferenceRenderer) {
 		this.bibleReferenceRenderer = bibleReferenceRenderer;
+		
+		// Set up the global mouse move tracker
+		this.mouseMoveHandler = (e: MouseEvent) => {
+			this.lastMouseX = e.clientX;
+			this.lastMouseY = e.clientY;
+		};
+		document.addEventListener('mousemove', this.mouseMoveHandler);
+		
+		// Set up global click handler to close previews
+		this.clickHandler = (e: MouseEvent) => {
+			const clickTarget = e.target as HTMLElement;
+			if (this.previewPopper && 
+				clickTarget && 
+				!clickTarget.closest('.bible-verse-preview') && 
+				!clickTarget.closest('.bible-reference')) {
+				this.clearAllPreviews();
+			}
+		};
+		document.addEventListener('click', this.clickHandler);
 	}
 
 	/**
 	 * Handle hover on Bible references
 	 */
 	async handleBibleReferenceHover(event: MouseEvent, passage: BiblePassage) {
-		// Don't create new preview if we already have one active
-		if (this.previewPopper) return;
-
 		const target = event.target as HTMLElement;
 		if (!target || !target.closest) return;
 
 		const referenceEl = target.closest('.bible-reference') as HTMLElement;
 		if (!referenceEl) return;
 
+		// If we're hovering the same reference that already has a preview, do nothing
+		if (this.previewPopper && this.activeReferenceEl === referenceEl) {
+			return;
+		}
+		
+		// If we have an existing preview but for a different reference, remove it
+		if (this.previewPopper) {
+			this.clearAllPreviews();
+		}
+
 		const referenceText = referenceEl.textContent;
 		if (!referenceText) return;
+
+		// Store reference to the active element
+		this.activeReferenceEl = referenceEl;
+		
+		// Store current mouse position
+		this.lastMouseX = event.clientX;
+		this.lastMouseY = event.clientY;
 
 		try {
 			// Create new preview
@@ -36,85 +75,77 @@ export class BibleEventHandlers {
 				event
 			);
 
-			// Add event listeners directly to the preview for better control
-			if (this.previewPopper) {
-				// When mouse enters the popup, mark it as locked
-				this.previewPopper.addEventListener('mouseenter', () => {
-					this.previewPopper?.classList.add('popup-locked');
-				});
-
-				// When mouse leaves the popup, check if we should close it
-				this.previewPopper.addEventListener('mouseleave', (e) => {
-					// Only close if not moving to the reference or another part of the popup
-					const relatedTarget = e.relatedTarget as HTMLElement;
-					if (relatedTarget &&
-						!relatedTarget.classList.contains('bible-reference') &&
-						!relatedTarget.closest('.bible-verse-preview')) {
-						this.previewPopper?.classList.remove('popup-locked');
-						this.removePreviewPopper(relatedTarget.doc);
-					}
-				});
-			}
-
-			// Also add listeners to the reference element
-			referenceEl.addEventListener('mouseleave', (e) => {
-				// Don't close if the popup is locked (being hovered) or we're moving to the popup
-				if (this.previewPopper) {
-					const relatedTarget = e.relatedTarget as HTMLElement;
-
-					// If moving to the popup or if popup is locked, don't close
-					if (relatedTarget &&
-						(relatedTarget.classList.contains('bible-verse-preview') ||
-							relatedTarget.closest('.bible-verse-preview') ||
-							this.previewPopper.classList.contains('popup-locked'))) {
-						return;
-					}
-
-					// Add a 100ms delay before closing to allow for cursor movement
-					setTimeout(() => {
-						// If locked during this delay, don't close
-						if (!this.previewPopper || this.previewPopper.classList.contains('popup-locked')) {
-							return;
-						}
-						this.removePreviewPopper(relatedTarget.doc);
-					}, 100);
-				}
-			});
+			if (!this.previewPopper) return;
+			
+			// Set up tracking interval to check mouse position
+			this.setupMouseTrackingInterval();
+			
 		} catch (error) {
 			console.error('Error showing Bible reference preview:', error);
 		}
 	}
+	
+	/**
+	 * Set up interval to track mouse position and hide preview when needed
+	 */
+	private setupMouseTrackingInterval() {
+		// Clear any existing interval
+		if (this.mouseTrackingInterval) {
+			clearInterval(this.mouseTrackingInterval);
+		}
+		
+		this.mouseTrackingInterval = window.setInterval(() => {
+			if (!this.previewPopper || !this.activeReferenceEl) {
+				clearInterval(this.mouseTrackingInterval!);
+				this.mouseTrackingInterval = null;
+				return;
+			}
+			
+			// Get bounding rects for both elements
+			const previewRect = this.previewPopper.getBoundingClientRect();
+			const referenceRect = this.activeReferenceEl.getBoundingClientRect();
+			
+			// Check if mouse is inside either element
+			const isMouseOverPreview = 
+				this.lastMouseX >= previewRect.left && 
+				this.lastMouseX <= previewRect.right && 
+				this.lastMouseY >= previewRect.top && 
+				this.lastMouseY <= previewRect.bottom;
+				
+			const isMouseOverReference = 
+				this.lastMouseX >= referenceRect.left && 
+				this.lastMouseX <= referenceRect.right && 
+				this.lastMouseY >= referenceRect.top && 
+				this.lastMouseY <= referenceRect.bottom;
+				
+			// If mouse is not over either element, close the preview
+			if (!isMouseOverPreview && !isMouseOverReference) {
+				this.clearAllPreviews();
+			}
+		}, 200); // Check every 200ms
+	}
 
 	/**
-	 * Handle mouse out from Bible references
+	 * Handle mouse out from Bible references - for backwards compatibility
 	 */
 	handleBibleReferenceMouseOut(event: MouseEvent) {
-		// If we don't have a popup, nothing to do
+		// We're using the interval-based tracking now, so this method is largely
+		// for backwards compatibility
+		
+		// If no preview active, nothing to do
 		if (!this.previewPopper) return;
-
-		// If the popup is locked (being hovered), don't close it
-		if (this.previewPopper.classList.contains('popup-locked')) {
-			return;
-		}
-
+		
 		const target = event.target as HTMLElement;
 		const relatedTarget = event.relatedTarget as HTMLElement;
-
-		// If either target is missing, can't make a good decision
-		if (!target || !relatedTarget) return;
-
-		// If moving to/from the popup or reference, don't close
-		if (target.classList.contains('bible-reference') ||
-			target.classList.contains('bible-verse-preview') ||
-			target.closest('.bible-verse-preview') ||
-			relatedTarget.classList.contains('bible-reference') ||
-			relatedTarget.classList.contains('bible-verse-preview') ||
-			relatedTarget.closest('.bible-verse-preview')) {
+		
+		// If moving directly to the preview element, don't close
+		if (relatedTarget && 
+			(relatedTarget.classList.contains('bible-verse-preview') || 
+			 relatedTarget.closest('.bible-verse-preview'))) {
 			return;
 		}
-
-		// In all other cases, remove the popup
-		this.removePreviewPopper(target.doc);
+		
+		// The interval will handle cleanup if needed
 	}
 
 	/**
@@ -123,11 +154,52 @@ export class BibleEventHandlers {
 	removePreviewPopper(doc: Document) {
 		if (this.previewPopper) {
 			// Remove any hover gap elements
-			const hoverGaps = doc.querySelectorAll('.bible-hover-gap');
-			hoverGaps.forEach(gap => gap.remove());
+			if (doc && doc.querySelectorAll) {
+				try {
+					const hoverGaps = doc.querySelectorAll('.bible-hover-gap');
+					hoverGaps.forEach(gap => gap.remove());
+				} catch (e) {
+					// Ignore any errors during cleanup
+				}
+			}
 
 			this.previewPopper.remove();
 			this.previewPopper = null;
+		}
+	}
+	
+	/**
+	 * Clear all previews and reset state
+	 */
+	clearAllPreviews() {
+		if (this.mouseTrackingInterval) {
+			clearInterval(this.mouseTrackingInterval);
+			this.mouseTrackingInterval = null;
+		}
+		
+		if (this.previewPopper) {
+			const doc = this.previewPopper.ownerDocument;
+			this.removePreviewPopper(doc);
+		}
+		
+		this.activeReferenceEl = null;
+	}
+	
+	/**
+	 * Clean up event handlers when plugin is unloaded
+	 */
+	cleanup() {
+		this.clearAllPreviews();
+		
+		// Remove global event listeners
+		if (this.mouseMoveHandler) {
+			document.removeEventListener('mousemove', this.mouseMoveHandler);
+			this.mouseMoveHandler = null;
+		}
+		
+		if (this.clickHandler) {
+			document.removeEventListener('click', this.clickHandler);
+			this.clickHandler = null;
 		}
 	}
 }
