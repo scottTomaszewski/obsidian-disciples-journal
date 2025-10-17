@@ -1,7 +1,7 @@
 import {TFile} from 'obsidian';
 import {BibleContentService} from './BibleContentService';
 import {BibleReference} from '../core/BibleReference';
-import {BibleFormatter} from '../utils/BibleFormatter';
+import {BibleCodeblockFormatter} from '../utils/BibleCodeblockFormatter';
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 import {BibleApiResponse} from "../utils/BibleApiResponse";
 
@@ -88,7 +88,7 @@ export class BibleFiles {
 			}
 
 			// Use the formatter utility to format the content
-			const content = BibleFormatter.formatChapterContent(response.passage);
+			const content = BibleCodeblockFormatter.formatChapterContent(response.passage);
 
 			// Save the content to a note with the version path
 			const fullPath = this.getFullContentPath();

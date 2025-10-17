@@ -4,7 +4,7 @@ import {BiblePassage} from "./BiblePassage";
  * Utility for formatting Bible content consistently across the application
  */
 // TODO - this probably belongs somewhere else
-export class BibleFormatter {
+export class BibleCodeblockFormatter {
 	/**
 	 * Format chapter content as Markdown
 	 */
