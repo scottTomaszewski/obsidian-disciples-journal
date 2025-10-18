@@ -55,7 +55,7 @@ export class BibleReference {
 
 			// Remove the book name to parse the chapter and verse
 			let chapterVerseText = reference.substring(book.length).trim();
-			chapterVerseText = chapterVerseText.replace("–", "-");
+			chapterVerseText = chapterVerseText.replace("–", "-").replace("–", "-");
 
 			// Cross-chapter reference pattern (e.g., "1:2-3:4")
 			const crossChapterPattern = /^(\d+):(\d+)-(\d+):(\d+)$/;
@@ -66,7 +66,7 @@ export class BibleReference {
 				const endChapter = parseInt(crossChapterMatch[3]);
 				const endVerse = parseInt(crossChapterMatch[4]);
 
-				return new BibleReference(standardizedBook, chapter, verse, endChapter, endVerse);
+				return new BibleReference(standardizedBook, chapter, verse, endVerse, endChapter);
 			}
 
 			// Chapter range pattern (e.g., "1-2")
@@ -87,7 +87,7 @@ export class BibleReference {
 				const verse = parseInt(verseRangeMatch[2]);
 				const endVerse = parseInt(verseRangeMatch[3]);
 
-				return new BibleReference(standardizedBook, chapter, verse, undefined, endVerse);
+				return new BibleReference(standardizedBook, chapter, verse, endVerse, undefined);
 			}
 
 			// Single verse pattern (e.g., "1:2")

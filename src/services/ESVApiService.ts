@@ -1,9 +1,10 @@
-import {requestUrl} from "obsidian";
+import {requestUrl, stringifyYaml} from "obsidian";
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 import {BibleReference} from "../core/BibleReference";
 import {BookNames} from "./BookNames";
 import {BiblePassage} from "../utils/BiblePassage";
 import {BibleApiResponse, ErrorType} from "../utils/BibleApiResponse";
+import {BibleFiles} from "./BibleFiles";
 
 /**
  * Interface for ESV API Response
@@ -82,7 +83,7 @@ export class ESVApiService {
 				const data = response.json as ESVApiResponse;
 
 				// Save the response to a file
-				await this.saveESVApiResponse(data);
+				await this.saveESVApiResponseAsMdNote(data);
 
 				// Return the content
 				const canonicalRef = BibleReference.parse(data.canonical);
@@ -107,10 +108,9 @@ export class ESVApiService {
 	}
 
 	/**
-	 * Save ESV API response to a file
+	 * Save ESV API response to a markdown file (as frontmatter)
 	 */
-	// TODO - i dont think this is needed anymore since we have a passage cache
-	private async saveESVApiResponse(data: ESVApiResponse): Promise<void> {
+	private async saveESVApiResponseAsMdNote(data: ESVApiResponse): Promise<void> {
 		try {
 			// Extract book and chapter from the canonical reference
 			const parts = data.canonical.split(' ');
@@ -124,8 +124,16 @@ export class ESVApiService {
 			await this.ensureVaultDirectoryExists(bookPath);
 
 			// Save the raw API response as JSON
-			const jsonPath = `${bookPath}/${data.canonical}.json`;
-			await this.plugin.app.vault.adapter.write(jsonPath, JSON.stringify(data));
+			const passage = BibleReference.parse(data.canonical);
+			const filePath = BibleFiles.pathForPassage(passage, this.plugin);
+			console.log(filePath);
+			let content = "---\n"
+			content += stringifyYaml(data);
+			content += "\n---\n\n";
+			content += "~~~bible\n"
+			content += data.canonical;
+			content += "\n~~~\n\n";
+			await this.plugin.app.vault.adapter.write(filePath, content);
 		} catch (error) {
 			console.error('Error saving ESV API response:', error);
 		}
