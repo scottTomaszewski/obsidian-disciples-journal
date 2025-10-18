@@ -4,6 +4,7 @@ import {BibleReference} from '../core/BibleReference';
 import {BibleCodeblockFormatter} from '../utils/BibleCodeblockFormatter';
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 import {BibleApiResponse} from "../utils/BibleApiResponse";
+import {BibleFiles} from "./BibleFiles";
 
 /**
  * Service for creating and opening Bible (chapter) files
@@ -33,24 +34,21 @@ export class BibleChapterFiles {
 				return;
 			}
 
-			// Get full content path including version
-			const fullPath = this.getFullContentPath();
-			const chapterPath = `${fullPath}/${parsedRef.book}/${parsedRef.book} ${parsedRef.chapter}.md`;
-
-			// Check if note exists
-			const fileExists = await this.plugin.app.vault.adapter.exists(chapterPath);
-
-			if (!fileExists && this.plugin.settings.downloadOnDemand) {
-				// Create the note with content from the API
-				await this.createChapterNote(parsedRef);
+			const chapterPath = BibleFiles.pathForPassage(parsedRef, this.plugin);
+			if (! await BibleFiles.fileExistsForPassage(parsedRef, this.plugin)) {
+				if (this.plugin.settings.downloadOnDemand) {
+					// TODO - create chapter note
+					await this.createChapterNote(parsedRef);
+				} else {
+					console.error(`Passage download disabled (see settings): ${chapterPath}`);
+					return null;
+				}
 			}
 
-			// Try opening the note
-			const file = this.plugin.app.vault.getAbstractFileByPath(chapterPath);
-
-			if (file && file instanceof TFile) {
+			const passageNoteFile = BibleFiles.getFileForPassage(parsedRef, this.plugin);
+			if (passageNoteFile && passageNoteFile instanceof TFile) {
 				const leaf = this.plugin.app.workspace.getLeaf(false);
-				await leaf.openFile(file);
+				await leaf.openFile(passageNoteFile);
 
 				// If there's a specific verse, scroll to it
 				if (parsedRef.verse) {
@@ -87,22 +85,6 @@ export class BibleChapterFiles {
 				console.error(`Failed to get Bible content for ${bookChapter}`);
 				throw new Error(`Failed to get Bible content for ${bookChapter}`);
 			}
-
-			// Use the formatter utility to format the content
-			const content = BibleCodeblockFormatter.formatChapterContent(response.passage);
-
-			// Save the content to a note with the version path
-			const fullPath = this.getFullContentPath();
-			const bookPath = `${fullPath}/${reference.book}`;
-			const chapterPath = `${fullPath}/${reference.book}/${reference.book} ${reference.chapter}.md`;
-
-			// Ensure the directory exists
-			await this.plugin.app.vault.adapter.mkdir(bookPath);
-
-			// Create the note
-			await this.plugin.app.vault.create(chapterPath, content);
-
-			return chapterPath;
 		} catch (error) {
 			console.error('Error creating chapter note:', error);
 			throw error;
