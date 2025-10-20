@@ -11,6 +11,13 @@ body {
     display: none !important; /* Use !important to ensure override */
 }
 
+.hide-dj-passage-properties {
+	/* hide in reading mode */
+	--metadata-display-reading: none;
+	/* hide in editing/live preview mode too */
+	--metadata-display-editing: none;
+}
+
 button.clear-input-button {
 	position: absolute;
 	top: 50%;

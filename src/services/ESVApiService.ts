@@ -129,6 +129,7 @@ export class ESVApiService {
 			console.log(filePath);
 			let content = "---\n"
 			content += stringifyYaml(data);
+			content += "cssclasses: hide-dj-passage-properties"
 			content += "\n---\n\n";
 			content += "~~~bible\n"
 			content += data.canonical;

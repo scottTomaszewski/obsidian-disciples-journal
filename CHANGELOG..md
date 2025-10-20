@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.1
+
+- Adds `cssclasses: hide-dj-passage-properties` to passage notes to hide the noise
+
 ## 0.8.0
 
 - Corrects an issue with hover previews not vanishing properly
