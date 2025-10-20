@@ -1,6 +1,7 @@
 import {App, Notice, PluginSettingTab, Setting} from 'obsidian';
 import DisciplesJournalPlugin from '../core/DisciplesJournalPlugin';
 import {THEME_PRESETS} from '../components/BibleStyles';
+import {BibleFiles} from "../services/BibleFiles";
 
 export interface DisciplesJournalSettings {
 	displayInlineVerses: boolean;
@@ -253,5 +254,14 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 					this.plugin.settings.downloadOnDemand = value;
 					await this.plugin.saveSettings();
 				}));
+
+		new Setting(containerEl)
+			.setDesc("Click this button to clear the cached bible files. Click this after upgrading from 0.7.0 or earlier. Data will be redownloaded on demand")
+			.addButton(btn => btn
+				.setButtonText("Clear Bible Data")
+				.onClick(async evt => {
+					await BibleFiles.clearData(this.plugin);
+				}));
+
 	}
 } 

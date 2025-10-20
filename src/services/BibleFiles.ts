@@ -40,4 +40,10 @@ export class BibleFiles {
 	private static getFullContentPath(plugin: DisciplesJournalPlugin): string {
 		return `${plugin.settings.bibleContentVaultPath}/${plugin.settings.preferredBibleVersion}`;
 	}
+
+
+	public static async clearData(plugin: DisciplesJournalPlugin) {
+		console.debug(`Clearing bible data from ${plugin.settings.bibleContentVaultPath}`);
+		await plugin.app.vault.adapter.rmdir(plugin.settings.bibleContentVaultPath, true);
+	}
 }
