@@ -42,9 +42,9 @@ export class BibleContentService {
 				if (frontmatter && frontmatter.frontmatter) {
 					return this.convertEsvApiResponseToGeneric(parseYaml(frontmatter.frontmatter), ref);
 				} else {
-					const message = `No frontmatter found in file for reference ${ref}`;
+					const message = `No frontmatter found in file for reference ${ref}. Loading from API instead.`;
 					console.error(message);
-					return BibleApiResponse.error(message, ErrorType.BadApiResponse);
+					// return BibleApiResponse.error(message, ErrorType.BadApiResponse);
 				}
 			} catch (error) {
 				const message = `Error reading file for reference ${ref}: ${error}`;
