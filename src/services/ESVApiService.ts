@@ -126,7 +126,6 @@ export class ESVApiService {
 			// Save the raw API response as JSON
 			const passage = BibleReference.parse(data.canonical);
 			const filePath = BibleFiles.pathForPassage(passage, this.plugin);
-			console.log(filePath);
 			let content = "---\n"
 			content += stringifyYaml(data);
 			content += "cssclasses: hide-dj-passage-properties"

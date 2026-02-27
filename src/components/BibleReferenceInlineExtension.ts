@@ -26,7 +26,6 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer,
 
 			buildDecorations(view: EditorView): DecorationSet {
 				if (!view.state.field(editorLivePreviewField)) {
-					console.log("skipping live preview");
 					return RangeSet.empty;
 				}
 				const builder = new RangeSetBuilder<Decoration>();
