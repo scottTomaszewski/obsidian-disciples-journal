@@ -118,7 +118,9 @@ export default class DisciplesJournalPlugin extends Plugin {
 					wordsOfChristColor: this.settings.wordsOfChristColor,
 					verseNumberColor: this.settings.verseNumberColor,
 					headingColor: this.settings.headingColor,
-					blockIndentation: this.settings.blockIndentation
+					blockIndentation: this.settings.blockIndentation,
+					hideFootnotes: this.settings.hideFootnotes,
+					hideFootnotesInPreview: this.settings.hideFootnotesInPreview
 				}
 			);
 		});

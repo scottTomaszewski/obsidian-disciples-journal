@@ -17,6 +17,8 @@ export interface DisciplesJournalSettings {
 	bibleContentVaultPath: string;
 	stylePreset: string;
 	showNavigationForVerses: boolean;
+	hideFootnotes: boolean;
+	hideFootnotesInPreview: boolean;
 }
 
 export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
@@ -32,7 +34,9 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
 	downloadOnDemand: true,
 	bibleContentVaultPath: 'Bible',
 	stylePreset: 'default',
-	showNavigationForVerses: false
+	showNavigationForVerses: false,
+	hideFootnotes: false,
+	hideFootnotesInPreview: false
 };
 
 export class DisciplesJournalSettingsTab extends PluginSettingTab {
@@ -79,6 +83,30 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				.onChange(async (value) => {
 					this.plugin.settings.showNavigationForVerses = value;
 					await this.plugin.saveSettings();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName('Hide Footnotes')
+			.setDesc('Hide footnotes in the displayed scripture.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.hideFootnotes)
+				.onChange(async (value) => {
+					this.plugin.settings.hideFootnotes = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateBibleStyles();
+				})
+			);
+
+		new Setting(containerEl)
+			.setName('Hide Footnotes in Hover Previews')
+			.setDesc('Hide footnotes in hover preview popups.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.hideFootnotesInPreview)
+				.onChange(async (value) => {
+					this.plugin.settings.hideFootnotesInPreview = value;
+					await this.plugin.saveSettings();
+					this.plugin.updateBibleStyles();
 				})
 			);
 

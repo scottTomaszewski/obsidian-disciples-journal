@@ -469,6 +469,13 @@ button.clear-input-button {
 .bible-passage-text .footnote {
     font-size: 0.8em;
     color: var(--text-muted);
+    display: var(--dj-footnote-display, inline);
+}
+
+.bible-verse-preview .footnote {
+    font-size: 0.8em;
+    color: var(--text-muted);
+    display: var(--dj-preview-footnote-display, var(--dj-footnote-display, inline));
 }
 
 .bible-passage-text .footnotes {
@@ -476,6 +483,15 @@ button.clear-input-button {
     padding-top: 1em;
     border-top: 1px solid var(--background-modifier-border);
     font-size: 0.9em;
+    display: var(--dj-footnotes-display, block);
+}
+
+.bible-verse-preview .footnotes {
+    margin-top: 2em;
+    padding-top: 1em;
+    border-top: 1px solid var(--background-modifier-border);
+    font-size: 0.9em;
+    display: var(--dj-preview-footnotes-display, var(--dj-footnotes-display, block));
 }
 
 .bible-passage-text .audio {

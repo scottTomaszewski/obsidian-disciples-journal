@@ -89,6 +89,8 @@ export class BibleStyles {
 		verseNumberColor?: string;
 		headingColor?: string;
 		blockIndentation?: string;
+		hideFootnotes?: boolean;
+		hideFootnotesInPreview?: boolean;
 	}): void {
 
 		// Get the preset, defaulting to 'default' if not found
@@ -119,6 +121,22 @@ export class BibleStyles {
 		rootStyle.setProperty('--dj-verse-number-color', options.verseNumberColor);
 		rootStyle.setProperty('--dj-woc-color', options.wordsOfChristColor);
 		rootStyle.setProperty('--dj-block-indentation', options.blockIndentation);
+		
+		if (settings?.hideFootnotes) {
+			rootStyle.setProperty('--dj-footnote-display', 'none');
+			rootStyle.setProperty('--dj-footnotes-display', 'none');
+		} else {
+			rootStyle.removeProperty('--dj-footnote-display');
+			rootStyle.removeProperty('--dj-footnotes-display');
+		}
+
+		if (settings?.hideFootnotesInPreview) {
+			rootStyle.setProperty('--dj-preview-footnote-display', 'none');
+			rootStyle.setProperty('--dj-preview-footnotes-display', 'none');
+		} else {
+			rootStyle.removeProperty('--dj-preview-footnote-display');
+			rootStyle.removeProperty('--dj-preview-footnotes-display');
+		}
 	}
 
 	/**
