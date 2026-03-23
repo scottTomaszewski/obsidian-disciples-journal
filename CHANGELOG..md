@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+
+- Adds settings to hide footnotes
+
 ## 0.8.1
 
 - Adds `cssclasses: hide-dj-passage-properties` to passage notes to hide the noise

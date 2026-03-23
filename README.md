@@ -80,8 +80,11 @@ Access plugin settings in Settings → Disciples Journal:
 
 - **Display Settings**:
   - Toggle inline verse and full passage rendering
+  - Show/hide navigation for verse references
+  - Hide footnotes in rendered passages
+  - Hide footnotes in hover preview popups
   - Customize verse font size
-  
+
 - **Bible Version Settings**:
   - Currently supports English Standard Version (ESV)
 
