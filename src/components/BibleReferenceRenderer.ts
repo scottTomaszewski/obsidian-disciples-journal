@@ -181,11 +181,21 @@ export class BibleReferenceRenderer {
 			const tempEl = element.doc.createElement('div');
 			tempEl.innerHTML = passage.html;
 
+			// Remove footnote sections before extracting paragraphs
+			if (this.plugin.settings.hideFootnotesInPreview) {
+				tempEl.querySelectorAll('.footnotes, .extra_text').forEach(el => el.remove());
+			}
+
 			// Find and extract the main verse content (paragraphs)
 			const paragraphs = tempEl.querySelectorAll('p:not(.extra_text)');
 			if (paragraphs.length > 0) {
 				for (let i = 0; i < paragraphs.length; i++) {
-					contentEl.appendChild(paragraphs[i].cloneNode(true));
+					const cloned = paragraphs[i].cloneNode(true) as HTMLElement;
+					// Strip inline footnote markers if the setting is enabled
+					if (this.plugin.settings.hideFootnotesInPreview) {
+						cloned.querySelectorAll('.footnote').forEach(fn => fn.remove());
+					}
+					contentEl.appendChild(cloned);
 				}
 			} else {
 				// Fallback if we can't extract the verses properly
