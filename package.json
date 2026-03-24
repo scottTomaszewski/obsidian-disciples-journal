@@ -1,6 +1,6 @@
 {
   "name": "obsidian-disciples-journal",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Obsidian plugin for Bible verse references and passage display",
   "main": "main.js",
   "scripts": {
