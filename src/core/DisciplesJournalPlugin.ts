@@ -192,9 +192,11 @@ export default class DisciplesJournalPlugin extends Plugin {
 					continue;
 				}
 
-				// Reconstruct the file: new frontmatter + original body
+				// Reconstruct the file: new frontmatter + original body.
+				// contentStart is the index after the closing "---\n", so bodyContent
+				// preserves whatever whitespace/content followed the original frontmatter.
 				const bodyContent = content.substring(fmInfo.contentStart);
-				const newContent = `---\n${mergedFrontmatter}---${bodyContent}`;
+				const newContent = `---\n${mergedFrontmatter}---\n${bodyContent}`;
 
 				await this.app.vault.adapter.write(file.path, newContent);
 				updatedCount++;

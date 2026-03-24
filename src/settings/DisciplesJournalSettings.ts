@@ -2,6 +2,7 @@ import {App, Notice, PluginSettingTab, Setting} from 'obsidian';
 import DisciplesJournalPlugin from '../core/DisciplesJournalPlugin';
 import {THEME_PRESETS} from '../components/BibleStyles';
 import {BibleFiles} from "../services/BibleFiles";
+import {TEMPLATE_VARIABLES} from "../utils/FrontmatterUtil";
 
 export interface DisciplesJournalSettings {
 	displayInlineVerses: boolean;
@@ -225,16 +226,29 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 
 		new Setting(containerEl).setName('Note Frontmatter').setHeading();
 
-		containerEl.createEl('p', {
-			text: 'Add custom YAML frontmatter to Bible notes. Enter valid YAML key-value pairs. API metadata keys (query, canonical, parsed, passage_meta, passages) are protected and cannot be overwritten. The cssclasses key will be merged with the plugin-managed class.',
-			cls: 'setting-item-description'
+		const fmInfoDiv = containerEl.createDiv({cls: 'disciples-journal-frontmatter-info'});
+
+		fmInfoDiv.createEl('p', {
+			text: 'Add custom YAML frontmatter to Bible notes. API metadata keys (query, canonical, parsed, passage_meta, passages) are protected and cannot be overwritten. The cssclasses key will be merged with the plugin-managed class.'
 		});
+
+		fmInfoDiv.createEl('p', {
+			text: 'Template variables -- use these in values to inject reference data:',
+			attr: {style: 'font-weight: bold; margin-bottom: 4px;'}
+		});
+
+		const varList = fmInfoDiv.createEl('ul', {attr: {style: 'margin-top: 0; padding-left: 1.5em;'}});
+		for (const v of TEMPLATE_VARIABLES) {
+			const li = varList.createEl('li');
+			li.createEl('code', {text: v.variable});
+			li.createEl('span', {text: ` -- ${v.description}`});
+		}
 
 		new Setting(containerEl)
 			.setName('Chapter Note Frontmatter')
 			.setDesc('Custom YAML frontmatter added to chapter-level notes (e.g., Genesis 1).')
 			.addTextArea(text => text
-				.setPlaceholder('tags:\n  - bible\ntype: chapter')
+				.setPlaceholder('tags:\n  - bible/{{book}}\ntype: chapter')
 				.setValue(this.plugin.settings.chapterNoteFrontmatter)
 				.onChange(async (value) => {
 					this.plugin.settings.chapterNoteFrontmatter = value;
@@ -245,7 +259,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			.setName('Passage Note Frontmatter')
 			.setDesc('Custom YAML frontmatter added to passage-level notes (e.g., Genesis 1:5 or Genesis 1:5-10).')
 			.addTextArea(text => text
-				.setPlaceholder('tags:\n  - bible\ntype: passage')
+				.setPlaceholder('tags:\n  - bible/{{book}}\npassage: "{{reference}}"')
 				.setValue(this.plugin.settings.passageNoteFrontmatter)
 				.onChange(async (value) => {
 					this.plugin.settings.passageNoteFrontmatter = value;

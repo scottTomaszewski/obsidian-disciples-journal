@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.0
+
+- Adds template variable support: `{{book}}`, `{{chapter}}`, `{{verse}}`, `{{endVerse}}`, `{{endChapter}}`, `{{reference}}`
+
 ## 0.10.0
 
 - Adds custom frontmatter support for Bible notes

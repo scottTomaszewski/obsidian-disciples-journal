@@ -10,14 +10,46 @@ const API_KEYS = new Set(['query', 'canonical', 'parsed', 'passage_meta', 'passa
 const PLUGIN_CSS_CLASS = 'hide-dj-passage-properties';
 
 /**
- * Render custom frontmatter through the template engine.
- * Currently a passthrough -- future hook for {{book}}, {{chapter}}, etc.
+ * Available template variables for custom frontmatter.
+ * Used both for rendering and for generating help text in settings.
+ */
+export const TEMPLATE_VARIABLES: { variable: string; description: string }[] = [
+	{variable: '{{book}}', description: 'Book name (e.g., Genesis)'},
+	{variable: '{{chapter}}', description: 'Chapter number (e.g., 1)'},
+	{variable: '{{verse}}', description: 'Start verse number (empty for chapter notes)'},
+	{variable: '{{endVerse}}', description: 'End verse number (empty if not a range)'},
+	{variable: '{{endChapter}}', description: 'End chapter number (empty if not cross-chapter)'},
+	{variable: '{{reference}}', description: 'Full reference string (e.g., Genesis 1:5-10)'},
+];
+
+/**
+ * Build a template context from a BibleReference.
+ */
+export function buildTemplateContext(ref: BibleReference): Record<string, string> {
+	return {
+		book: ref.book,
+		chapter: String(ref.chapter),
+		verse: ref.verse !== undefined ? String(ref.verse) : '',
+		endVerse: ref.endVerse !== undefined ? String(ref.endVerse) : '',
+		endChapter: ref.endChapter !== undefined ? String(ref.endChapter) : '',
+		reference: ref.toString(),
+	};
+}
+
+/**
+ * Render custom frontmatter by substituting {{variable}} placeholders
+ * with values from the provided context.
  */
 export function renderCustomFrontmatter(
 	rawYaml: string,
-	_context?: Record<string, string>
+	context?: Record<string, string>
 ): string {
-	return rawYaml;
+	if (!context) {
+		return rawYaml;
+	}
+	return rawYaml.replace(/\{\{(\w+)}}/g, (match, key) => {
+		return key in context ? context[key] : match;
+	});
 }
 
 /**
@@ -155,7 +187,8 @@ export function mergeCustomFrontmatterIntoExisting(
 }
 
 /**
- * Get the appropriate custom frontmatter string for a reference type.
+ * Get the appropriate custom frontmatter string for a reference type,
+ * with template variables resolved.
  */
 export function getCustomFrontmatterForReference(
 	ref: BibleReference,
@@ -164,5 +197,5 @@ export function getCustomFrontmatterForReference(
 	const raw = ref.isChapterReference()
 		? settings.chapterNoteFrontmatter
 		: settings.passageNoteFrontmatter;
-	return renderCustomFrontmatter(raw);
+	return renderCustomFrontmatter(raw, buildTemplateContext(ref));
 }
