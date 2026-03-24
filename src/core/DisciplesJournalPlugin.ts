@@ -1,4 +1,4 @@
-import {Plugin, MarkdownView, Notice} from 'obsidian';
+import {Plugin, MarkdownView, Notice, getFrontMatterInfo, parseYaml} from 'obsidian';
 import {ESVApiService} from '../services/ESVApiService';
 import {BibleContentService} from '../services/BibleContentService';
 import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
@@ -11,6 +11,8 @@ import {
 import {BibleChapterFiles} from 'src/services/BibleChapterFiles';
 import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
+import {BibleReference} from './BibleReference';
+import {getCustomFrontmatterForReference, mergeCustomFrontmatterIntoExisting} from "../utils/FrontmatterUtil";
 
 /**
  * Disciples Journal Plugin for Obsidian
@@ -67,6 +69,13 @@ export default class DisciplesJournalPlugin extends Plugin {
 		if (this.settings.displayInlineVerses) {
 			this.registerEditorExtension(createInlineReferenceExtension(this.bibleReferenceRenderer, this.bibleContentService));
 		}
+
+		// Register commands
+		this.addCommand({
+			id: 'update-bible-note-frontmatter',
+			name: 'Update frontmatter on all Bible notes',
+			callback: () => this.updateAllBibleNoteFrontmatter()
+		});
 
 		// Register settings tab
 		this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this));
@@ -131,5 +140,70 @@ export default class DisciplesJournalPlugin extends Plugin {
 	 */
 	public async openChapterNote(reference: string) {
 		return this.bibleBookFiles.openChapterNote(reference);
+	}
+
+	/**
+	 * Scan all Bible notes and update their frontmatter with the current custom frontmatter settings.
+	 */
+	private async updateAllBibleNoteFrontmatter() {
+		const basePath = this.settings.bibleContentVaultPath;
+		const files = this.app.vault.getFiles().filter(
+			f => f.path.startsWith(basePath + '/') && f.extension === 'md'
+		);
+
+		if (files.length === 0) {
+			new Notice('No Bible notes found to update.');
+			return;
+		}
+
+		let updatedCount = 0;
+		let skippedCount = 0;
+
+		for (const file of files) {
+			try {
+				const content = await this.app.vault.read(file);
+				const fmInfo = getFrontMatterInfo(content);
+				if (!fmInfo || !fmInfo.frontmatter) {
+					skippedCount++;
+					continue;
+				}
+
+				const fmData = parseYaml(fmInfo.frontmatter);
+				if (!fmData || !fmData.canonical) {
+					skippedCount++;
+					continue;
+				}
+
+				const ref = BibleReference.parse(fmData.canonical);
+				if (!ref) {
+					skippedCount++;
+					continue;
+				}
+
+				const customYaml = getCustomFrontmatterForReference(ref, this.settings);
+				if (!customYaml.trim()) {
+					skippedCount++;
+					continue;
+				}
+
+				const mergedFrontmatter = mergeCustomFrontmatterIntoExisting(fmInfo.frontmatter, customYaml);
+				if (!mergedFrontmatter) {
+					skippedCount++;
+					continue;
+				}
+
+				// Reconstruct the file: new frontmatter + original body
+				const bodyContent = content.substring(fmInfo.contentStart);
+				const newContent = `---\n${mergedFrontmatter}---${bodyContent}`;
+
+				await this.app.vault.adapter.write(file.path, newContent);
+				updatedCount++;
+			} catch (e) {
+				console.warn(`Disciples Journal: failed to update frontmatter for ${file.path}`, e);
+				skippedCount++;
+			}
+		}
+
+		new Notice(`Updated frontmatter on ${updatedCount} Bible note(s). Skipped ${skippedCount}.`);
 	}
 } 

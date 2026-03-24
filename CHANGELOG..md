@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.0
+
+- Adds custom frontmatter support for Bible notes
+  - Separate settings for chapter notes and passage notes
+  - Custom YAML frontmatter is injected on newly downloaded notes
+  - New command "Update frontmatter on all Bible notes" to backfill existing notes
+
 ## 0.9.2
 
 - Removes some extra, ugly margin

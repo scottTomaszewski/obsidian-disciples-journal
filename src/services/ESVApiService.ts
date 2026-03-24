@@ -1,10 +1,11 @@
-import {requestUrl, stringifyYaml} from "obsidian";
+import {requestUrl} from "obsidian";
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 import {BibleReference} from "../core/BibleReference";
 import {BookNames} from "./BookNames";
 import {BiblePassage} from "../utils/BiblePassage";
 import {BibleApiResponse, ErrorType} from "../utils/BibleApiResponse";
 import {BibleFiles} from "./BibleFiles";
+import {buildFrontmatterString, getCustomFrontmatterForReference} from "../utils/FrontmatterUtil";
 
 /**
  * Interface for ESV API Response
@@ -123,16 +124,12 @@ export class ESVApiService {
 			await this.ensureVaultDirectoryExists(fullPath);
 			await this.ensureVaultDirectoryExists(bookPath);
 
-			// Save the raw API response as JSON
+			// Save the raw API response as a markdown note with frontmatter
 			const passage = BibleReference.parse(data.canonical);
 			const filePath = BibleFiles.pathForPassage(passage, this.plugin);
-			let content = "---\n"
-			content += stringifyYaml(data);
-			content += "cssclasses: hide-dj-passage-properties"
-			content += "\n---\n\n";
-			content += "~~~bible\n"
-			content += data.canonical;
-			content += "\n~~~\n\n";
+			const customYaml = getCustomFrontmatterForReference(passage, this.plugin.settings);
+			const frontmatterBody = buildFrontmatterString(data, customYaml);
+			const content = `---\n${frontmatterBody}---\n\n~~~bible\n${data.canonical}\n~~~\n\n`;
 			await this.plugin.app.vault.adapter.write(filePath, content);
 		} catch (error) {
 			console.error('Error saving ESV API response:', error);

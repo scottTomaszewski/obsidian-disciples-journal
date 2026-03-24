@@ -19,6 +19,8 @@ export interface DisciplesJournalSettings {
 	showNavigationForVerses: boolean;
 	hideFootnotes: boolean;
 	hideFootnotesInPreview: boolean;
+	chapterNoteFrontmatter: string;
+	passageNoteFrontmatter: string;
 }
 
 export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
@@ -36,7 +38,9 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
 	stylePreset: 'default',
 	showNavigationForVerses: false,
 	hideFootnotes: false,
-	hideFootnotesInPreview: false
+	hideFootnotesInPreview: false,
+	chapterNoteFrontmatter: '',
+	passageNoteFrontmatter: ''
 };
 
 export class DisciplesJournalSettingsTab extends PluginSettingTab {
@@ -216,6 +220,35 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.bibleContentVaultPath)
 				.onChange(async (value) => {
 					this.plugin.settings.bibleContentVaultPath = value || 'Bible';
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl).setName('Note Frontmatter').setHeading();
+
+		containerEl.createEl('p', {
+			text: 'Add custom YAML frontmatter to Bible notes. Enter valid YAML key-value pairs. API metadata keys (query, canonical, parsed, passage_meta, passages) are protected and cannot be overwritten. The cssclasses key will be merged with the plugin-managed class.',
+			cls: 'setting-item-description'
+		});
+
+		new Setting(containerEl)
+			.setName('Chapter Note Frontmatter')
+			.setDesc('Custom YAML frontmatter added to chapter-level notes (e.g., Genesis 1).')
+			.addTextArea(text => text
+				.setPlaceholder('tags:\n  - bible\ntype: chapter')
+				.setValue(this.plugin.settings.chapterNoteFrontmatter)
+				.onChange(async (value) => {
+					this.plugin.settings.chapterNoteFrontmatter = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Passage Note Frontmatter')
+			.setDesc('Custom YAML frontmatter added to passage-level notes (e.g., Genesis 1:5 or Genesis 1:5-10).')
+			.addTextArea(text => text
+				.setPlaceholder('tags:\n  - bible\ntype: passage')
+				.setValue(this.plugin.settings.passageNoteFrontmatter)
+				.onChange(async (value) => {
+					this.plugin.settings.passageNoteFrontmatter = value;
 					await this.plugin.saveSettings();
 				}));
 
