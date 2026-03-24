@@ -371,7 +371,6 @@ button.clear-input-button {
     border: 1px solid var(--background-modifier-border);
     border-radius: 6px;
     padding: 16px;
-    margin: 12px 0;
 }
 
 .bible-passage-heading {

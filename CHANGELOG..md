@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1
+
+- Removes some extra, ugly margin
+
 ## 0.9.0
 
 - Adds settings to hide footnotes
