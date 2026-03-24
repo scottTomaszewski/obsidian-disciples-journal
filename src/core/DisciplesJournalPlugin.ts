@@ -13,6 +13,7 @@ import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
 import {BibleReference} from './BibleReference';
 import {getCustomFrontmatterForReference, mergeCustomFrontmatterIntoExisting} from "../utils/FrontmatterUtil";
+import {OpenBibleModal} from "../components/OpenBibleModal";
 
 /**
  * Disciples Journal Plugin for Obsidian
@@ -72,9 +73,20 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Register commands
 		this.addCommand({
+			id: 'open-bible',
+			name: 'Open Bible',
+			callback: () => new OpenBibleModal(this.app, this.bibleBookFiles).open()
+		});
+
+		this.addCommand({
 			id: 'update-bible-note-frontmatter',
 			name: 'Update frontmatter on all Bible notes',
 			callback: () => this.updateAllBibleNoteFrontmatter()
+		});
+
+		// Ribbon icon
+		this.addRibbonIcon('book-open', 'Open Bible', () => {
+			new OpenBibleModal(this.app, this.bibleBookFiles).open();
 		});
 
 		// Register settings tab

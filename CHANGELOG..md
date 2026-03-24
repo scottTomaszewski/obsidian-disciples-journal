@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.12.0
+
+- Adds "Open Bible" command and ribbon icon to browse books and chapters without a reference
+
 ## 0.11.0
 
 - Adds template variable support: `{{book}}`, `{{chapter}}`, `{{verse}}`, `{{endVerse}}`, `{{endChapter}}`, `{{reference}}`
