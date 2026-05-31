@@ -1,11 +1,11 @@
-import {requestUrl} from "obsidian";
+import {normalizePath, requestUrl, TFile} from "obsidian";
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 import {BibleReference} from "../core/BibleReference";
 import {BookNames} from "./BookNames";
 import {BiblePassage} from "../utils/BiblePassage";
 import {BibleApiResponse, ErrorType} from "../utils/BibleApiResponse";
 import {BibleFiles} from "./BibleFiles";
-import {buildFrontmatterString, getCustomFrontmatterForReference} from "../utils/FrontmatterUtil";
+import {applyCustomFrontmatter, getCustomFrontmatterForReference} from "../utils/FrontmatterUtil";
 
 /**
  * Interface for ESV API Response
@@ -40,13 +40,6 @@ export class ESVApiService {
 	// Store HTML formatted Bible chapters
 	constructor(plugin: DisciplesJournalPlugin) {
 		this.plugin = plugin;
-	}
-
-	/**
-	 * Get the full vault path including version subdirectory
-	 */
-	private getFullContentPath(): string {
-		return `${this.plugin.settings.bibleContentVaultPath}/ESV`;
 	}
 
 	/**
@@ -113,44 +106,61 @@ export class ESVApiService {
 	 */
 	private async saveESVApiResponseAsMdNote(data: ESVApiResponse): Promise<void> {
 		try {
-			// Extract book and chapter from the canonical reference
-			const parts = data.canonical.split(' ');
-			if (parts.length < 2) return;
-			const book = parts.slice(0, -1).join(' ');
-
-			// Create the directory structure with version subdirectory
-			const fullPath = this.getFullContentPath();
-			const bookPath = `${fullPath}/${book}`;
-			await this.ensureVaultDirectoryExists(fullPath);
-			await this.ensureVaultDirectoryExists(bookPath);
-
-			// Save the raw API response as a markdown note with frontmatter
 			const passage = BibleReference.parse(data.canonical);
 			if (!passage) {
 				console.error(`Failed to parse canonical reference from ESV API: ${data.canonical}`);
 				return;
 			}
-			const filePath = BibleFiles.pathForPassage(passage, this.plugin);
+
+			const filePath = normalizePath(BibleFiles.pathForPassage(passage, this.plugin));
+
+			// Ensure the parent folder exists before creating the note.
+			const folderPath = filePath.substring(0, filePath.lastIndexOf('/'));
+			await this.ensureVaultFolderExists(folderPath);
+
+			// Create the note (body only) if it doesn't exist yet; otherwise reuse
+			// the existing file and just refresh its frontmatter below.
+			const vault = this.plugin.app.vault;
+			const existing = vault.getAbstractFileByPath(filePath);
+			const file = existing instanceof TFile
+				? existing
+				: await vault.create(filePath, `\n~~~bible\n${data.canonical}\n~~~\n`);
+
+			// Write the raw API response (plus any custom fields) as frontmatter.
 			const customYaml = getCustomFrontmatterForReference(passage, this.plugin.settings);
-			const frontmatterBody = buildFrontmatterString(data, customYaml);
-			const content = `---\n${frontmatterBody}---\n\n~~~bible\n${data.canonical}\n~~~\n\n`;
-			await this.plugin.app.vault.adapter.write(filePath, content);
+			await this.plugin.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+				fm.query = data.query;
+				fm.canonical = data.canonical;
+				fm.parsed = data.parsed;
+				fm.passage_meta = data.passage_meta;
+				fm.passages = data.passages;
+				applyCustomFrontmatter(fm, customYaml);
+			});
 		} catch (error) {
 			console.error('Error saving ESV API response:', error);
 		}
 	}
 
 	/**
-	 * Ensure vault directory exists, creating it if necessary
+	 * Ensure a vault folder exists, creating any missing path segments.
 	 */
-	private async ensureVaultDirectoryExists(path: string): Promise<void> {
-		const parts = path.split('/').filter(p => p.length > 0);
+	private async ensureVaultFolderExists(path: string): Promise<void> {
+		const vault = this.plugin.app.vault;
+		const parts = normalizePath(path).split('/').filter(p => p.length > 0);
 		let currentPath = '';
 
 		for (const part of parts) {
 			currentPath += (currentPath ? '/' : '') + part;
-			if (!(await this.plugin.app.vault.adapter.exists(currentPath))) {
-				await this.plugin.app.vault.adapter.mkdir(currentPath);
+			if (vault.getAbstractFileByPath(currentPath)) {
+				continue;
+			}
+			try {
+				await vault.createFolder(currentPath);
+			} catch (e) {
+				// Ignore races where the folder was created concurrently.
+				if (!vault.getAbstractFileByPath(currentPath)) {
+					throw e;
+				}
 			}
 		}
 	}

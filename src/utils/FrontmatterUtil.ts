@@ -1,4 +1,4 @@
-import {parseYaml, stringifyYaml} from "obsidian";
+import {parseYaml} from "obsidian";
 import {BibleReference} from "../core/BibleReference";
 import {DisciplesJournalSettings} from "../settings/DisciplesJournalSettings";
 
@@ -104,15 +104,18 @@ function mergeCssClasses(existing: unknown, custom: unknown): string[] {
 }
 
 /**
- * Build the complete frontmatter YAML body for a new note.
- * Returns the YAML content without the --- delimiters.
+ * Apply custom frontmatter onto a mutable frontmatter object, as handed to
+ * `FileManager.processFrontMatter()`. API-reserved keys in the custom YAML are
+ * filtered out (see {@link parseCustomYaml}), and the plugin css class is always
+ * ensured present. Any existing `cssclasses` on the object are preserved.
+ *
+ * Pass through {@link getCustomFrontmatterForReference} first so template
+ * variables are resolved.
  */
-export function buildFrontmatterString(
-	apiData: Record<string, unknown>,
+export function applyCustomFrontmatter(
+	fm: Record<string, unknown>,
 	customYaml: string
-): string {
-	// Separate cssclasses from API data so we can place it last
-	const {cssclasses: apiCss, ...apiFields} = apiData;
+): void {
 	const customData = parseCustomYaml(customYaml);
 
 	// Extract cssclasses from custom data if present
@@ -128,64 +131,14 @@ export function buildFrontmatterString(
 		}
 	}
 
-	// Build the combined object: API fields, then custom fields, then cssclasses last
-	const combined: Record<string, unknown> = {...apiFields};
+	// Overlay custom fields onto the frontmatter object
 	for (const [key, value] of Object.entries(customFields)) {
-		combined[key] = value;
-	}
-	combined['cssclasses'] = mergeCssClasses(apiCss, customCss);
-
-	return stringifyYaml(combined);
-}
-
-/**
- * Merge custom frontmatter into an existing note's frontmatter YAML string.
- * Returns the new YAML body without --- delimiters.
- */
-export function mergeCustomFrontmatterIntoExisting(
-	existingFrontmatter: string,
-	customYaml: string
-): string | null {
-	const customData = parseCustomYaml(customYaml);
-	if (!customData) {
-		return null;
+		fm[key] = value;
 	}
 
-	let existing: Record<string, unknown>;
-	try {
-		const parsedExisting = parseYaml(existingFrontmatter) as unknown;
-		if (parsedExisting === null || typeof parsedExisting !== 'object' || Array.isArray(parsedExisting)) {
-			console.warn('Disciples Journal: existing frontmatter is not a valid YAML mapping, skipping merge.');
-			return null;
-		}
-		existing = parsedExisting as Record<string, unknown>;
-	} catch (e) {
-		console.warn('Disciples Journal: failed to parse existing frontmatter, skipping merge.', e);
-		return null;
-	}
-
-	// Extract cssclasses from custom data if present
-	let customCss: unknown = undefined;
-	const customFields: Record<string, unknown> = {};
-	for (const [key, value] of Object.entries(customData)) {
-		if (key === 'cssclasses') {
-			customCss = value;
-		} else {
-			customFields[key] = value;
-		}
-	}
-
-	// Overlay custom fields onto existing
-	for (const [key, value] of Object.entries(customFields)) {
-		existing[key] = value;
-	}
-
-	// Merge cssclasses if custom has them
-	if (customCss !== undefined) {
-		existing['cssclasses'] = mergeCssClasses(existing['cssclasses'], customCss);
-	}
-
-	return stringifyYaml(existing);
+	// Always (re)write cssclasses last so the plugin class is present and any
+	// existing/custom classes are merged in.
+	fm['cssclasses'] = mergeCssClasses(fm['cssclasses'], customCss);
 }
 
 /**

@@ -31,7 +31,7 @@ export class BibleContentService {
 		}
 
 		// Load from local file
-		const passageMdFile = await BibleFiles.fileExistsForPassage(ref, this.plugin)
+		const passageMdFile = BibleFiles.fileExistsForPassage(ref, this.plugin)
 			? BibleFiles.getFileForPassage(ref, this.plugin)
 			: null;
 		if (passageMdFile) {

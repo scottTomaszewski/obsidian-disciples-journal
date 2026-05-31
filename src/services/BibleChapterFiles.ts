@@ -35,7 +35,7 @@ export class BibleChapterFiles {
 			}
 
 			const chapterPath = BibleFiles.pathForPassage(parsedRef, this.plugin);
-			if (! await BibleFiles.fileExistsForPassage(parsedRef, this.plugin)) {
+			if (!BibleFiles.fileExistsForPassage(parsedRef, this.plugin)) {
 				if (this.plugin.settings.downloadOnDemand) {
 					// TODO - create chapter note
 					const response = await this.createChapterNote(parsedRef);

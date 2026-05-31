@@ -33,28 +33,35 @@ callbacks reuse the shared instance instead of constructing new ones. The file-l
 
 ---
 
-## 2. File access via `vault.adapter` instead of the Vault/FileManager APIs
+## 2. File access via `vault.adapter` instead of the Vault/FileManager APIs — ✅ RESOLVED
 
 **Files:** `src/services/ESVApiService.ts`, `src/services/BibleFiles.ts`,
 `src/core/DisciplesJournalPlugin.ts`
 
-**What's wrong (Obsidian guideline rules 19–22):**
-- `vault.adapter.write(...)` is used to create/overwrite notes
+**What was wrong (Obsidian guideline rules 19–22):**
+- `vault.adapter.write(...)` was used to create/overwrite notes
   (`ESVApiService.saveESVApiResponseAsMdNote`, `DisciplesJournalPlugin.updateAllBibleNoteFrontmatter`).
-  Prefer `Vault.create()` for new files and `Vault.process()` for background
-  edits of existing files. For frontmatter specifically, `FileManager.processFrontMatter()`
-  is the intended API and would remove most of the manual YAML string handling
-  in `FrontmatterUtil.ts`.
-- `vault.adapter.exists` / `vault.adapter.mkdir` (directory creation) should use
-  `Vault.getAbstractFileByPath()` / `Vault.createFolder()`.
-- `BibleFiles.clearData` uses `vault.adapter.rmdir(...)`; deletion should go
-  through `FileManager.trashFile()` so it respects the user's trash settings.
-- Paths are built by string concatenation; run user-configurable paths through
-  `normalizePath()`.
+- `vault.adapter.exists` / `vault.adapter.mkdir` were used for existence checks
+  and directory creation.
+- `BibleFiles.clearData` used `vault.adapter.rmdir(...)`, bypassing the user's
+  trash settings.
+- Paths were built by string concatenation without `normalizePath()`.
 
-> Note: these are **not** currently flagged by the lint config (the obsidianmd
-> rules target `Vault.trash/delete`, not `adapter.*`), so there are no disable
-> comments for them — but they are still non-conformant and worth migrating.
+**Fix applied:**
+- `ESVApiService.saveESVApiResponseAsMdNote` now creates the note body with
+  `Vault.create()` (reusing the existing `TFile` when present) and writes the API
+  response + custom fields via `FileManager.processFrontMatter()`. Folder creation
+  goes through `Vault.getAbstractFileByPath()` / `Vault.createFolder()`.
+- `DisciplesJournalPlugin.updateAllBibleNoteFrontmatter` reads `canonical` from
+  `metadataCache` and updates frontmatter via `FileManager.processFrontMatter()`.
+- The manual YAML string builders in `FrontmatterUtil.ts`
+  (`buildFrontmatterString` / `mergeCustomFrontmatterIntoExisting`) were replaced
+  by a single `applyCustomFrontmatter(fm, customYaml)` that mutates the
+  frontmatter object handed to `processFrontMatter` (dropping the
+  `stringifyYaml` round-tripping).
+- `BibleFiles.fileExistsForPassage` uses `getAbstractFileByPath` (now synchronous),
+  and `BibleFiles.clearData` deletes through `FileManager.trashFile()`.
+- All passage/content paths run through `normalizePath()`.
 
 ---
 

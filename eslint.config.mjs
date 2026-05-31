@@ -16,6 +16,7 @@ export default defineConfig([
 			"tsconfig.json",
 			"devbox.json",
 			"devbox.lock",
+			".devbox/**",
 			"package-lock.json",
 		],
 	},

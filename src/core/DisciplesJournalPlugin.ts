@@ -1,4 +1,4 @@
-import {Plugin, MarkdownView, Notice, getFrontMatterInfo, parseYaml} from 'obsidian';
+import {Plugin, MarkdownView, Notice, normalizePath} from 'obsidian';
 import {ESVApiService} from '../services/ESVApiService';
 import {BibleContentService} from '../services/BibleContentService';
 import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
@@ -13,7 +13,7 @@ import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
 import {BibleReference} from './BibleReference';
 import {BibleEventHandlers} from './BibleEventHandlers';
-import {getCustomFrontmatterForReference, mergeCustomFrontmatterIntoExisting} from "../utils/FrontmatterUtil";
+import {applyCustomFrontmatter, getCustomFrontmatterForReference} from "../utils/FrontmatterUtil";
 import {OpenBibleModal} from "../components/OpenBibleModal";
 
 /**
@@ -168,7 +168,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 	 * Scan all Bible notes and update their frontmatter with the current custom frontmatter settings.
 	 */
 	private async updateAllBibleNoteFrontmatter() {
-		const basePath = this.settings.bibleContentVaultPath;
+		const basePath = normalizePath(this.settings.bibleContentVaultPath);
 		const files = this.app.vault.getFiles().filter(
 			f => f.path.startsWith(basePath + '/') && f.extension === 'md'
 		);
@@ -183,20 +183,13 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		for (const file of files) {
 			try {
-				const content = await this.app.vault.read(file);
-				const fmInfo = getFrontMatterInfo(content);
-				if (!fmInfo || !fmInfo.frontmatter) {
+				const canonical: unknown = this.app.metadataCache.getFileCache(file)?.frontmatter?.canonical;
+				if (typeof canonical !== 'string') {
 					skippedCount++;
 					continue;
 				}
 
-				const fmData = parseYaml(fmInfo.frontmatter) as { canonical?: unknown } | null;
-				if (!fmData || typeof fmData.canonical !== 'string') {
-					skippedCount++;
-					continue;
-				}
-
-				const ref = BibleReference.parse(fmData.canonical);
+				const ref = BibleReference.parse(canonical);
 				if (!ref) {
 					skippedCount++;
 					continue;
@@ -208,19 +201,9 @@ export default class DisciplesJournalPlugin extends Plugin {
 					continue;
 				}
 
-				const mergedFrontmatter = mergeCustomFrontmatterIntoExisting(fmInfo.frontmatter, customYaml);
-				if (!mergedFrontmatter) {
-					skippedCount++;
-					continue;
-				}
-
-				// Reconstruct the file: new frontmatter + original body.
-				// contentStart is the index after the closing "---\n", so bodyContent
-				// preserves whatever whitespace/content followed the original frontmatter.
-				const bodyContent = content.substring(fmInfo.contentStart);
-				const newContent = `---\n${mergedFrontmatter}---\n${bodyContent}`;
-
-				await this.app.vault.adapter.write(file.path, newContent);
+				await this.app.fileManager.processFrontMatter(file, (fm: Record<string, unknown>) => {
+					applyCustomFrontmatter(fm, customYaml);
+				});
 				updatedCount++;
 			} catch (e) {
 				console.warn(`Disciples Journal: failed to update frontmatter for ${file.path}`, e);
