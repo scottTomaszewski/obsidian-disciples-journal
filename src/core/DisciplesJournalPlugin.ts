@@ -12,6 +12,7 @@ import {BibleChapterFiles} from 'src/services/BibleChapterFiles';
 import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
 import {BibleReference} from './BibleReference';
+import {BibleEventHandlers} from './BibleEventHandlers';
 import {getCustomFrontmatterForReference, mergeCustomFrontmatterIntoExisting} from "../utils/FrontmatterUtil";
 import {OpenBibleModal} from "../components/OpenBibleModal";
 
@@ -30,6 +31,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 	// Components
 	private bibleStyles: BibleStyles;
 	private bibleReferenceRenderer: BibleReferenceRenderer;
+	private bibleEventHandlers: BibleEventHandlers;
 	private bibleMarkupProcessor: BibleMarkupProcessor;
 
 	async onload() {
@@ -55,6 +57,13 @@ export default class DisciplesJournalPlugin extends Plugin {
 			this
 		);
 
+		// Single, long-lived hover-preview event handler owned by the plugin.
+		// addChild loads it now (registering its listeners/timer) and unloads it
+		// with the plugin, so the global document listeners no longer leak.
+		this.bibleEventHandlers = new BibleEventHandlers(this.bibleReferenceRenderer);
+		this.addChild(this.bibleEventHandlers);
+		this.bibleReferenceRenderer.setEventHandlers(this.bibleEventHandlers);
+
 		// Initialize markup processor
 		this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
 
@@ -68,7 +77,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Register editor extension for Live Preview
 		if (this.settings.displayInlineVerses) {
-			this.registerEditorExtension(createInlineReferenceExtension(this.bibleReferenceRenderer, this.bibleContentService));
+			this.registerEditorExtension(createInlineReferenceExtension(this.bibleContentService, this.bibleEventHandlers));
 		}
 
 		// Register commands

@@ -3,13 +3,12 @@ import {RangeSetBuilder} from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 import { BibleReference } from "src/core/BibleReference";
 import { BibleEventHandlers } from "src/core/BibleEventHandlers";
-import { BibleReferenceRenderer } from "./BibleReferenceRenderer";
 import {editorLivePreviewField, Notice} from "obsidian";
 import {BibleContentService} from "../services/BibleContentService";
 
 // Plugin/Extension to handle live-preview rendering of Inline Admonitions.
 // Reference: https://github.com/liamcain/obsidian-lapel/blob/main/src/headingWidget.ts
-export function createInlineReferenceExtension(renderer: BibleReferenceRenderer, contentService: BibleContentService) {
+export function createInlineReferenceExtension(contentService: BibleContentService, eventHandlers: BibleEventHandlers) {
 	return ViewPlugin.fromClass(
 		class {
 			decorations: DecorationSet;
@@ -79,14 +78,14 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer,
 								new Notice(response.errorMessage, 10000);
 								return;
 							}
-							void new BibleEventHandlers(renderer).handleBibleReferenceHover(e, response.passage);
+							void eventHandlers.handleBibleReferenceHover(e, response.passage);
 						});
 					}
 				},
 				mouseout: (e, view) => {
 					const t = e.target as HTMLElement;
 					if (t.classList.contains("bible-reference")) {
-						new BibleEventHandlers(renderer).handleBibleReferenceMouseOut(e);
+						eventHandlers.handleBibleReferenceMouseOut(e);
 					}
 				}
 			}

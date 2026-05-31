@@ -7,7 +7,8 @@
   - Settings UI text uses sentence case
   - Corrects the manifest description and raises `minAppVersion` to `1.6.6` to match the APIs actually used
   - Tightens type safety (removes `any`, narrows YAML/error handling) and moves remaining inline styles to `styles.css`
-- Known follow-ups (tracked in `FOLLOWUP.md`): the hover-preview event listeners are still attached globally and should move to the registered-listener lifecycle, and file reads/writes should migrate to the `Vault`/`FileManager` APIs
+- Fixes a hover-preview event-listener leak: `BibleEventHandlers` is now a single plugin-owned `Component` whose `document` listeners and close-poll timer are registered through the Obsidian lifecycle (so they're released on unload) and tracked per document for correct pop-out behavior, instead of being re-created and leaked on every hover
+- Known follow-ups (tracked in `FOLLOWUP.md`): file reads/writes should migrate to the `Vault`/`FileManager` APIs
 
 ## 0.12.0
 

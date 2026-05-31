@@ -11,35 +11,25 @@ file-API internals and the event-handler internals **functionally unchanged**.
 
 ---
 
-## 1. Hover-preview event listeners leak (highest priority)
+## 1. Hover-preview event listeners leak (highest priority) — ✅ RESOLVED
 
 **Files:** `src/core/BibleEventHandlers.ts`, `src/components/BibleReferenceRenderer.ts`,
-`src/components/BibleReferenceInlineExtension.ts`
+`src/components/BibleReferenceInlineExtension.ts`, `src/core/DisciplesJournalPlugin.ts`
 
-**What's wrong:**
-- `BibleReferenceRenderer.processInlineCodeBlocks` and the CodeMirror
-  `eventHandlers` in `BibleReferenceInlineExtension` create a **new
-  `BibleEventHandlers` instance on every `mouseover`/`mouseout`**.
-- Each `BibleEventHandlers` constructor calls `document.addEventListener('mousemove', …)`
-  and `document.addEventListener('click', …)` on the **global `document`**.
-- These global listeners are only removed by `cleanup()`, which is **never called** —
-  `DisciplesJournalPlugin.onunload()` is empty. So listeners accumulate for the
-  lifetime of the app session and are never released on plugin unload.
-- It also uses `window.setInterval` / `clearInterval` and the global `document`
-  rather than `activeDocument`, so hover previews don't behave correctly in
-  pop-out windows.
+**What was wrong:** `BibleEventHandlers` was instantiated on every
+`mouseover`/`mouseout`, and each constructor added `mousemove`/`click` listeners to
+the global `document` that were only removed by a `cleanup()` that was never called
+(empty `onunload`), so listeners leaked for the app session. It also used bare
+`document` and `setInterval`, breaking pop-out windows.
 
-**Rules currently disabled for this:** `obsidianmd/prefer-active-doc`,
-`obsidianmd/prefer-window-timers`, `@typescript-eslint/no-deprecated`
-(file-level disable at the top of `BibleEventHandlers.ts`).
-
-**Suggested fix:**
-- Make `BibleEventHandlers` a single, long-lived instance owned by the plugin
-  (or make it extend `Component`), created once in `onload`.
-- Register all DOM listeners with `this.registerDomEvent(...)` and the interval
-  with `this.registerInterval(...)` so Obsidian tears them down automatically.
-- Use `activeDocument` / `activeWindow` instead of the globals for pop-out support.
-- Stop instantiating `new BibleEventHandlers(...)` inside the hover callbacks.
+**Fix applied:** `BibleEventHandlers` now extends `Component` and is a single,
+plugin-owned instance created in `onload` and registered with `addChild(...)`. Its
+document listeners are attached via `registerDomEvent` (lazily per document, deduped
+through a `WeakSet`, so pop-out windows are tracked too) and the close-poll runs on a
+single `registerInterval` timer — all torn down automatically on unload. The hover
+callbacks reuse the shared instance instead of constructing new ones. The file-level
+`eslint-disable` banner (`obsidianmd/prefer-active-doc`,
+`obsidianmd/prefer-window-timers`, `@typescript-eslint/no-deprecated`) was removed.
 
 ---
 

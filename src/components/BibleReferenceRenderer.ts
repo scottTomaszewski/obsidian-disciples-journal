@@ -14,6 +14,7 @@ export class BibleReferenceRenderer {
 	private bibleContentService: BibleContentService;
 	private bibleNavigation: BibleNavigation;
 	private plugin: DisciplesJournalPlugin;
+	private eventHandlers: BibleEventHandlers;
 
 	constructor(
 		bibleContentService: BibleContentService,
@@ -23,6 +24,14 @@ export class BibleReferenceRenderer {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
 		this.bibleNavigation = new BibleNavigation(noteCreationService, plugin.app);
+	}
+
+	/**
+	 * Inject the shared, plugin-owned event handlers. Set after construction
+	 * because the handlers need a reference to this renderer.
+	 */
+	public setEventHandlers(handlers: BibleEventHandlers): void {
+		this.eventHandlers = handlers;
 	}
 
 	/**
@@ -61,10 +70,10 @@ export class BibleReferenceRenderer {
 				}
 				
 				referenceEl.addEventListener('mouseover', (e) => {
-					void new BibleEventHandlers(this).handleBibleReferenceHover(e, response.passage);
+					void this.eventHandlers.handleBibleReferenceHover(e, response.passage);
 				});
 				referenceEl.addEventListener('mouseout', (e) => {
-					new BibleEventHandlers(this).handleBibleReferenceMouseOut(e);
+					this.eventHandlers.handleBibleReferenceMouseOut(e);
 				});
 
 				// Replace the code block with our reference element
