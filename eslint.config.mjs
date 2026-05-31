@@ -12,6 +12,7 @@ export default defineConfig([
 			"**/*.mjs",
 			"manifest.json",
 			"versions.json",
+			"data.json",
 			"tsconfig.json",
 			"devbox.json",
 			"devbox.lock",

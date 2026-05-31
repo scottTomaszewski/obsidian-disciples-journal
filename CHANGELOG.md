@@ -8,6 +8,7 @@
   - Corrects the manifest description and raises `minAppVersion` to `1.6.6` to match the APIs actually used
   - Tightens type safety (removes `any`, narrows YAML/error handling) and moves remaining inline styles to `styles.css`
 - Fixes a hover-preview event-listener leak: `BibleEventHandlers` is now a single plugin-owned `Component` whose `document` listeners and close-poll timer are registered through the Obsidian lifecycle (so they're released on unload) and tracked per document for correct pop-out behavior, instead of being re-created and leaked on every hover
+- Surfaces a notification when opening a chapter fails instead of failing silently — e.g. opening the Bible without an ESV API token configured now explains that a token is needed (and points to the plugin settings) rather than doing nothing
 - Known follow-ups (tracked in `FOLLOWUP.md`): file reads/writes should migrate to the `Vault`/`FileManager` APIs
 
 ## 0.12.0
