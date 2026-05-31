@@ -1,3 +1,11 @@
+/*
+ * DEFERRED: this class attaches hover-preview listeners to the global `document`
+ * and is created per hover event, leaking listeners. It is slated for a
+ * lifecycle rewrite (registerDomEvent / registerInterval / activeDocument) —
+ * see FOLLOWUP.md. Until then the popout-window, timer, and deprecation rules
+ * tied to that code are disabled here rather than partially reworked.
+ */
+/* eslint-disable obsidianmd/prefer-active-doc, obsidianmd/prefer-window-timers, @typescript-eslint/no-deprecated */
 import { BiblePassage } from 'src/utils/BiblePassage';
 import { BibleReferenceRenderer } from '../components/BibleReferenceRenderer';
 
@@ -134,8 +142,7 @@ export class BibleEventHandlers {
 		
 		// If no preview active, nothing to do
 		if (!this.previewPopper) return;
-		
-		const target = event.target as HTMLElement;
+
 		const relatedTarget = event.relatedTarget as HTMLElement;
 		
 		// If moving directly to the preview element, don't close
@@ -158,7 +165,7 @@ export class BibleEventHandlers {
 				try {
 					const hoverGaps = doc.querySelectorAll('.bible-hover-gap');
 					hoverGaps.forEach(gap => gap.remove());
-				} catch (e) {
+				} catch {
 					// Ignore any errors during cleanup
 				}
 			}

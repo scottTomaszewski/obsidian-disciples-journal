@@ -56,10 +56,10 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 		const {containerEl} = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName('Display Customization').setHeading();
+		new Setting(containerEl).setName('Display customization').setHeading();
 
 		new Setting(containerEl)
-			.setName('Display Inline Verses')
+			.setName('Display inline verses')
 			.setDesc('Enable rendering of inline Bible references (in `code blocks`).')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.displayInlineVerses)
@@ -70,7 +70,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Display Full Passages')
+			.setName('Display full passages')
 			.setDesc('Enable rendering of full Bible passages (in ```bible code blocks).')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.displayFullPassages)
@@ -81,7 +81,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Show Navigation for Verses')
+			.setName('Show navigation for verses')
 			.setDesc('Show chapter navigation when displaying specific verses (by default, navigation only shows for full chapters).')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.showNavigationForVerses)
@@ -92,7 +92,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Hide Footnotes')
+			.setName('Hide footnotes')
 			.setDesc('Hide footnotes in the displayed scripture.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.hideFootnotes)
@@ -104,7 +104,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Hide Footnotes in Hover Previews')
+			.setName('Hide footnotes in hover previews')
 			.setDesc('Hide footnotes in hover preview popups.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.hideFootnotesInPreview)
@@ -116,7 +116,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Style Preset')
+			.setName('Style preset')
 			.setDesc('Choose a predefined style preset for Bible content.')
 			.addDropdown(dropdown => {
 				// Add all theme presets
@@ -133,7 +133,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName('Bible Text Font Size')
+			.setName('Bible text font size')
 			.setDesc('Set the font size for Bible verses and passages.')
 			.addDropdown(dropdown => dropdown
 				.addOption('80%', 'Smaller (80%)')
@@ -149,10 +149,10 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				})
 			);
 
-		new Setting(containerEl).setName('Text Styling').setHeading();
+		new Setting(containerEl).setName('Text styling').setHeading();
 
 		new Setting(containerEl)
-			.setName('Words of Christ Color')
+			.setName('Words of Christ color')
 			.setDesc('Set the color for Words of Christ (use `var(--text-normal)` for no special color).')
 			.addText(text => text
 				.setPlaceholder('var(--text-accent)')
@@ -164,7 +164,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Verse Number Color')
+			.setName('Verse number color')
 			.setDesc('Set the color for verse numbers.')
 			.addText(text => text
 				.setPlaceholder('var(--text-accent)')
@@ -176,7 +176,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Heading Color')
+			.setName('Heading color')
 			.setDesc('Set the color for Bible passage headings.')
 			.addText(text => text
 				.setPlaceholder('var(--text-accent)')
@@ -188,7 +188,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Block Indentation')
+			.setName('Block indentation')
 			.setDesc('Set the indentation for block sections.')
 			.addText(text => text
 				.setPlaceholder('2em')
@@ -202,7 +202,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 		new Setting(containerEl).setName('Bible').setHeading();
 
 		new Setting(containerEl)
-			.setName('Preferred Bible Version')
+			.setName('Preferred Bible version')
 			.setDesc('Select your preferred Bible version (only ESV currently supported).')
 			.addDropdown(dropdown => dropdown
 				.addOption('ESV', 'English Standard Version (ESV)')
@@ -214,7 +214,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName('Bible Content Vault Path')
+			.setName('Bible content vault path')
 			.setDesc('Root path in your vault where Bible content will be stored. Each translation will be stored in a subdirectory.')
 			.addText(text => text
 				.setPlaceholder('Bible')
@@ -224,7 +224,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 					await this.plugin.saveSettings();
 				}));
 
-		new Setting(containerEl).setName('Note Frontmatter').setHeading();
+		new Setting(containerEl).setName('Note frontmatter').setHeading();
 
 		const fmInfoDiv = containerEl.createDiv({cls: 'disciples-journal-frontmatter-info'});
 
@@ -234,10 +234,10 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 
 		fmInfoDiv.createEl('p', {
 			text: 'Template variables -- use these in values to inject reference data:',
-			attr: {style: 'font-weight: bold; margin-bottom: 4px;'}
+			cls: 'disciples-journal-info-label'
 		});
 
-		const varList = fmInfoDiv.createEl('ul', {attr: {style: 'margin-top: 0; padding-left: 1.5em;'}});
+		const varList = fmInfoDiv.createEl('ul', {cls: 'disciples-journal-var-list'});
 		for (const v of TEMPLATE_VARIABLES) {
 			const li = varList.createEl('li');
 			li.createEl('code', {text: v.variable});
@@ -245,7 +245,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 		}
 
 		new Setting(containerEl)
-			.setName('Chapter Note Frontmatter')
+			.setName('Chapter note frontmatter')
 			.setDesc('Custom YAML frontmatter added to chapter-level notes (e.g., Genesis 1).')
 			.addTextArea(text => text
 				.setPlaceholder('tags:\n  - bible/{{book}}\ntype: chapter')
@@ -256,7 +256,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Passage Note Frontmatter')
+			.setName('Passage note frontmatter')
 			.setDesc('Custom YAML frontmatter added to passage-level notes (e.g., Genesis 1:5 or Genesis 1:5-10).')
 			.addTextArea(text => text
 				.setPlaceholder('tags:\n  - bible/{{book}}\npassage: "{{reference}}"')
@@ -276,7 +276,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 
 		apiInfoDiv.createEl('p', {
 			text: 'To get a free ESV API token:',
-			attr: {style: 'font-weight: bold;'}
+			cls: 'disciples-journal-info-label'
 		});
 
 		const instructionsList = apiInfoDiv.createEl('ol');
@@ -307,7 +307,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 		});
 
 		new Setting(containerEl)
-			.setName('ESV API Token')
+			.setName('ESV API token')
 			.setDesc('Enter your ESV API token from api.esv.org.')
 			.addText(text => text
 				.setPlaceholder('Enter your ESV API token')
@@ -321,7 +321,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				}));
 
 		new Setting(containerEl)
-			.setName('Download on Demand')
+			.setName('Download on demand')
 			.setDesc('Enable automatic downloading of Bible content when requested.')
 			.addToggle(toggle => toggle
 				.setValue(this.plugin.settings.downloadOnDemand)
@@ -333,7 +333,7 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setDesc("Click this button to clear the cached bible files. Click this after upgrading from 0.7.0 or earlier. Data will be redownloaded on demand")
 			.addButton(btn => btn
-				.setButtonText("Clear Bible Data")
+				.setButtonText("Clear Bible data")
 				.onClick(async evt => {
 					await BibleFiles.clearData(this.plugin);
 				}));

@@ -504,3 +504,24 @@ button.clear-input-button {
 .inline-bible-reference .inline-bible-reference-text { /* Target the text part */
     font-size: var(--dj-font-size); /* Keep original font size variable for now, or switch to --dj-font-size if desired */
 }
+
+/* Settings: frontmatter/API info blocks */
+.disciples-journal-info-label {
+    font-weight: var(--font-bold);
+    margin-bottom: var(--size-4-1);
+}
+
+.disciples-journal-var-list {
+    margin-top: 0;
+    padding-left: var(--size-4-6);
+}
+
+/* Book search input (navigation) */
+.disciples-journal-book-suggest-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.disciples-journal-book-suggest-input {
+    padding-right: 1.5em;
+}

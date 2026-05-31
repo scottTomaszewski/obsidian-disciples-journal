@@ -1,26 +1,36 @@
 {
   "name": "obsidian-disciples-journal",
-  "version": "0.12.0",
-  "description": "Obsidian plugin for Bible verse references and passage display",
+  "version": "0.13.0",
+  "description": "Embed Bible references and passages in your notes and read the Bible.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
+    "lint": "eslint .",
     "version": "node version-bump.mjs && git add manifest.json versions.json",
     "build-no-check": "node esbuild.config.mjs production"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "obsidian",
+    "bible",
+    "scripture",
+    "esv",
+    "verse"
+  ],
+  "author": "Scott Tomaszewski (Xentis)",
   "license": "MIT",
   "devDependencies": {
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
     "@rollup/plugin-json": "^6.1.0",
     "@types/node": "^16.11.6",
-    "@typescript-eslint/eslint-plugin": "5.29.0",
-    "@typescript-eslint/parser": "5.29.0",
-    "builtin-modules": "3.3.0",
     "esbuild": "0.17.3",
+    "eslint": "^9.18.0",
+    "eslint-plugin-obsidianmd": "^0.3.0",
     "obsidian": "latest",
     "tslib": "^2.4.0",
-    "typescript": "4.7.4"
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.20.0"
   }
 }

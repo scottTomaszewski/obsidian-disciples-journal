@@ -33,8 +33,6 @@ export default class DisciplesJournalPlugin extends Plugin {
 	private bibleMarkupProcessor: BibleMarkupProcessor;
 
 	async onload() {
-		console.log('Loading Disciples Journal plugin');
-
 		// Initialize settings
 		await this.loadSettings();
 
@@ -61,10 +59,12 @@ export default class DisciplesJournalPlugin extends Plugin {
 		this.bibleMarkupProcessor = new BibleMarkupProcessor(this.bibleReferenceRenderer, this.settings);
 
 		// Register bible reference processor
-		this.registerMarkdownCodeBlockProcessor('bible', this.bibleMarkupProcessor.processBibleCodeBlock.bind(this.bibleMarkupProcessor));
+		this.registerMarkdownCodeBlockProcessor('bible', (source, el, ctx) =>
+			this.bibleMarkupProcessor.processBibleCodeBlock(source, el, ctx));
 
 		// Register markdown post processor for inline references
-		this.registerMarkdownPostProcessor(this.bibleMarkupProcessor.processInlineBibleReferences.bind(this.bibleMarkupProcessor));
+		this.registerMarkdownPostProcessor((el, ctx) =>
+			this.bibleMarkupProcessor.processInlineBibleReferences(el, ctx));
 
 		// Register editor extension for Live Preview
 		if (this.settings.displayInlineVerses) {
@@ -93,14 +93,15 @@ export default class DisciplesJournalPlugin extends Plugin {
 		this.addSettingTab(new DisciplesJournalSettingsTab(this.app, this));
 
 		// Register active leaf change to update styles
-		this.registerEvent(this.app.workspace.on('active-leaf-change', this.handleActiveLeafChange.bind(this)));
+		this.registerEvent(this.app.workspace.on('active-leaf-change', () => this.handleActiveLeafChange()));
 	}
 
 	onunload() {
 	}
 
 	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		const savedData = (await this.loadData()) as Partial<DisciplesJournalSettings> | null;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData);
 	}
 
 	async saveSettings() {
@@ -180,8 +181,8 @@ export default class DisciplesJournalPlugin extends Plugin {
 					continue;
 				}
 
-				const fmData = parseYaml(fmInfo.frontmatter);
-				if (!fmData || !fmData.canonical) {
+				const fmData = parseYaml(fmInfo.frontmatter) as { canonical?: unknown } | null;
+				if (!fmData || typeof fmData.canonical !== 'string') {
 					skippedCount++;
 					continue;
 				}

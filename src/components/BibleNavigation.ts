@@ -189,7 +189,8 @@ export class BibleNavigation {
 			await this.bibleBookFiles.openChapterNote(new BibleReference(book, chapter).toString());
 		} catch (error) {
 			console.error('Error navigating to chapter:', error);
-			new Notice(`Error navigating to chapter: ${error.message}`);
+			const message = error instanceof Error ? error.message : String(error);
+			new Notice(`Error navigating to chapter: ${message}`);
 		}
 	}
 } 

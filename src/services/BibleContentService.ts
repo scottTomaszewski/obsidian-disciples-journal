@@ -27,14 +27,14 @@ export class BibleContentService {
 		//  Return cached result if available
 		const passage = this.getCachedRef(ref);
 		if (passage) {
-			console.debug(`Returning cached passage(s) (${ref})`)
 			return BibleApiResponse.success(passage);
 		}
 
 		// Load from local file
-		if (await BibleFiles.fileExistsForPassage(ref, this.plugin)) {
-			console.debug(`Pulling passage(s) (${ref}) from local file`)
-			const passageMdFile = BibleFiles.getFileForPassage(ref, this.plugin);
+		const passageMdFile = await BibleFiles.fileExistsForPassage(ref, this.plugin)
+			? BibleFiles.getFileForPassage(ref, this.plugin)
+			: null;
+		if (passageMdFile) {
 			try {
 				const fileContent = await this.plugin.app.vault.read(passageMdFile);
 				const frontmatter = getFrontMatterInfo(fileContent);
@@ -42,12 +42,13 @@ export class BibleContentService {
 				if (frontmatter && frontmatter.frontmatter) {
 					return this.convertEsvApiResponseToGeneric(parseYaml(frontmatter.frontmatter), ref);
 				} else {
-					const message = `No frontmatter found in file for reference ${ref}. Loading from API instead.`;
+					const message = `No frontmatter found in file for reference ${ref.toString()}. Loading from API instead.`;
 					console.error(message);
 					// return BibleApiResponse.error(message, ErrorType.BadApiResponse);
 				}
 			} catch (error) {
-				const message = `Error reading file for reference ${ref}: ${error}`;
+				const detail = error instanceof Error ? error.message : String(error);
+				const message = `Error reading file for reference ${ref.toString()}: ${detail}`;
 				console.error(message);
 				return BibleApiResponse.error(message, ErrorType.BadApiResponse);
 			}
@@ -55,7 +56,6 @@ export class BibleContentService {
 
 		// Otherwise, grab from the API
 		if (this.plugin.settings.downloadOnDemand) {
-			console.debug(`Pulling passage(s) (${ref}) from ESV API`)
 			const response = await this.esvApiService.downloadFromESVApi(ref);
 			if (response.isError()) {
 				return response
@@ -64,20 +64,24 @@ export class BibleContentService {
 				return response;
 			}
 		} else {
-			console.error(`Settings "downloadOnDemand" is false. Skipping request to get passage ${ref}`);
-			return BibleApiResponse.error(`Settings prevent download of passage ${ref}`, ErrorType.RequestsForbidden)
+			console.error(`Settings "downloadOnDemand" is false. Skipping request to get passage ${ref.toString()}`);
+			return BibleApiResponse.error(`Settings prevent download of passage ${ref.toString()}`, ErrorType.RequestsForbidden)
 		}
 	}
 
 	// TODO - I would like this to go away once I normalize things a bit.  This code is duplicated within ESVAPIService
-	private convertEsvApiResponseToGeneric(frontmatter: any, ref: BibleReference) {
-		const canonicalRef = BibleReference.parse(frontmatter.canonical);
+	private convertEsvApiResponseToGeneric(frontmatter: unknown, ref: BibleReference) {
+		const fm = frontmatter as { canonical?: unknown; passages?: unknown } | null;
+		const canonical = fm && typeof fm.canonical === 'string' ? fm.canonical : null;
+		const canonicalRef = canonical ? BibleReference.parse(canonical) : null;
 		if (!canonicalRef) {
-			const message = `Failed to parse canonical reference (${frontmatter.canonical}) from ESV API for ${ref.toString()}`;
+			const message = `Failed to parse canonical reference (${String(canonical)}) from ESV API for ${ref.toString()}`;
 			console.error(message);
 			return BibleApiResponse.error(message, ErrorType.BadApiResponse);
 		}
-		return BibleApiResponse.success(new BiblePassage(canonicalRef, frontmatter.passages[0]));
+		const passages = fm && Array.isArray(fm.passages) ? (fm.passages as unknown[]) : [];
+		const html = typeof passages[0] === 'string' ? passages[0] : '';
+		return BibleApiResponse.success(new BiblePassage(canonicalRef, html));
 	}
 
 	private getCachedRef(ref: BibleReference): BiblePassage | undefined {

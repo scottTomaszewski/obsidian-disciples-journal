@@ -1,5 +1,5 @@
 import { ViewUpdate, EditorView, ViewPlugin, Decoration, DecorationSet } from "@codemirror/view";
-import {RangeSet, RangeSetBuilder} from "@codemirror/state";
+import {RangeSetBuilder} from "@codemirror/state";
 import { syntaxTree } from "@codemirror/language";
 import { BibleReference } from "src/core/BibleReference";
 import { BibleEventHandlers } from "src/core/BibleEventHandlers";
@@ -26,7 +26,7 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer,
 
 			buildDecorations(view: EditorView): DecorationSet {
 				if (!view.state.field(editorLivePreviewField)) {
-					return RangeSet.empty;
+					return Decoration.none;
 				}
 				const builder = new RangeSetBuilder<Decoration>();
 
@@ -34,7 +34,7 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer,
 					syntaxTree(view.state).iterate({
 						from,
 						to,
-						enter: (node: any) => {
+						enter: (node) => {
 							if (node.type.name.contains("inline-code")) {
 								const content = view.state.doc.sliceString(node.from, node.to);
 								// Try to parse as a Bible reference
@@ -74,12 +74,12 @@ export function createInlineReferenceExtension(renderer: BibleReferenceRenderer,
 							return;
 						}
 
-						contentService.getBibleContent(reference).then(response  => {
+						void contentService.getBibleContent(reference).then(response => {
 							if (response.isError()) {
 								new Notice(response.errorMessage, 10000);
 								return;
 							}
-							new BibleEventHandlers(renderer).handleBibleReferenceHover(e, response.passage);
+							void new BibleEventHandlers(renderer).handleBibleReferenceHover(e, response.passage);
 						});
 					}
 				},

@@ -47,7 +47,7 @@ export function renderCustomFrontmatter(
 	if (!context) {
 		return rawYaml;
 	}
-	return rawYaml.replace(/\{\{(\w+)}}/g, (match, key) => {
+	return rawYaml.replace(/\{\{(\w+)}}/g, (match: string, key: string) => {
 		return key in context ? context[key] : match;
 	});
 }
@@ -56,25 +56,26 @@ export function renderCustomFrontmatter(
  * Parse user-provided YAML, filtering out API-reserved keys.
  * Returns null on empty input or parse failure.
  */
-function parseCustomYaml(customYaml: string): Record<string, any> | null {
+function parseCustomYaml(customYaml: string): Record<string, unknown> | null {
 	const trimmed = customYaml.trim();
 	if (!trimmed) {
 		return null;
 	}
 	try {
-		const parsed = parseYaml(trimmed);
+		const parsed = parseYaml(trimmed) as unknown;
 		if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
 			console.warn('Disciples Journal: custom frontmatter must be a YAML mapping, ignoring.');
 			return null;
 		}
 		// Filter out API-reserved keys
-		const filtered: Record<string, any> = {};
-		for (const key of Object.keys(parsed)) {
+		const source = parsed as Record<string, unknown>;
+		const filtered: Record<string, unknown> = {};
+		for (const key of Object.keys(source)) {
 			if (API_KEYS.has(key)) {
 				console.warn(`Disciples Journal: custom frontmatter key "${key}" collides with API data, skipping.`);
 				continue;
 			}
-			filtered[key] = parsed[key];
+			filtered[key] = source[key];
 		}
 		return Object.keys(filtered).length > 0 ? filtered : null;
 	} catch (e) {
@@ -87,7 +88,7 @@ function parseCustomYaml(customYaml: string): Record<string, any> | null {
  * Merge cssclasses, ensuring PLUGIN_CSS_CLASS is always present.
  * Handles string, array, or undefined inputs from both sides.
  */
-function mergeCssClasses(existing: any, custom: any): string[] {
+function mergeCssClasses(existing: unknown, custom: unknown): string[] {
 	const classes = new Set<string>();
 	classes.add(PLUGIN_CSS_CLASS);
 
@@ -107,7 +108,7 @@ function mergeCssClasses(existing: any, custom: any): string[] {
  * Returns the YAML content without the --- delimiters.
  */
 export function buildFrontmatterString(
-	apiData: Record<string, any>,
+	apiData: Record<string, unknown>,
 	customYaml: string
 ): string {
 	// Separate cssclasses from API data so we can place it last
@@ -115,8 +116,8 @@ export function buildFrontmatterString(
 	const customData = parseCustomYaml(customYaml);
 
 	// Extract cssclasses from custom data if present
-	let customCss: any = undefined;
-	const customFields: Record<string, any> = {};
+	let customCss: unknown = undefined;
+	const customFields: Record<string, unknown> = {};
 	if (customData) {
 		for (const [key, value] of Object.entries(customData)) {
 			if (key === 'cssclasses') {
@@ -128,7 +129,7 @@ export function buildFrontmatterString(
 	}
 
 	// Build the combined object: API fields, then custom fields, then cssclasses last
-	const combined: Record<string, any> = {...apiFields};
+	const combined: Record<string, unknown> = {...apiFields};
 	for (const [key, value] of Object.entries(customFields)) {
 		combined[key] = value;
 	}
@@ -150,21 +151,22 @@ export function mergeCustomFrontmatterIntoExisting(
 		return null;
 	}
 
-	let existing: Record<string, any>;
+	let existing: Record<string, unknown>;
 	try {
-		existing = parseYaml(existingFrontmatter);
-		if (existing === null || typeof existing !== 'object' || Array.isArray(existing)) {
+		const parsedExisting = parseYaml(existingFrontmatter) as unknown;
+		if (parsedExisting === null || typeof parsedExisting !== 'object' || Array.isArray(parsedExisting)) {
 			console.warn('Disciples Journal: existing frontmatter is not a valid YAML mapping, skipping merge.');
 			return null;
 		}
+		existing = parsedExisting as Record<string, unknown>;
 	} catch (e) {
 		console.warn('Disciples Journal: failed to parse existing frontmatter, skipping merge.', e);
 		return null;
 	}
 
 	// Extract cssclasses from custom data if present
-	let customCss: any = undefined;
-	const customFields: Record<string, any> = {};
+	let customCss: unknown = undefined;
+	const customFields: Record<string, unknown> = {};
 	for (const [key, value] of Object.entries(customData)) {
 		if (key === 'cssclasses') {
 			customCss = value;

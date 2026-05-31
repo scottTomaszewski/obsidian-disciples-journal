@@ -30,8 +30,9 @@ export class BibleMarkupProcessor {
 			await this.bibleReferenceRenderer.processFullBiblePassage(source, el);
 		} catch (error) {
 			console.error('Error processing Bible code block:', error);
+			const message = error instanceof Error ? error.message : String(error);
 			el.createEl('div', {
-				text: `Error processing Bible reference: ${error.message}`,
+				text: `Error processing Bible reference: ${message}`,
 				cls: 'bible-reference-error'
 			});
 		}

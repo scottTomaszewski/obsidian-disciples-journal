@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.0
+
+- Brings the plugin in line with current Obsidian community standards
+  - Modernizes the lint toolchain (flat config, `eslint-plugin-obsidianmd`, type-aware `typescript-eslint`); the plugin now passes `eslint` and `tsc` cleanly
+  - Settings UI text uses sentence case
+  - Corrects the manifest description and raises `minAppVersion` to `1.6.6` to match the APIs actually used
+  - Tightens type safety (removes `any`, narrows YAML/error handling) and moves remaining inline styles to `styles.css`
+- Known follow-ups (tracked in `FOLLOWUP.md`): the hover-preview event listeners are still attached globally and should move to the registered-listener lifecycle, and file reads/writes should migrate to the `Vault`/`FileManager` APIs
+
 ## 0.12.0
 
 - Adds "Open Bible" command and ribbon icon to browse books and chapters without a reference

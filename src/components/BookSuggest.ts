@@ -15,11 +15,10 @@ export class BookSuggest extends AbstractInputSuggest<string> {
 		this.onBookSelected = onBookSelected;
 
 		const wrapper = inputEl.parentElement!;
-		wrapper.style.position = 'relative';
-		wrapper.style.display = 'inline-block';  // shrink‐wrap to input width
+		wrapper.addClass('disciples-journal-book-suggest-wrapper');
 
 		// make room for the clear “×”
-		inputEl.style.paddingRight = '1.5em';
+		inputEl.addClass('disciples-journal-book-suggest-input');
 		const clearBtn = wrapper.createEl('button', {
 			cls: 'clear-input-button',
 			text: '×',
@@ -58,22 +57,23 @@ export class BookSuggest extends AbstractInputSuggest<string> {
 		super.open();
 
 		// give Obsidian time to insert & position the popover…
-		requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
 			// 1) grab the suggestion container
 			//    this is the <div> Obsidian just appended after your input
-			const container = this.inputEl.doc
-				?.querySelector('.suggestion-container') as HTMLElement;
-
-			if (!container) return;
+			const container = this.inputEl.doc.querySelector('.suggestion-container');
+			if (!(container instanceof HTMLElement)) return;
 
 			// 2) compute your input's screen-coords
 			const rect = this.inputEl.getBoundingClientRect();
 
 			// 3) force the dropdown to sit flush with your input's left edge
-			container.style.position = 'absolute';
-			container.style.left     = `${rect.left}px`;
-			container.style.top      = `${rect.bottom}px`;       // drop below
-			container.style.minWidth = `${rect.width}px`;        // match widths
+			//    (dynamic positioning depends on runtime geometry)
+			container.setCssStyles({
+				position: 'absolute',
+				left: `${rect.left}px`,
+				top: `${rect.bottom}px`,
+				minWidth: `${rect.width}px`,
+			});
 		});
 	}
 }

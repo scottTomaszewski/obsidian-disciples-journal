@@ -61,7 +61,7 @@ export class BibleReferenceRenderer {
 				}
 				
 				referenceEl.addEventListener('mouseover', (e) => {
-					new BibleEventHandlers(this).handleBibleReferenceHover(e, response.passage);
+					void new BibleEventHandlers(this).handleBibleReferenceHover(e, response.passage);
 				});
 				referenceEl.addEventListener('mouseout', (e) => {
 					new BibleEventHandlers(this).handleBibleReferenceMouseOut(e);
@@ -124,6 +124,7 @@ export class BibleReferenceRenderer {
 		// Add verses
 		const passageEl = el.doc.createElement('div');
 		passageEl.classList.add('bible-passage-text');
+		// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
 		passageEl.innerHTML = response.passage.html;
 
 		containerEl.appendChild(passageEl);
@@ -152,7 +153,7 @@ export class BibleReferenceRenderer {
 			try {
 				// Call the method to open the chapter note
 				// TODO - openChapterNote should take in a BibleReference instead of string
-				this.plugin.openChapterNote(passage.reference.toString());
+				void this.plugin.openChapterNote(passage.reference.toString());
 
 				// Close the preview - using a method available in BibleEventHandlers
 				// Remove the popup directly instead of trying to access the private property
@@ -164,7 +165,7 @@ export class BibleReferenceRenderer {
 				console.error('Error opening chapter note from popup:', error);
 
 				// Show user feedback if there's an error
-				new Notice(`Disciples Journal: Unable to open chapter note for ${passage.reference}`, 10000);
+				new Notice(`Disciples Journal: Unable to open chapter note for ${passage.reference.toString()}`, 10000);
 			}
 		});
 
@@ -179,6 +180,7 @@ export class BibleReferenceRenderer {
 		try {
 			// Create a temporary element to parse the HTML
 			const tempEl = element.doc.createElement('div');
+			// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
 			tempEl.innerHTML = passage.html;
 
 			// Remove footnote sections before extracting paragraphs
@@ -190,7 +192,10 @@ export class BibleReferenceRenderer {
 			const paragraphs = tempEl.querySelectorAll('p:not(.extra_text)');
 			if (paragraphs.length > 0) {
 				for (let i = 0; i < paragraphs.length; i++) {
-					const cloned = paragraphs[i].cloneNode(true) as HTMLElement;
+					const cloned = paragraphs[i].cloneNode(true);
+					if (!cloned.instanceOf(HTMLElement)) {
+						continue;
+					}
 					// Strip inline footnote markers if the setting is enabled
 					if (this.plugin.settings.hideFootnotesInPreview) {
 						cloned.querySelectorAll('.footnote').forEach(fn => fn.remove());
@@ -199,10 +204,12 @@ export class BibleReferenceRenderer {
 				}
 			} else {
 				// Fallback if we can't extract the verses properly
+				// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
 				contentEl.innerHTML = passage.html;
 			}
 		} catch (error) {
 			console.error("Error extracting verse content from HTML:", error);
+			// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
 			contentEl.innerHTML = passage.html;
 		}
 
@@ -213,8 +220,11 @@ export class BibleReferenceRenderer {
 
 		// Position the main popup with slight overlap to the reference
 		// This creates an easier hover target when moving from reference to popup
-		versePreviewEl.style.left = `${rect.left}px`;
-		versePreviewEl.style.top = `${rect.bottom - 3}px`;
+		// (dynamic positioning depends on runtime geometry)
+		versePreviewEl.setCssStyles({
+			left: `${rect.left}px`,
+			top: `${rect.bottom - 3}px`,
+		});
 
 		// Add popup to document
 		element.doc.body.appendChild(versePreviewEl);

@@ -1,7 +1,6 @@
 import {TFile} from 'obsidian';
 import {BibleContentService} from './BibleContentService';
 import {BibleReference} from '../core/BibleReference';
-import {BibleCodeblockFormatter} from '../utils/BibleCodeblockFormatter';
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
 import {BibleApiResponse} from "../utils/BibleApiResponse";
 import {BibleFiles} from "./BibleFiles";
@@ -52,7 +51,7 @@ export class BibleChapterFiles {
 
 				// If there's a specific verse, scroll to it
 				if (parsedRef.verse) {
-					setTimeout(() => {
+					window.setTimeout(() => {
 						// Find the verse element and scroll to it
 						const verseEl = leaf.getContainer().doc.querySelector(`.verse-${parsedRef.verse}`);
 						if (verseEl) {
@@ -82,8 +81,8 @@ export class BibleChapterFiles {
 			// Check if passage is null
 			if (response.isError()) {
 				// TODO - handle this better with a dialog box or Notice or something.
-				console.error(`Failed to get Bible content for ${bookChapter}`);
-				throw new Error(`Failed to get Bible content for ${bookChapter}`);
+				console.error(`Failed to get Bible content for ${bookChapter.toString()}`);
+				throw new Error(`Failed to get Bible content for ${bookChapter.toString()}`);
 			}
 		} catch (error) {
 			console.error('Error creating chapter note:', error);

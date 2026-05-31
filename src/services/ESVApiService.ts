@@ -10,7 +10,7 @@ import {buildFrontmatterString, getCustomFrontmatterForReference} from "../utils
 /**
  * Interface for ESV API Response
  */
-export interface ESVApiResponse {
+export type ESVApiResponse = {
 	query: string;
 	canonical: string;
 	parsed: number[][];
@@ -126,6 +126,10 @@ export class ESVApiService {
 
 			// Save the raw API response as a markdown note with frontmatter
 			const passage = BibleReference.parse(data.canonical);
+			if (!passage) {
+				console.error(`Failed to parse canonical reference from ESV API: ${data.canonical}`);
+				return;
+			}
 			const filePath = BibleFiles.pathForPassage(passage, this.plugin);
 			const customYaml = getCustomFrontmatterForReference(passage, this.plugin.settings);
 			const frontmatterBody = buildFrontmatterString(data, customYaml);

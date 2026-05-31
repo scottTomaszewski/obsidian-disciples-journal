@@ -56,7 +56,11 @@ export class OpenBibleModal extends SuggestModal<BibleTarget> {
 		el.setText(item.label);
 	}
 
-	async onChooseSuggestion(item: BibleTarget, _evt: MouseEvent | KeyboardEvent): Promise<void> {
+	onChooseSuggestion(item: BibleTarget, _evt: MouseEvent | KeyboardEvent): void {
+		void this.openTarget(item);
+	}
+
+	private async openTarget(item: BibleTarget): Promise<void> {
 		if (item.chapter === 0) {
 			// Book selected -- reopen modal for chapter selection
 			const chapterCount = BookNames.getChapterCount(item.book);
@@ -113,7 +117,11 @@ class OpenBibleChapterModal extends SuggestModal<BibleTarget> {
 		el.setText(item.label);
 	}
 
-	async onChooseSuggestion(item: BibleTarget, _evt: MouseEvent | KeyboardEvent): Promise<void> {
+	onChooseSuggestion(item: BibleTarget, _evt: MouseEvent | KeyboardEvent): void {
+		void this.openChapter(item);
+	}
+
+	private async openChapter(item: BibleTarget): Promise<void> {
 		const loadingNotice = new Notice("Loading chapter...", 0);
 		await this.bibleBookFiles.openChapterNote(`${item.book} ${item.chapter}`);
 		loadingNotice.hide();
