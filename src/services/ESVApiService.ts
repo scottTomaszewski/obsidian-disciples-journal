@@ -43,9 +43,27 @@ export class ESVApiService {
 	}
 
 	/**
+	 * Convert a raw ESV API response into a BibleApiResponse. Handles both freshly
+	 * downloaded responses and ones re-read from a saved note's frontmatter (hence
+	 * the loosely-typed input). `contextRef` is only used for error messages.
+	 */
+	public static toBibleApiResponse(data: unknown, contextRef: BibleReference): BibleApiResponse {
+		const response = data as { canonical?: unknown; passages?: unknown } | null;
+		const canonical = response && typeof response.canonical === 'string' ? response.canonical : null;
+		const canonicalRef = canonical ? BibleReference.parse(canonical) : null;
+		if (!canonicalRef) {
+			const message = `Failed to parse canonical reference (${String(canonical)}) from ESV API for ${contextRef.toString()}`;
+			console.error(message);
+			return BibleApiResponse.error(message, ErrorType.BadApiResponse);
+		}
+		const passages = response && Array.isArray(response.passages) ? response.passages : [];
+		const html = typeof passages[0] === 'string' ? passages[0] : '';
+		return BibleApiResponse.success(new BiblePassage(canonicalRef, html));
+	}
+
+	/**
 	 * Download Bible content from the ESV API
 	 */
-	// TODO - this should probably take in a BibleReference instead of a string
 	public async downloadFromESVApi(ref: BibleReference): Promise<BibleApiResponse> {
 		if (!this.plugin.settings.esvApiToken) {
 			console.error('ESV API token not set. Cannot download content.');
@@ -80,13 +98,7 @@ export class ESVApiService {
 				await this.saveESVApiResponseAsMdNote(data);
 
 				// Return the content
-				const canonicalRef = BibleReference.parse(data.canonical);
-				if (!canonicalRef) {
-					const message = `Failed to parse canonical reference (${data.canonical}) from ESV API for ${ref.toString()}`;
-					console.error(message);
-					return BibleApiResponse.error(message, ErrorType.BadApiResponse);
-				}
-				return BibleApiResponse.success(new BiblePassage(canonicalRef, data.passages[0]));
+				return ESVApiService.toBibleApiResponse(data, ref);
 			} else {
 				console.error(`ESV API request failed with status ${response.status}: ${response.text}`);
 				return BibleApiResponse.error(

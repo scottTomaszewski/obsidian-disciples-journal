@@ -101,13 +101,39 @@ the verse never appears, so it can't linger.
 
 ---
 
-## 5. Smaller cleanups noticed in passing
+## 5. Smaller cleanups noticed in passing — ✅ RESOLVED
 
-- `src/services/BibleContentService.ts` and `src/services/ESVApiService.ts` both
-  contain `// TODO` notes about duplicated ESV-response → `BiblePassage`
-  conversion logic that could be unified.
-- `src/services/BibleChapterFiles.ts` has a `// TODO - logic in this class needs
-  to move to BibleFiles` note; `BibleFiles.ts` has TODOs for `openChapterNote` /
-  `openPassageNote` helpers.
-- `openChapterNote` takes a `string` and re-parses it; several call sites already
-  hold a `BibleReference` and could pass it directly (existing TODO).
+**Files:** `src/services/BibleContentService.ts`, `src/services/ESVApiService.ts`,
+`src/services/BibleFiles.ts`, `src/services/BibleChapterFiles.ts` (removed),
+`src/core/DisciplesJournalPlugin.ts`, `src/components/OpenBibleModal.ts`,
+`src/components/BibleNavigation.ts`, `src/components/BibleReferenceRenderer.ts`
+
+**What was wrong:**
+- `BibleContentService` and `ESVApiService` each had their own copy of the
+  ESV-response → `BiblePassage` conversion (parse `canonical`, take `passages[0]`),
+  flagged by matching `// TODO` notes.
+- `BibleChapterFiles` carried a `// TODO - logic in this class needs to move to
+  BibleFiles` note while `BibleFiles` had placeholder TODOs for `openChapterNote` /
+  `openPassageNote` — the two classes were the same responsibility split in half.
+- `openChapterNote` took a `string` and re-parsed it via `BibleReference.parse`,
+  even though every call site already had (or trivially built) a `BibleReference`.
+- `BibleChapterFiles` also had a dead `getFullContentPath()` duplicating the one in
+  `BibleFiles`, and `ESVApiService.downloadFromESVApi` had a stale "should take a
+  `BibleReference`" TODO (it already did).
+
+**Fix applied:**
+- The conversion now lives in one place: `ESVApiService.toBibleApiResponse(data, ref)`
+  (a static helper accepting the loosely-typed shape from both a fresh API response
+  and a note's parsed frontmatter). `downloadFromESVApi` and
+  `BibleContentService.getBibleContent` both call it; the duplicate private method
+  and both TODOs are gone.
+- `BibleChapterFiles` was merged into `BibleFiles` and deleted. `BibleFiles` now
+  owns both the static path/file lookups (unchanged) and instance methods
+  `openChapterNote` / `createChapterNote` / `scrollToVerse` (constructed once in
+  `onload` with the content service). The static lookup split keeps
+  `BibleContentService` / `ESVApiService` free of a circular dependency (the type-only
+  `BibleContentService` import is erased at runtime).
+- `openChapterNote` now takes a `BibleReference`; the modal, navigation, renderer,
+  and plugin call sites pass one directly (no more `toString()` → re-parse round-trip),
+  and its invalid-string guard is gone since the type guarantees validity.
+- The dead `getFullContentPath()` and the stale `downloadFromESVApi` TODO were removed.

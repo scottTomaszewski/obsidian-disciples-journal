@@ -3,7 +3,7 @@ import {BibleContentService} from "../services/BibleContentService";
 import {BibleNavigation} from "./BibleNavigation";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
 import {BibleEventHandlers} from "src/core/BibleEventHandlers";
-import {BibleChapterFiles} from "../services/BibleChapterFiles";
+import {BibleFiles} from "../services/BibleFiles";
 import {BibleReference} from "../core/BibleReference";
 import {BiblePassage} from "../utils/BiblePassage";
 
@@ -18,12 +18,12 @@ export class BibleReferenceRenderer {
 
 	constructor(
 		bibleContentService: BibleContentService,
-		noteCreationService: BibleChapterFiles,
+		bibleFiles: BibleFiles,
 		plugin: DisciplesJournalPlugin
 	) {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
-		this.bibleNavigation = new BibleNavigation(noteCreationService, plugin.app);
+		this.bibleNavigation = new BibleNavigation(bibleFiles, plugin.app);
 	}
 
 	/**
@@ -160,8 +160,7 @@ export class BibleReferenceRenderer {
 
 			try {
 				// Call the method to open the chapter note
-				// TODO - openChapterNote should take in a BibleReference instead of string
-				void this.plugin.openChapterNote(passage.reference.toString());
+				void this.plugin.openChapterNote(passage.reference);
 
 				// Close the preview - using a method available in BibleEventHandlers
 				// Remove the popup directly instead of trying to access the private property

@@ -8,7 +8,7 @@ import {
 	DEFAULT_SETTINGS,
 	DisciplesJournalSettingsTab
 } from '../settings/DisciplesJournalSettings';
-import {BibleChapterFiles} from 'src/services/BibleChapterFiles';
+import {BibleFiles} from 'src/services/BibleFiles';
 import {BibleMarkupProcessor} from './BibleMarkupProcessor';
 import {createInlineReferenceExtension} from "../components/BibleReferenceInlineExtension";
 import {BibleReference} from './BibleReference';
@@ -26,7 +26,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 	// Services
 	private esvApiService: ESVApiService;
 	private bibleContentService: BibleContentService;
-	private bibleBookFiles: BibleChapterFiles;
+	private bibleFiles: BibleFiles;
 
 	// Components
 	private bibleStyles: BibleStyles;
@@ -49,11 +49,11 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Initialize components
 		this.bibleStyles = new BibleStyles();
-		this.bibleBookFiles = new BibleChapterFiles(this, this.bibleContentService);
+		this.bibleFiles = new BibleFiles(this, this.bibleContentService);
 
 		this.bibleReferenceRenderer = new BibleReferenceRenderer(
 			this.bibleContentService,
-			this.bibleBookFiles,
+			this.bibleFiles,
 			this
 		);
 
@@ -84,7 +84,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 		this.addCommand({
 			id: 'open-bible',
 			name: 'Open Bible',
-			callback: () => new OpenBibleModal(this.app, this.bibleBookFiles).open()
+			callback: () => new OpenBibleModal(this.app, this.bibleFiles).open()
 		});
 
 		this.addCommand({
@@ -95,7 +95,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 
 		// Ribbon icon
 		this.addRibbonIcon('book-open', 'Open Bible', () => {
-			new OpenBibleModal(this.app, this.bibleBookFiles).open();
+			new OpenBibleModal(this.app, this.bibleFiles).open();
 		});
 
 		// Register settings tab
@@ -160,8 +160,8 @@ export default class DisciplesJournalPlugin extends Plugin {
 	/**
 	 * Open or create a chapter note (Public method for external access)
 	 */
-	public async openChapterNote(reference: string) {
-		return this.bibleBookFiles.openChapterNote(reference);
+	public async openChapterNote(reference: BibleReference) {
+		return this.bibleFiles.openChapterNote(reference);
 	}
 
 	/**

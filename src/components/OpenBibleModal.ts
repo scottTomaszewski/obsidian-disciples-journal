@@ -1,6 +1,7 @@
 import {App, SuggestModal, Notice} from "obsidian";
 import {BookNames} from "../services/BookNames";
-import {BibleChapterFiles} from "../services/BibleChapterFiles";
+import {BibleFiles} from "../services/BibleFiles";
+import {BibleReference} from "../core/BibleReference";
 
 interface BibleTarget {
 	label: string;
@@ -13,12 +14,12 @@ interface BibleTarget {
  * First shows all books; after selecting a book, shows its chapters.
  */
 export class OpenBibleModal extends SuggestModal<BibleTarget> {
-	private bibleBookFiles: BibleChapterFiles;
+	private bibleFiles: BibleFiles;
 	private selectedBook: string | null = null;
 
-	constructor(app: App, bibleBookFiles: BibleChapterFiles) {
+	constructor(app: App, bibleFiles: BibleFiles) {
 		super(app);
-		this.bibleBookFiles = bibleBookFiles;
+		this.bibleFiles = bibleFiles;
 		this.setPlaceholder('Type a book name...');
 	}
 
@@ -67,16 +68,16 @@ export class OpenBibleModal extends SuggestModal<BibleTarget> {
 			if (chapterCount === 1) {
 				// Single-chapter book, open directly
 				const loadingNotice = new Notice("Loading chapter...", 0);
-				await this.bibleBookFiles.openChapterNote(`${item.book} 1`);
+				await this.bibleFiles.openChapterNote(new BibleReference(item.book, 1));
 				loadingNotice.hide();
 			} else {
 				// Reopen for chapter selection
-				const chapterModal = new OpenBibleChapterModal(this.app, this.bibleBookFiles, item.book);
+				const chapterModal = new OpenBibleChapterModal(this.app, this.bibleFiles, item.book);
 				chapterModal.open();
 			}
 		} else {
 			const loadingNotice = new Notice("Loading chapter...", 0);
-			await this.bibleBookFiles.openChapterNote(`${item.book} ${item.chapter}`);
+			await this.bibleFiles.openChapterNote(new BibleReference(item.book, item.chapter));
 			loadingNotice.hide();
 		}
 	}
@@ -86,12 +87,12 @@ export class OpenBibleModal extends SuggestModal<BibleTarget> {
  * Second-stage modal: pick a chapter within a specific book.
  */
 class OpenBibleChapterModal extends SuggestModal<BibleTarget> {
-	private bibleBookFiles: BibleChapterFiles;
+	private bibleFiles: BibleFiles;
 	private book: string;
 
-	constructor(app: App, bibleBookFiles: BibleChapterFiles, book: string) {
+	constructor(app: App, bibleFiles: BibleFiles, book: string) {
 		super(app);
-		this.bibleBookFiles = bibleBookFiles;
+		this.bibleFiles = bibleFiles;
 		this.book = book;
 		this.setPlaceholder(`${book} -- type a chapter number...`);
 	}
@@ -123,7 +124,7 @@ class OpenBibleChapterModal extends SuggestModal<BibleTarget> {
 
 	private async openChapter(item: BibleTarget): Promise<void> {
 		const loadingNotice = new Notice("Loading chapter...", 0);
-		await this.bibleBookFiles.openChapterNote(`${item.book} ${item.chapter}`);
+		await this.bibleFiles.openChapterNote(new BibleReference(item.book, item.chapter));
 		loadingNotice.hide();
 	}
 }

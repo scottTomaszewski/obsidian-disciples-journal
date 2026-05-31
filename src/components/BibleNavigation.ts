@@ -1,18 +1,18 @@
 import {App, ButtonComponent, DropdownComponent, Notice} from "obsidian";
 import {BibleReference} from "../core/BibleReference";
 import {BookNames} from "../services/BookNames";
-import {BibleChapterFiles} from "../services/BibleChapterFiles";
+import {BibleFiles} from "../services/BibleFiles";
 import { BookSuggest } from "./BookSuggest";
 
 /**
  * Component for generating Bible navigation elements
  */
 export class BibleNavigation {
-	private bibleBookFiles: BibleChapterFiles;
+	private bibleFiles: BibleFiles;
 	private app: App;
 
-	constructor(noteCreationService: BibleChapterFiles, app: App) {
-		this.bibleBookFiles = noteCreationService;
+	constructor(bibleFiles: BibleFiles, app: App) {
+		this.bibleFiles = bibleFiles;
 		this.app = app;
 	}
 
@@ -186,7 +186,7 @@ export class BibleNavigation {
 	 */
 	public async navigateToChapter(book: string, chapter: number): Promise<void> {
 		try {
-			await this.bibleBookFiles.openChapterNote(new BibleReference(book, chapter).toString());
+			await this.bibleFiles.openChapterNote(new BibleReference(book, chapter));
 		} catch (error) {
 			console.error('Error navigating to chapter:', error);
 			const message = error instanceof Error ? error.message : String(error);
