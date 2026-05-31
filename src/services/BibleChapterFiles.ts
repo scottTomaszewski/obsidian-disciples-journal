@@ -1,4 +1,4 @@
-import {Notice, TFile} from 'obsidian';
+import {Notice, TFile, WorkspaceLeaf} from 'obsidian';
 import {BibleContentService} from './BibleContentService';
 import {BibleReference} from '../core/BibleReference';
 import DisciplesJournalPlugin from "../core/DisciplesJournalPlugin";
@@ -57,15 +57,9 @@ export class BibleChapterFiles {
 				const leaf = this.plugin.app.workspace.getLeaf(false);
 				await leaf.openFile(passageNoteFile);
 
-				// If there's a specific verse, scroll to it
+				// If there's a specific verse, scroll to it once it has rendered
 				if (parsedRef.verse) {
-					window.setTimeout(() => {
-						// Find the verse element and scroll to it
-						const verseEl = leaf.getContainer().doc.querySelector(`.verse-${parsedRef.verse}`);
-						if (verseEl) {
-							verseEl.scrollIntoView({behavior: 'smooth', block: 'center'});
-						}
-					}, 300); // Give it a moment to load
+					this.scrollToVerse(leaf, parsedRef.verse);
 				}
 			} else {
 				console.error(`Could not find or create the chapter note: ${chapterPath}`);
@@ -76,6 +70,44 @@ export class BibleChapterFiles {
 			const detail = error instanceof Error ? error.message : String(error);
 			new Notice(`Disciples Journal: Failed to open chapter note. ${detail}`, 10000);
 		}
+	}
+
+	/**
+	 * Scroll the opened note to a verse element. The note's body renders
+	 * asynchronously after `openFile`, so rather than guessing with a fixed
+	 * delay we watch the view for the verse element to appear and scroll the
+	 * moment it does. A bounded fallback disconnects the observer if the verse
+	 * never renders (e.g. wrong reference, or the view is in an edit mode that
+	 * doesn't produce verse elements) so it can't linger.
+	 */
+	private scrollToVerse(leaf: WorkspaceLeaf, verse: number): void {
+		const container = leaf.getContainer();
+		const selector = `.verse-${verse}`;
+
+		const tryScroll = (): boolean => {
+			const verseEl = container.doc.querySelector(selector);
+			if (verseEl) {
+				verseEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+				return true;
+			}
+			return false;
+		};
+
+		// Already rendered (e.g. note was cached)? Scroll right away.
+		if (tryScroll()) {
+			return;
+		}
+
+		const win = container.win;
+		const observer = new MutationObserver(() => {
+			if (tryScroll()) {
+				observer.disconnect();
+				win.clearTimeout(fallbackId);
+			}
+		});
+		observer.observe(leaf.view.containerEl, {childList: true, subtree: true});
+
+		const fallbackId = win.setTimeout(() => observer.disconnect(), 5000);
 	}
 
 	/**

@@ -3,6 +3,7 @@
 ## Unreleased
 
 - Renders ESV passage HTML through Obsidian's `sanitizeHTMLToDom()` and appends the resulting fragment, instead of assigning the raw API response to `innerHTML`
+- Scrolls to a referenced verse the moment it renders by watching the view for the verse element, instead of guessing with a fixed delay (more reliable on slow loads, snappier on fast ones)
 
 ## 0.13.0
 

@@ -82,14 +82,22 @@ each site were removed.
 
 ---
 
-## 4. `setTimeout` for scroll-to-verse
+## 4. `setTimeout` for scroll-to-verse — ✅ RESOLVED
 
 **File:** `src/services/BibleChapterFiles.ts`
 
-The scroll-to-verse uses a fixed `window.setTimeout(..., 300)` to wait for the
-note to render before querying for the verse element. This was left as-is (only
-prefixed with `window.` for pop-out compatibility). A more robust approach would
-key off a render/layout event rather than a magic delay.
+**What was wrong:** scroll-to-verse used a fixed `window.setTimeout(..., 300)`
+to wait for the note to render before querying for the verse element — a magic
+delay that could fire before a slow render finished (missing the scroll) or
+needlessly late on a fast one.
+
+**Fix applied:** `openChapterNote` now delegates to a `scrollToVerse(leaf, verse)`
+helper that scrolls immediately if the verse element is already present
+(cached note) and otherwise watches `leaf.view.containerEl` with a
+`MutationObserver`, scrolling the instant `.verse-N` is rendered and then
+disconnecting. A bounded `win.setTimeout(..., 5000)` fallback (using the leaf's
+`WorkspaceContainer.win` for pop-out correctness) disconnects the observer if
+the verse never appears, so it can't linger.
 
 ---
 
