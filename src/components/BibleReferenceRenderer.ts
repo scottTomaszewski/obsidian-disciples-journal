@@ -1,4 +1,4 @@
-import {Notice} from "obsidian";
+import {Notice, sanitizeHTMLToDom} from "obsidian";
 import {BibleContentService} from "../services/BibleContentService";
 import {BibleNavigation} from "./BibleNavigation";
 import DisciplesJournalPlugin from "src/core/DisciplesJournalPlugin";
@@ -133,8 +133,7 @@ export class BibleReferenceRenderer {
 		// Add verses
 		const passageEl = el.doc.createElement('div');
 		passageEl.classList.add('bible-passage-text');
-		// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
-		passageEl.innerHTML = response.passage.html;
+		passageEl.appendChild(sanitizeHTMLToDom(response.passage.html));
 
 		containerEl.appendChild(passageEl);
 		el.appendChild(containerEl);
@@ -187,18 +186,16 @@ export class BibleReferenceRenderer {
 		// Use the HTML content directly, but try to extract just the portion we need
 		// for the preview (to avoid showing footnotes, chapter headings, etc.)
 		try {
-			// Create a temporary element to parse the HTML
-			const tempEl = element.doc.createElement('div');
-			// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
-			tempEl.innerHTML = passage.html;
+			// Parse and sanitize the HTML into a detached fragment we can inspect
+			const parsed = sanitizeHTMLToDom(passage.html);
 
 			// Remove footnote sections before extracting paragraphs
 			if (this.plugin.settings.hideFootnotesInPreview) {
-				tempEl.querySelectorAll('.footnotes, .extra_text').forEach(el => el.remove());
+				parsed.querySelectorAll('.footnotes, .extra_text').forEach(el => el.remove());
 			}
 
 			// Find and extract the main verse content (paragraphs)
-			const paragraphs = tempEl.querySelectorAll('p:not(.extra_text)');
+			const paragraphs = parsed.querySelectorAll('p:not(.extra_text)');
 			if (paragraphs.length > 0) {
 				for (let i = 0; i < paragraphs.length; i++) {
 					const cloned = paragraphs[i].cloneNode(true);
@@ -213,13 +210,11 @@ export class BibleReferenceRenderer {
 				}
 			} else {
 				// Fallback if we can't extract the verses properly
-				// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
-				contentEl.innerHTML = passage.html;
+				contentEl.appendChild(sanitizeHTMLToDom(passage.html));
 			}
 		} catch (error) {
 			console.error("Error extracting verse content from HTML:", error);
-			// eslint-disable-next-line no-unsanitized/property, @microsoft/sdl/no-inner-html -- deferred: ESV API returns trusted formatted HTML; see FOLLOWUP.md
-			contentEl.innerHTML = passage.html;
+			contentEl.appendChild(sanitizeHTMLToDom(passage.html));
 		}
 
 		versePreviewEl.appendChild(contentEl);

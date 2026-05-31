@@ -65,18 +65,20 @@ callbacks reuse the shared instance instead of constructing new ones. The file-l
 
 ---
 
-## 3. Rendering ESV HTML via `innerHTML`
+## 3. Rendering ESV HTML via `innerHTML` — ✅ RESOLVED
 
 **File:** `src/components/BibleReferenceRenderer.ts` (4 sites)
 
-**What's wrong:** passage HTML returned by the ESV API is injected with
+**What was wrong:** passage HTML returned by the ESV API was injected with
 `element.innerHTML = passage.html`. Flagged by `no-unsanitized/property` and
-`@microsoft/sdl/no-inner-html`. The content is trusted (comes from the ESV API
-over HTTPS), so this is currently accepted and disabled inline at each site.
+`@microsoft/sdl/no-inner-html`.
 
-**Suggested fix:** parse the HTML and rebuild it with Obsidian DOM helpers
-(`createEl`/`createDiv`), or sanitize before insertion, so no raw HTML string is
-written to the DOM.
+**Fix applied:** all four sites now run the passage HTML through Obsidian's
+`sanitizeHTMLToDom()` and append the returned `DocumentFragment`, so no raw HTML
+string is written to the DOM. The verse-preview extraction (`showVersePreview`)
+parses into the sanitized fragment and queries/clones paragraphs off of it
+instead of a temporary `innerHTML` div. The inline `eslint-disable` comments at
+each site were removed.
 
 ---
 

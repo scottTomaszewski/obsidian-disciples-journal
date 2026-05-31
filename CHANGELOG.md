@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Renders ESV passage HTML through Obsidian's `sanitizeHTMLToDom()` and appends the resulting fragment, instead of assigning the raw API response to `innerHTML`
+
 ## 0.13.0
 
 - Brings the plugin in line with current Obsidian community standards
