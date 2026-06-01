@@ -15,7 +15,7 @@
 - Fixes a hover-preview event-listener leak: `BibleEventHandlers` is now a single plugin-owned `Component` whose `document` listeners and close-poll timer are registered through the Obsidian lifecycle (so they're released on unload) and tracked per document for correct pop-out behavior, instead of being re-created and leaked on every hover
 - Surfaces a notification when opening a chapter fails instead of failing silently — e.g. opening the Bible without an ESV API token configured now explains that a token is needed (and points to the plugin settings) rather than doing nothing
 - Migrates file access off `vault.adapter` onto the intended `Vault`/`FileManager` APIs: notes are created with `Vault.create()` and their frontmatter written via `FileManager.processFrontMatter()`, folders use `getAbstractFileByPath`/`createFolder`, deletions go through `FileManager.trashFile()` (respecting the user's trash settings), and paths are run through `normalizePath()`
-- Known follow-ups (tracked in `FOLLOWUP.md`): ESV HTML is still rendered via `innerHTML`, and a couple of smaller cleanups remain
+- Known follow-ups (tracked in `FOLLOWUPS.md`): a couple of smaller cleanups remain (the ESV-HTML-via-`innerHTML` item noted here has since been resolved — see Unreleased)
 
 ## 0.12.0
 
