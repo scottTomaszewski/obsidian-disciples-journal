@@ -16,25 +16,6 @@ Each entry should include:
 
 ---
 
-## Remove (or wire up) dead `BibleCodeblockFormatter`
-
-- **Identified:** 2026-05-31, funky-logic sweep while documenting the repo.
-- **What:** `src/utils/BibleCodeblockFormatter.ts` has no callers and carries a
-  `// TODO - this probably belongs somewhere else`. Decide: delete it, or use it.
-- **Why:** Dead code misleads the next agent into thinking it's part of the flow.
-- **Context:** Confirmed unused via `grep -rn BibleCodeblockFormatter src/`.
-- **Effort:** XS
-
-## Remove vestigial `ESV` / `ESVVerse` globals
-
-- **Identified:** 2026-05-31, funky-logic sweep.
-- **What:** `src/types.d.ts` declares `interface ESVVerse` and
-  `declare const ESV: ESVVerse[]`. The `ESV` global appears unused at runtime —
-  verify, then drop the declaration if so.
-- **Why:** A declared global with no backing implementation is a trap.
-- **Context:** Only the declaration shows up in `src/`; confirm no consumer before removing.
-- **Effort:** XS
-
 ## Add a test harness, starting with `BibleReference.parse`
 
 - **Identified:** 2026-05-31, repo documentation pass.
