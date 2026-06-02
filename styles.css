@@ -7,8 +7,10 @@ body {
 }
 
 /* Utility Classes */
-.dj-hidden {
-    display: none !important; /* Use !important to ensure override */
+/* Doubled class raises specificity (0,2,0) so this wins over component
+   display rules without needing !important. */
+.dj-hidden.dj-hidden {
+    display: none;
 }
 
 .hide-dj-passage-properties {
@@ -135,11 +137,11 @@ button.clear-input-button {
     margin-bottom: 8px;
 }
 
-.nav-go-button {
-    width: 100% !important;
+.nav-book-data .nav-go-button {
+    width: 100%;
     padding: 6px 12px;
-    background-color: var(--interactive-accent) !important;
-    color: var(--text-on-accent) !important;
+    background-color: var(--interactive-accent);
+    color: var(--text-on-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -440,11 +442,11 @@ button.clear-input-button {
     color: var(--dj-woc-color);
 }
 
-.bible-passage-text .chapter-num,
-.bible-passage-text .verse-num {
+.bible-passage-container .bible-passage-text .chapter-num,
+.bible-passage-container .bible-passage-text .verse-num {
     font-weight: bold;
     font-size: 0.8em;
-    color: var(--dj-verse-number-color) !important; /* Keep important if needed for specificity */
+    color: var(--dj-verse-number-color);
     vertical-align: top;
     margin-right: 0.2em;
 }
@@ -462,7 +464,7 @@ button.clear-input-button {
 }
 
 .bible-passage-text .indent {
-    text-indent: 1.5em; /* Keep specific text-indent if needed */
+    padding-left: 1.5em;
 }
 
 .bible-passage-text .footnote {

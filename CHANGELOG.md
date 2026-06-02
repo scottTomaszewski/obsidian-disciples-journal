@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.13.2
+
+- Resolves Obsidian plugin-evaluation styling warnings: removes all `!important` declarations from `styles.css` (overriding via selector specificity instead) and replaces the partially-supported `text-indent` on indented passage lines with `padding-left`
+
 ## 0.13.1
 
 - Renders ESV passage HTML through Obsidian's `sanitizeHTMLToDom()` and appends the resulting fragment, instead of assigning the raw API response to `innerHTML`
