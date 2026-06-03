@@ -69,6 +69,30 @@ export class BibleContentService {
 		}
 	}
 
+	/**
+	 * Resolve a possibly non-contiguous reference string ("Genesis 1:2-3, 5") by parsing
+	 * it into runs and resolving each. Returns one BiblePassage whose HTML is the runs'
+	 * HTML concatenated and whose reference is the first run (used for the heading/link).
+	 * Falls back to single-ref resolution when the string isn't a list.
+	 */
+	public async getBibleContentList(referenceText: string): Promise<BibleApiResponse> {
+		const runs = BibleReference.parseList(referenceText);
+		if (!runs || runs.length === 0) {
+			const single = BibleReference.parse(referenceText);
+			if (!single) return BibleApiResponse.error(`Invalid reference: ${referenceText}`, ErrorType.BadApiResponse);
+			return this.getBibleContent(single);
+		}
+		if (runs.length === 1) return this.getBibleContent(runs[0]);
+
+		let html = "";
+		for (const run of runs) {
+			const res = await this.getBibleContent(run);
+			if (res.isError()) return res;
+			html += res.passage.html;
+		}
+		return BibleApiResponse.success(new BiblePassage(runs[0], html));
+	}
+
 	private getCachedRef(ref: BibleReference): BiblePassage | undefined {
 		if (this.passageCache.has(ref)) {
 			return this.passageCache.get(ref);

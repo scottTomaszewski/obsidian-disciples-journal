@@ -117,6 +117,49 @@ export class BibleReference {
 	}
 
 	/**
+	 * Parse a possibly non-contiguous list like "Genesis 1:2-3, 5" or "Genesis 1:31, 2:1".
+	 * The first item is a full reference; later comma-separated items may be a bare verse
+	 * ("5"), a bare verse range ("5-7") inheriting the prior book+chapter, or
+	 * "chapter:verse[-end]" inheriting the book. Returns null if any item is invalid.
+	 */
+	public static parseList(reference: string): BibleReference[] | null {
+		const trimmed = reference.trim();
+		if (!trimmed) return null;
+
+		const items = trimmed.split(",").map((s) => s.trim().replace(/[–—]/g, "-"));
+		const out: BibleReference[] = [];
+
+		const first = BibleReference.parse(items[0]);
+		if (!first) return null;
+		out.push(first);
+
+		for (let i = 1; i < items.length; i++) {
+			const prev = out[out.length - 1];
+			const item = items[i];
+
+			// "chapter:verse" or "chapter:verse-end"
+			const cv = /^(\d+):(\d+)(?:-(\d+))?$/.exec(item);
+			if (cv) {
+				out.push(new BibleReference(prev.book, parseInt(cv[1], 10), parseInt(cv[2], 10),
+					cv[3] ? parseInt(cv[3], 10) : undefined));
+				continue;
+			}
+
+			// bare "verse" or "verse-end" (inherit prev chapter)
+			const v = /^(\d+)(?:-(\d+))?$/.exec(item);
+			if (v) {
+				out.push(new BibleReference(prev.book, prev.chapter, parseInt(v[1], 10),
+					v[2] ? parseInt(v[2], 10) : undefined));
+				continue;
+			}
+
+			return null;
+		}
+
+		return out;
+	}
+
+	/**
 	 * Get the formatted reference as a string
 	 */
 	public toString(): string {

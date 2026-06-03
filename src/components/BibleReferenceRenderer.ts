@@ -6,6 +6,8 @@ import {BibleEventHandlers} from "src/core/BibleEventHandlers";
 import {BibleFiles} from "../services/BibleFiles";
 import {BibleReference} from "../core/BibleReference";
 import {BiblePassage} from "../utils/BiblePassage";
+import {VerseSelectionController} from "./VerseSelectionController";
+import {VerseSelectionService} from "../core/VerseSelectionService";
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -15,15 +17,18 @@ export class BibleReferenceRenderer {
 	private bibleNavigation: BibleNavigation;
 	private plugin: DisciplesJournalPlugin;
 	private eventHandlers: BibleEventHandlers;
+	private selectionService: VerseSelectionService;
 
 	constructor(
 		bibleContentService: BibleContentService,
 		bibleFiles: BibleFiles,
-		plugin: DisciplesJournalPlugin
+		plugin: DisciplesJournalPlugin,
+		selectionService: VerseSelectionService
 	) {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
 		this.bibleNavigation = new BibleNavigation(bibleFiles, plugin.app);
+		this.selectionService = selectionService;
 	}
 
 	/**
@@ -88,10 +93,9 @@ export class BibleReferenceRenderer {
 	 * Process full Bible passage code blocks
 	 */
 	public async processFullBiblePassage(source: string, el: HTMLElement): Promise<void> {
-		// Parse the reference
+		// Parse the reference (supports non-contiguous lists like "Genesis 1:2-3, 5")
 		const reference = source.trim();
-		const parsedRef = BibleReference.parse(reference);
-		if (!parsedRef) {
+		if (!BibleReference.parseList(reference) && !BibleReference.parse(reference)) {
 			const message = `Invalid bible reference: ${source}`;
 			console.error(message);
 			const errorContainer = el.createEl('div');
@@ -100,8 +104,8 @@ export class BibleReferenceRenderer {
 			return;
 		}
 
-		// Grab the content
-		const response = await this.bibleContentService.getBibleContent(parsedRef);
+		// Grab the content (resolves and concatenates each contiguous run)
+		const response = await this.bibleContentService.getBibleContentList(reference);
 
 		if (response.isError()) {
 			const errorContainer = el.createEl('div');
@@ -137,6 +141,14 @@ export class BibleReferenceRenderer {
 
 		containerEl.appendChild(passageEl);
 		el.appendChild(containerEl);
+
+		if (this.plugin.settings.enableVerseSelection) {
+			const controller = new VerseSelectionController(
+				this.plugin, passageEl, canonicalRef.book, this.selectionService
+			);
+			this.selectionService.addChild(controller); // unloads with the plugin/service
+			controller.load();
+		}
 	}
 
 	/**
