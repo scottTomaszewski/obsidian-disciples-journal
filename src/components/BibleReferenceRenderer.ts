@@ -93,10 +93,9 @@ export class BibleReferenceRenderer {
 	 * Process full Bible passage code blocks
 	 */
 	public async processFullBiblePassage(source: string, el: HTMLElement): Promise<void> {
-		// Parse the reference
+		// Parse the reference (supports non-contiguous lists like "Genesis 1:2-3, 5")
 		const reference = source.trim();
-		const parsedRef = BibleReference.parse(reference);
-		if (!parsedRef) {
+		if (!BibleReference.parseList(reference) && !BibleReference.parse(reference)) {
 			const message = `Invalid bible reference: ${source}`;
 			console.error(message);
 			const errorContainer = el.createEl('div');
@@ -105,8 +104,8 @@ export class BibleReferenceRenderer {
 			return;
 		}
 
-		// Grab the content
-		const response = await this.bibleContentService.getBibleContent(parsedRef);
+		// Grab the content (resolves and concatenates each contiguous run)
+		const response = await this.bibleContentService.getBibleContentList(reference);
 
 		if (response.isError()) {
 			const errorContainer = el.createEl('div');
