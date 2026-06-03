@@ -1,4 +1,4 @@
-import { MarkdownView, Notice, TFile } from "obsidian";
+import { Notice, TFile } from "obsidian";
 import { VerseSelection } from "../core/VerseSelection";
 import { formatBlockquote, formatCodeBlock, formatInlineReference } from "../utils/VerseFormatter";
 import { InsertTargetModal } from "./InsertTargetModal";
@@ -63,12 +63,13 @@ export async function runVerseAction(
 	}
 
 	if (kind === "insert") {
-		const editor = plugin.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
-		if (!editor) {
-			new Notice("Open a note and place your cursor to insert.");
+		const view = plugin.resolveInsertTarget();
+		if (!view) {
+			new Notice("No note to insert into — open a note (not a generated Bible note), or right-click where you want it.");
 			return;
 		}
-		editor.replaceSelection(payload);
+		view.editor.replaceSelection(payload);
+		new Notice(`Inserted ${selection.label()} into ${view.file?.basename ?? "note"}`);
 		return;
 	}
 
