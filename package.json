@@ -1,6 +1,6 @@
 {
   "name": "obsidian-disciples-journal",
-  "version": "0.13.3",
+  "version": "1.14.0",
   "description": "Embed Bible references and passages in your notes and read the Bible.",
   "main": "main.js",
   "scripts": {
