@@ -4,6 +4,8 @@ import { VerseSelection } from "./VerseSelection";
 /** Anything that can own the current selection (a per-passage controller). */
 export interface SelectionOwner {
 	readonly id: string;
+	/** The rendered passage element — used to extract verse text in the right document. */
+	readonly sourceEl: HTMLElement;
 }
 
 interface ActiveSelection {
