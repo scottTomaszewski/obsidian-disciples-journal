@@ -527,3 +527,90 @@ button.clear-input-button {
 .disciples-journal-book-suggest-input {
     padding-right: 1.5em;
 }
+
+/* ===== Verse selection ===== */
+.dj-selectable .dj-verse {
+    cursor: pointer;
+    border-radius: var(--radius-s);
+}
+
+.dj-selectable .dj-verse:hover {
+    background: var(--background-modifier-hover);
+}
+
+.dj-verse-selected,
+.dj-selectable .dj-verse-selected:hover {
+    background: var(--text-selection);
+    box-shadow: inset 0 0 0 1px var(--text-accent);
+}
+
+/* Floating action bar (appears only while verses are selected) */
+.dj-verse-action-bar {
+    position: fixed;
+    z-index: var(--layer-popover);
+    display: flex;
+    align-items: center;
+    gap: var(--size-4-2);
+    padding: var(--size-4-2) var(--size-4-3);
+    border-radius: var(--radius-m);
+    background: var(--background-secondary);
+    box-shadow: var(--shadow-l);
+}
+
+.dj-verse-action-label {
+    font-weight: var(--font-bold);
+    margin-right: var(--size-4-1);
+}
+
+.dj-verse-action-bar button {
+    cursor: pointer;
+}
+
+.dj-split-button {
+    display: inline-flex;
+}
+
+.dj-split-button .dj-split-main {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dj-split-button .dj-split-chevron {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    padding-left: var(--size-4-1);
+    padding-right: var(--size-4-1);
+}
+
+.dj-format-toggle {
+    display: inline-flex;
+    gap: var(--size-2-1);
+    margin-right: var(--size-4-1);
+}
+
+.dj-format-toggle button.is-active {
+    background: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.dj-verse-action-bar button:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+/* Bottom-dock and enlarge touch targets on narrow / mobile layouts */
+@media (max-width: 600px) {
+    .dj-verse-action-bar {
+        left: var(--size-4-2) !important;
+        right: var(--size-4-2);
+        top: auto !important;
+        bottom: var(--size-4-3);
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .dj-verse-action-bar button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+}
