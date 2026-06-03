@@ -1,4 +1,8 @@
-# Changelog
+# Disciples Journal Releases
+
+New changes land under `## Unreleased`; at release time it is renamed by hand to the
+version tag (see [docs/build-and-release.md](docs/build-and-release.md)). Each `## `
+header text is **exactly** the release tag (no leading `v`).
 
 ## Unreleased
 

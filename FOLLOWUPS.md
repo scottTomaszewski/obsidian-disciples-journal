@@ -1,22 +1,28 @@
-# Workspace Follow-Ups
+# Follow-ups
 
-Lightweight tracking for tasks identified during other work that weren't tackled in the original scope. These are intentionally deferred — captured here so they don't get lost.
+In-scope tangents found while working — important to fix, but they'd derail the task
+at hand. Add a numbered `## N.` section below instead of chasing them now, and
+**clear these before starting a new feature.** New features and larger efforts go in
+[ROADMAP.md](ROADMAP.md), not here.
 
-Add new entries at the top. Remove entries when done (commit message can reference them).
+Mark a finished item with a `**Status:** done` line rather than deleting it; completed
+items get pruned and the rest renumbered on a periodic cleanup pass. Each entry
+carries the repo's standard fields (Identified / What / Why / Context / Effort), where
+Effort is sized XS (<1 h) · S (1–4 h) · M (1 day) · L (multi-day).
 
-## Entry format
+<!-- Template — copy for each item, numbering sequentially:
+## N. Short title
+**Status:** open
+- **Identified:** YYYY-MM-DD, the work it came up in.
+- **What:** brief description of the change.
+- **Why:** the motivation / what value it adds.
+- **Context:** file paths, gotchas, anything that saves the next person grep time.
+- **Effort:** XS | S | M | L
+-->
 
-Each entry should include:
+## 1. Finish pop-out window styling
 
-- **Identified:** YYYY-MM-DD and the work it came up in
-- **What:** brief description of the change
-- **Why:** the motivation / what value it adds
-- **Context:** background, file paths, gotchas, anything that would save the next person 10 minutes of grepping
-- **Effort:** rough sizing — XS (<1 h), S (1–4 h), M (1 day), L (multi-day)
-
----
-
-## Finish pop-out window styling
+**Status:** open
 
 - **Identified:** 2026-05-31, funky-logic sweep.
 - **What:** Styles aren't fully ported into freshly created pop-out windows.

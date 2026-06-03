@@ -31,7 +31,11 @@ The repo follows `eslint-plugin-obsidianmd` (see `eslint.config.mjs`) and the
 
 ## Releasing
 
-Releases go through the `justfile` (`just release <version>`), which:
+**Before releasing**, rename the `## Unreleased` header in [../CHANGELOG.md](../CHANGELOG.md)
+to the version tag — the `justfile` does **not** touch the changelog (it creates the
+GitHub release with empty notes), so this promotion is a manual step.
+
+Releases then go through the `justfile` (`just release <version>`), which:
 
 1. Refuses to run if `git status` is not clean.
 2. Runs `npm test` — a failing test aborts the release before any files are mutated.
@@ -39,7 +43,7 @@ Releases go through the `justfile` (`just release <version>`), which:
 5. Builds with `npm run build-no-check`.
 6. Commits (`Prepares for release '<version>'`) and pushes.
 7. Creates a GitHub release with `gh`, uploading `main.js`, `manifest.json`, and
-   `styles.css` as assets.
+   `styles.css` as assets (release notes are left empty — the changelog is the record).
 
 ### gh token note
 

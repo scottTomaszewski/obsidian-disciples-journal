@@ -52,5 +52,9 @@ change the code, update the matching doc in the same change:
 - **Add a new reference format or change parsing** → update `docs/reference-formats.md`.
 - **Introduce a workaround, magic number, or non-obvious behavior** → give it a home:
   a precise inline comment if local, a `docs/gotchas.md` entry if cross-cutting.
-- **Defer something out of scope** → add a `FOLLOWUPS.md` entry; promote it to
-  `ROADMAP.md` (and a plan doc) if it grows into a real effort.
+- **Ship a user-facing change** → add a bullet under `## Unreleased` in `CHANGELOG.md`.
+- **Hit a small in-scope tangent** (worth fixing, but it'd derail the current task) →
+  add a numbered `## N.` section to `FOLLOWUPS.md`, and clear it before the next feature.
+- **Plan a new feature or larger effort** → add a numbered `## N.` section to
+  `ROADMAP.md` (and a plan doc once work starts). `FOLLOWUPS.md` and `ROADMAP.md` serve
+  different lifespans — don't fold one into the other.
