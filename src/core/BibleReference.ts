@@ -76,7 +76,7 @@ export class BibleReference {
 				const chapter = parseInt(chapterRangeMatch[1]);
 				const endChapter = parseInt(chapterRangeMatch[2]);
 
-				return new BibleReference(standardizedBook, chapter, undefined, endChapter);
+				return new BibleReference(standardizedBook, chapter, undefined, undefined, endChapter);
 			}
 
 			// Verse range pattern (e.g., "1:2-10")

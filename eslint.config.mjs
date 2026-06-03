@@ -41,6 +41,16 @@ export default defineConfig([
 		},
 	},
 	{
+		// Tests legitimately use Node builtins (node:test / node:assert), and the
+		// node:test runner's top-level test() calls intentionally return unawaited
+		// promises. Both are flagged by the plugin-oriented recommended set.
+		files: ["test/**/*.ts"],
+		rules: {
+			"import/no-nodejs-modules": "off",
+			"@typescript-eslint/no-floating-promises": "off",
+		},
+	},
+	{
 		// obsidianmd's recommended set applies several type-aware rules globally
 		// (no file filter). They require TS parser services and crash on the JSON
 		// files. They are only meaningful for source, so disable them for JSON.

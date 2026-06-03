@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Fixes chapter-range references (e.g. `Genesis 1-2`): `BibleReference.parse` was
+  storing the end chapter in the `endVerse` field, so the range was dropped — it
+  round-tripped to `Genesis 1` and was fetched/stored as a single chapter. The end
+  chapter is now set correctly
+- Adds an automated test harness (Node's built-in `node:test` runner via `tsx`) with
+  a first suite covering `BibleReference` parsing, round-tripping, and helpers; tests
+  gate `npm run build` and `just release`
+
 ## 0.13.2
 
 - Resolves Obsidian plugin-evaluation styling warnings: removes all `!important` declarations from `styles.css` (overriding via selector specificity instead) and replaces the partially-supported `text-indent` on indented passage lines with `padding-left`

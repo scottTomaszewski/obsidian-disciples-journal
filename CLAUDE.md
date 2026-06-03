@@ -21,6 +21,7 @@ feature tour and `manifest.json` for plugin metadata.
   - [docs/esv-api.md](docs/esv-api.md) — ESV API integration, note storage, frontmatter
   - [docs/reference-formats.md](docs/reference-formats.md) — supported reference syntax + parsing
   - [docs/build-and-release.md](docs/build-and-release.md) — build, lint, and the `just release` flow
+  - [docs/testing.md](docs/testing.md) — test harness, how to run tests, build/release gating
 - **[FOLLOWUPS.md](FOLLOWUPS.md)** — small deferred findings captured during other
   tasks. Add an entry here instead of silently dropping out-of-scope work.
 - **[ROADMAP.md](ROADMAP.md)** — larger planned / in-flight efforts.
@@ -34,8 +35,9 @@ feature tour and `manifest.json` for plugin metadata.
   entry shim that re-exports `src/core/DisciplesJournalPlugin.ts`.
 - This repo follows the **obsidian-plugin-development** skill (ESLint rules from
   `eslint-plugin-obsidianmd`). Invoke that skill when touching plugin APIs.
-- Before committing: `npm run build` (runs `tsc -noEmit` + esbuild) and
-  `npx eslint .` must both pass with zero errors/warnings.
+- Before committing: `npm run build` (runs `tsc -noEmit` + `npm test` + esbuild) and
+  `npx eslint .` must both pass with zero errors/warnings. Tests live in `test/`
+  (`npm test` / `devbox run test`) — see [docs/testing.md](docs/testing.md).
 - `main.js` is a generated/bundled artifact — never edit it by hand.
 
 ## Working agreements

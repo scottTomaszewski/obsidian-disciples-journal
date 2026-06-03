@@ -126,8 +126,15 @@ canonical reference. Because the frontmatter is the cache, re-opening a chapter
 reuses `toBibleApiResponse` on the stored data instead of re-hitting the API. See
 [docs/esv-api.md](docs/esv-api.md).
 
+## Tests
+
+`test/` holds the test suites (Node's built-in `node:test` runner via `tsx`), one
+`*.test.ts` per unit — currently `test/BibleReference.test.ts`. Run with `npm test`
+(or `devbox run test`); they also gate `npm run build` and `just release`. See
+[docs/testing.md](docs/testing.md).
+
 ## Build
 
 esbuild bundles `main.ts` → `main.js` (CJS, `es2018`); `obsidian`, `electron`, and
-CodeMirror packages are externalized. `npm run build` type-checks first. See
-[docs/build-and-release.md](docs/build-and-release.md).
+CodeMirror packages are externalized. `npm run build` type-checks and runs tests
+first. See [docs/build-and-release.md](docs/build-and-release.md).

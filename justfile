@@ -7,6 +7,7 @@ release version:
 		echo "Cannot release: 'git status' is not clean.  Commit/push or stash changes first"
 		exit 0
 	fi
+	npm test
 	jq '.version = "{{version}}"' manifest.json > tmp && mv tmp manifest.json
 	jq '.version = "{{version}}"' package.json > tmp && mv tmp package.json
 	npm run build-no-check

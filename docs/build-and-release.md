@@ -13,8 +13,9 @@
 | Script | What it does |
 | --- | --- |
 | `npm run dev` | esbuild in watch mode (inline sourcemaps, no minify). |
-| `npm run build` | `tsc -noEmit -skipLibCheck` (type-check) then a production esbuild (minified). |
-| `npm run build-no-check` | Production esbuild only — skips type-checking. |
+| `npm run build` | `tsc -noEmit -skipLibCheck` (type-check) → `npm test` → production esbuild (minified). |
+| `npm run build-no-check` | Production esbuild only — skips type-checking **and tests**. |
+| `npm test` | Runs the test suite (`tsx --test test/*.test.ts`). See [testing.md](testing.md). |
 | `npm run lint` | `eslint .` |
 | `npm run version` | `version-bump.mjs` (syncs `manifest.json` + `versions.json`). |
 
@@ -33,10 +34,11 @@ The repo follows `eslint-plugin-obsidianmd` (see `eslint.config.mjs`) and the
 Releases go through the `justfile` (`just release <version>`), which:
 
 1. Refuses to run if `git status` is not clean.
-2. Sets `version` in both `manifest.json` and `package.json` (via `jq`).
-3. Builds with `npm run build-no-check`.
-4. Commits (`Prepares for release '<version>'`) and pushes.
-5. Creates a GitHub release with `gh`, uploading `main.js`, `manifest.json`, and
+2. Runs `npm test` — a failing test aborts the release before any files are mutated.
+3. Sets `version` in both `manifest.json` and `package.json` (via `jq`).
+5. Builds with `npm run build-no-check`.
+6. Commits (`Prepares for release '<version>'`) and pushes.
+7. Creates a GitHub release with `gh`, uploading `main.js`, `manifest.json`, and
    `styles.css` as assets.
 
 ### gh token note

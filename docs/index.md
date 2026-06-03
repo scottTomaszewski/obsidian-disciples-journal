@@ -14,6 +14,8 @@ with [../CLAUDE.md](../CLAUDE.md); for how the pieces fit together read
   syntax and how `BibleReference.parse` interprets it.
 - **[build-and-release.md](build-and-release.md)** — building, type-checking,
   linting, and the `just release` workflow.
+- **[testing.md](testing.md)** — the test harness: how to run tests, where they
+  live, and how they gate the build/release flows.
 
 ## See also
 
