@@ -1,4 +1,4 @@
-import {Plugin, MarkdownView, Notice, normalizePath} from 'obsidian';
+import {Plugin, MarkdownView, Notice, normalizePath, Editor, Menu, MenuItem} from 'obsidian';
 import {ESVApiService} from '../services/ESVApiService';
 import {BibleContentService} from '../services/BibleContentService';
 import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
@@ -16,6 +16,7 @@ import {BibleEventHandlers} from './BibleEventHandlers';
 import {applyCustomFrontmatter, getCustomFrontmatterForReference} from "../utils/FrontmatterUtil";
 import {OpenBibleModal} from "../components/OpenBibleModal";
 import {VerseSelectionService} from './VerseSelectionService';
+import {buildPayload, runVerseAction} from '../components/VerseActions';
 
 /**
  * Disciples Journal Plugin for Obsidian
@@ -99,6 +100,47 @@ export default class DisciplesJournalPlugin extends Plugin {
 			name: 'Update frontmatter on all Bible notes',
 			callback: () => this.updateAllBibleNoteFrontmatter()
 		});
+
+		this.addCommand({
+			id: 'insert-selected-verses',
+			name: 'Insert selected verses at cursor',
+			editorCallback: (editor: Editor) => {
+				const active = this.verseSelectionService.get();
+				if (!active) { new Notice('No verses selected.'); return; }
+				editor.replaceSelection(
+					buildPayload(this, active.selection, this.settings.defaultInsertFormat, active.owner.sourceEl)
+				);
+			}
+		});
+
+		this.addCommand({
+			id: 'copy-selected-verses',
+			name: 'Copy selected verses',
+			callback: () => {
+				const active = this.verseSelectionService.get();
+				if (!active) { new Notice('No verses selected.'); return; }
+				void runVerseAction(this, 'copy', active.selection, this.settings.defaultInsertFormat, active.owner.sourceEl);
+			}
+		});
+
+		this.addCommand({
+			id: 'clear-verse-selection',
+			name: 'Clear verse selection',
+			callback: () => this.verseSelectionService.clear()
+		});
+
+		// Right-click in any editor while a selection exists → insert at the click point.
+		this.registerEvent(this.app.workspace.on('editor-menu', (menu: Menu, editor: Editor) => {
+			const active = this.verseSelectionService.get();
+			if (!active) return;
+			const label = active.selection.label();
+			menu.addItem((item: MenuItem) =>
+				item.setTitle(`Insert ${label} here`)
+					.setIcon('book-open')
+					.onClick(() => editor.replaceSelection(
+						buildPayload(this, active.selection, this.settings.defaultInsertFormat, active.owner.sourceEl)
+					)));
+		}));
 
 		// Ribbon icon
 		this.addRibbonIcon('book-open', 'Open Bible', () => {
