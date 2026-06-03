@@ -10,6 +10,14 @@ passages inside notes (inline hover previews + full `bible` code blocks) and can
 download passages on demand from the ESV API. See `README.md` for the user-facing
 feature tour and `manifest.json` for plugin metadata.
 
+## Design ethos
+
+**Non-intrusive by default.** People use this plugin during devotion, prayer, and small
+group. Features must never distract, frustrate, or shake the user out of an intimate time
+with God. Default to quiet: nothing new appears, moves, or interrupts until the user
+deliberately asks for it. No text shifting, no surprise popups, no persistent chrome. When
+in doubt, do less.
+
 ## Where to look
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — how the plugin is wired: services,

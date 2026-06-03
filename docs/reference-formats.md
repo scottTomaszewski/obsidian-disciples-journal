@@ -44,3 +44,19 @@ provides:
 
 These fields also drive note filenames — see
 [esv-api.md](esv-api.md) and `BibleFiles.pathForPassage`.
+
+## Non-contiguous (comma) lists
+
+Verse selection (see [gotchas.md](gotchas.md)) can produce non-contiguous references
+like `Genesis 1:2-3, 5` or `Genesis 1:31, 2:1`. These are parsed by
+`BibleReference.parseList`, **not** the single-range `parse`:
+
+- The first comma-separated item is a full reference (any format above).
+- Later items may be a bare verse (`5`), a bare verse range (`5-7`) — both inheriting the
+  previous item's book **and** chapter — or `chapter:verse[-end]`, inheriting only the book.
+- The result is a `BibleReference[]` (one per contiguous run); any invalid item makes the
+  whole list `null`.
+
+A rendered list resolves each run and concatenates the HTML
+(`BibleContentService.getBibleContentList`); the passage heading/link uses the **first**
+run.

@@ -82,3 +82,13 @@ across existing notes.
 All failures funnel through `BibleApiResponse.error(message, ErrorType)`
 (`ApiAuthentication`, `BadApiResponse`, `RequestsForbidden`, …). User-visible cases
 surface an Obsidian `Notice`; internal ones are logged to the console.
+
+## Attribution when reproducing verse text
+
+The verse-selection **blockquote** format (`VerseFormatter.formatBlockquote`) reproduces
+ESV text into the user's note and appends a `— <ref> (ESV)` citation. The ESV API
+[copyright/permissions terms](https://api.esv.org/) require attribution when ESV text is
+quoted; the `(ESV)` suffix is the minimum, and larger reproductions carry a fuller
+copyright-notice obligation. If the quoting story expands (e.g. exporting many passages),
+revisit the notice requirement here. The other two formats (inline reference, `bible`
+block) store only a reference, not text, so they don't trigger this.

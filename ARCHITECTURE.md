@@ -52,6 +52,10 @@ Source is organized under `src/` by responsibility:
   display setting, then delegates to the renderer and handles errors.
 - **`BibleEventHandlers.ts`** — the single, plugin-owned hover/popup lifecycle
   (mouseover/mouseout, show/hide timing). Loaded as a child component.
+- **`VerseSelection.ts`** — pure value object: a verse set within one book →
+  contiguous `BibleReference[]` runs + a display label (`Genesis 1:2-3, 5`).
+- **`VerseSelectionService.ts`** — plugin-owned (`addChild`) holder of the *single*
+  active verse selection across panes + its owning controller; notifies subscribers.
 
 ### `services/` — content resolution and storage
 
@@ -82,6 +86,18 @@ Source is organized under `src/` by responsibility:
   window has its own `Document`, so styles are applied per-doc).
 - **`BookSuggest.ts`**, **`OpenBibleModal.ts`** — the `Open Bible` modal and its
   book autocomplete.
+- **`VerseWrapper.ts`** — `wrapPassageVerses(passageEl)`: wraps each rendered verse in a
+  `.dj-verse` span (idempotent) so verses are selectable/highlightable.
+- **`VerseSelectionController.ts`** — one per rendered passage: wraps verses, binds
+  gestures (desktop tap/shift, mobile long-press-drag), reflects the service's selection
+  (highlight) and owns the action bar.
+- **`VerseActionBar.ts`** — floating bar shown while verses are selected; renders the
+  Copy / Insert (and optional Append) actions with the configurable `split`/`toggle`/
+  `submenu` format chooser.
+- **`VerseActions.ts`** — turns a selection + format into the payload and performs Copy
+  (clipboard), Insert (Editor API), or Append (`Vault.process`); extracts verse text for
+  the blockquote format from the passage's own document.
+- **`InsertTargetModal.ts`** — `FuzzySuggestModal<TFile>` note picker for "Append to note…".
 
 ### `utils/` — small helpers
 
@@ -90,6 +106,9 @@ Source is organized under `src/` by responsibility:
 - **`BiblePassage.ts`** — `{ reference, html }` pairing for resolved content.
 - **`BibleApiResponse`/`BiblePassage`** are what flow back out of the content
   service to the renderer.
+- **`VerseId.ts`** — `parseVerseId(id)`: ESV marker id (`v01001002-1`) → `{chapter, verse}`.
+- **`VerseFormatter.ts`** — pure builders for the three insert formats (inline reference,
+  `bible` code block, blockquote-with-text + citation).
 - **`FrontmatterUtil.ts`** — apply user-configured custom frontmatter to Bible
   notes (`getCustomFrontmatterForReference`, `applyCustomFrontmatter`).
 - **`BibleCodeblockFormatter.ts`** — formatting helper for the `bible` code block.
@@ -115,7 +134,20 @@ note renders
 ```
 
 Full passages follow the same resolution path through `getBibleContent`, but render
-the whole passage inline (`processFullBiblePassage`) with navigation + heading.
+the whole passage inline (`processFullBiblePassage`) with navigation + heading. Non-
+contiguous references (`Genesis 1:2-3, 5`) resolve via `getBibleContentList`, which parses
+the list with `BibleReference.parseList` and concatenates each run's HTML.
+
+## Verse selection
+
+After a full passage renders, `processFullBiblePassage` wraps its verses
+(`wrapPassageVerses` → `.dj-verse` spans) and attaches a `VerseSelectionController`.
+Selecting verses (tap/shift on desktop, long-press-drag on mobile) updates a per-passage
+`VerseSelection` and pushes it to the plugin-owned `VerseSelectionService`, which holds the
+single active selection. The owning controller highlights its verses and shows a
+`VerseActionBar`; Copy / Insert / Append (and the editor `Insert … here` menu + commands)
+run through `VerseActions`, formatting via `VerseFormatter`. See
+[docs/gotchas.md](docs/gotchas.md) for the wrapping/gesture/bar-lifecycle details.
 
 ## Storage model
 
