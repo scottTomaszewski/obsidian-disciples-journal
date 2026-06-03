@@ -544,12 +544,20 @@ button.clear-input-button {
     box-shadow: inset 0 0 0 1px var(--text-accent);
 }
 
-/* Floating action bar (appears only while verses are selected) */
+/* Floating action bar — bottom-center dock, so it stays in view regardless of how tall
+   the passage is (a full chapter is taller than the viewport, so anchoring to the passage
+   would push the bar off-screen). Appears only while verses are selected. */
 .dj-verse-action-bar {
     position: fixed;
     z-index: var(--layer-popover);
+    left: 50%;
+    bottom: var(--size-4-6);
+    transform: translateX(-50%);
+    max-width: calc(100% - var(--size-4-8));
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--size-4-2);
     padding: var(--size-4-2) var(--size-4-3);
     border-radius: var(--radius-m);
@@ -598,15 +606,14 @@ button.clear-input-button {
     outline-offset: 2px;
 }
 
-/* Bottom-dock and enlarge touch targets on narrow / mobile layouts */
+/* Full-width and enlarge touch targets on narrow / mobile layouts */
 @media (max-width: 600px) {
     .dj-verse-action-bar {
-        left: var(--size-4-2) !important;
+        left: var(--size-4-2);
         right: var(--size-4-2);
-        top: auto !important;
         bottom: var(--size-4-3);
-        justify-content: center;
-        flex-wrap: wrap;
+        transform: none;
+        max-width: none;
     }
 
     .dj-verse-action-bar button {
