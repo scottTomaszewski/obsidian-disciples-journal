@@ -6,6 +6,8 @@ import {BibleEventHandlers} from "src/core/BibleEventHandlers";
 import {BibleFiles} from "../services/BibleFiles";
 import {BibleReference} from "../core/BibleReference";
 import {BiblePassage} from "../utils/BiblePassage";
+import {VerseSelectionController} from "./VerseSelectionController";
+import {VerseSelectionService} from "../core/VerseSelectionService";
 
 /**
  * Component for rendering Bible references in Obsidian
@@ -15,15 +17,18 @@ export class BibleReferenceRenderer {
 	private bibleNavigation: BibleNavigation;
 	private plugin: DisciplesJournalPlugin;
 	private eventHandlers: BibleEventHandlers;
+	private selectionService: VerseSelectionService;
 
 	constructor(
 		bibleContentService: BibleContentService,
 		bibleFiles: BibleFiles,
-		plugin: DisciplesJournalPlugin
+		plugin: DisciplesJournalPlugin,
+		selectionService: VerseSelectionService
 	) {
 		this.bibleContentService = bibleContentService;
 		this.plugin = plugin;
 		this.bibleNavigation = new BibleNavigation(bibleFiles, plugin.app);
+		this.selectionService = selectionService;
 	}
 
 	/**
@@ -137,6 +142,14 @@ export class BibleReferenceRenderer {
 
 		containerEl.appendChild(passageEl);
 		el.appendChild(containerEl);
+
+		if (this.plugin.settings.enableVerseSelection) {
+			const controller = new VerseSelectionController(
+				this.plugin, passageEl, canonicalRef.book, this.selectionService
+			);
+			this.selectionService.addChild(controller); // unloads with the plugin/service
+			controller.load();
+		}
 	}
 
 	/**

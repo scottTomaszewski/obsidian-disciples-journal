@@ -15,6 +15,7 @@ import {BibleReference} from './BibleReference';
 import {BibleEventHandlers} from './BibleEventHandlers';
 import {applyCustomFrontmatter, getCustomFrontmatterForReference} from "../utils/FrontmatterUtil";
 import {OpenBibleModal} from "../components/OpenBibleModal";
+import {VerseSelectionService} from './VerseSelectionService';
 
 /**
  * Disciples Journal Plugin for Obsidian
@@ -33,6 +34,7 @@ export default class DisciplesJournalPlugin extends Plugin {
 	private bibleReferenceRenderer: BibleReferenceRenderer;
 	private bibleEventHandlers: BibleEventHandlers;
 	private bibleMarkupProcessor: BibleMarkupProcessor;
+	private verseSelectionService: VerseSelectionService;
 
 	async onload() {
 		// Initialize settings
@@ -41,6 +43,10 @@ export default class DisciplesJournalPlugin extends Plugin {
 		// Initialize services
 		this.esvApiService = new ESVApiService(this);
 		this.bibleContentService = new BibleContentService(this, this.esvApiService);
+
+		// Holds the single active verse selection across panes; unloads with the plugin.
+		this.verseSelectionService = new VerseSelectionService();
+		this.addChild(this.verseSelectionService);
 
 		// Check if ESV API token is set and show a notice if it's not
 		if (!this.settings.esvApiToken) {
@@ -54,7 +60,8 @@ export default class DisciplesJournalPlugin extends Plugin {
 		this.bibleReferenceRenderer = new BibleReferenceRenderer(
 			this.bibleContentService,
 			this.bibleFiles,
-			this
+			this,
+			this.verseSelectionService
 		);
 
 		// Single, long-lived hover-preview event handler owned by the plugin.
