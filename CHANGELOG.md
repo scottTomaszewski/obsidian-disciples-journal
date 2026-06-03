@@ -8,11 +8,15 @@ header text is **exactly** the release tag (no leading `v`).
 
 - Adds verse selection: tap verses in a rendered passage to select them (shift-click or
   long-press-drag for a range), then copy or insert them as an inline reference, a `bible`
-  code block, or a blockquote of the verse text. A floating action bar (with configurable
-  split / toggle / submenu format choosers) and a desktop right-click "Insert … here" both
-  drive it; an optional "Append to note…" action can be enabled in settings. Adds a
-  *Verse selection* settings section and supports non-contiguous references like
-  `Genesis 1:2-3, 5`
+  code block, or a blockquote of the verse text. A floating action bar (docked at the
+  bottom of the view, with configurable split / toggle / submenu format choosers) and a
+  desktop right-click "Insert … here" both drive it; an optional "Append to note…" action
+  can be enabled in settings. "Insert" targets the note you were last editing (generated
+  Bible notes are skipped), not the passage you selected from. Adds a *Verse selection*
+  settings section
+- Adds support for non-contiguous references like `Genesis 1:2-3, 5` and `Genesis 1:2, 4, 8`
+  — in full `bible` blocks, inline `` `code` `` references, and Live Preview (parsed by the
+  new `BibleReference.parseList`)
 - Fixes chapter-range references (e.g. `Genesis 1-2`): `BibleReference.parse` was
   storing the end chapter in the `endVerse` field, so the range was dropped — it
   round-tripped to `Genesis 1` and was fetched/stored as a single chapter. The end
