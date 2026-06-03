@@ -69,7 +69,7 @@ export async function runVerseAction(
 			return;
 		}
 		view.editor.replaceSelection(payload);
-		new Notice(`Inserted ${selection.label()} into ${view.file?.basename ?? "note"}`);
+		new Notice(`Passage ${selection.label()} inserted into note ${view.file?.basename ?? "note"}`);
 		return;
 	}
 

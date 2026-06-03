@@ -77,5 +77,6 @@ non-obvious things:
   → `lastEditableLeaf`, filtered by `isBibleContentFile`) and `resolveInsertTarget()`
   returns it. There's no public "leaves in MRU order" API — this `active-leaf-change`
   tracking is the stand-in. Insert does **not** steal focus; it drops the text in and shows
-  an `Inserted … into <note>` notice. The right-click "Insert here" path is unaffected — it
-  always uses the clicked editor.
+  a `Passage … inserted into note …` notice (important when the target pane is in the
+  background). The right-click "Insert here" path is unaffected — it always uses the clicked
+  editor.
