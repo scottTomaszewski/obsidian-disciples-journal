@@ -9,6 +9,7 @@
 - Adds an automated test harness (Node's built-in `node:test` runner via `tsx`) with
   a first suite covering `BibleReference` parsing, round-tripping, and helpers; tests
   gate `npm run build` and `just release`
+- Corrects an overly greedy book-name normalization logic bug
 
 ## 0.13.2
 

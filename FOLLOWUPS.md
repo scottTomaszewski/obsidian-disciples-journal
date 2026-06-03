@@ -16,22 +16,6 @@ Each entry should include:
 
 ---
 
-## `BookNames.normalize` partial-matches too greedily
-
-- **Identified:** 2026-06-02, while adding the test harness.
-- **What:** `normalize` falls back to a `startsWith` scan over all book
-  names/abbreviations, so any unknown string that begins with a registered token is
-  silently accepted — e.g. `normalize("Hobbiton")` → `"Hosea"` (via the `ho`
-  abbreviation), and `parse("Hobbiton 1:1")` returns a Hosea reference instead of
-  `null`.
-- **Why:** Surprising false-positives; a typo'd book can resolve to the wrong book.
-- **Context:** `src/services/BookNames.ts` `normalize` (the `for (const [key, value]
-  ... startsWith` loop). The test suite sidesteps this by using `"Xylophone"` (shares
-  no prefix with any book) for its unknown-book cases — see
-  `test/BibleReference.test.ts`. A fix likely needs anchored/whole-token matching, but
-  must preserve legitimate abbreviation lookups; verify against the format matrix.
-- **Effort:** S
-
 ## Finish pop-out window styling
 
 - **Identified:** 2026-05-31, funky-logic sweep.

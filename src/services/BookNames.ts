@@ -13,20 +13,12 @@ export class BookNames {
 		// Clean up the book name
 		const cleanedName = bookName.trim();
 
-		// First try a direct lookup
-		if (BookNames._instance.bookNameMap.has(cleanedName.toLowerCase())) {
-			return BookNames._instance.bookNameMap.get(cleanedName.toLowerCase()) as string;
-		}
-
-		// Try to find a partial match
-		for (const [key, value] of BookNames._instance.bookNameMap.entries()) {
-			// Check if the key is a substring of the cleaned name
-			if (cleanedName.toLowerCase().startsWith(key)) {
-				return value;
-			}
-		}
-
-		return null;
+		// Every canonical name and abbreviation is registered as an exact key, so a
+		// direct lookup resolves all legitimate inputs. We deliberately do NOT fall
+		// back to prefix matching: that resolved any unknown word beginning with a
+		// registered token (e.g. "Hobbiton" -> "Hosea" via "ho"). See FOLLOWUPS.md.
+		const key = cleanedName.toLowerCase();
+		return BookNames._instance.bookNameMap.get(key) ?? null;
 	}
 
 	/**

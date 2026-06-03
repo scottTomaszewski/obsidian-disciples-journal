@@ -109,10 +109,10 @@ test("parse — normalization", async (t) => {
 test("parse — null cases", async (t) => {
 	await t.test("empty string", () => assert.equal(BibleReference.parse(""), null));
 	await t.test("whitespace only", () => assert.equal(BibleReference.parse("   "), null));
-	// "Xylophone" shares no prefix with any registered book/abbreviation. (Note:
-	// BookNames.normalize partial-matches greedily, so e.g. "Hobbiton" -> "Hosea"
-	// via the "ho" abbreviation; see FOLLOWUPS.md.)
 	await t.test("unknown book", () => assert.equal(BibleReference.parse("Xylophone 1:1"), null));
+	// "Hobbiton" begins with the "ho" (Hosea) abbreviation; normalize must not
+	// greedily resolve it. See test/BookNames.test.ts.
+	await t.test("word starting with an abbreviation", () => assert.equal(BibleReference.parse("Hobbiton 1:1"), null));
 	await t.test("book with no chapter", () => assert.equal(BibleReference.parse("John"), null));
 	await t.test("trailing garbage", () => assert.equal(BibleReference.parse("John 3:16 foo"), null));
 });
