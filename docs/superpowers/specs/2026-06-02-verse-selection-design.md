@@ -49,17 +49,18 @@ automatically.
 **Acting on a selection — same actions surfaced in three places:**
 1. **Floating action bar** — appears (anchored near the selection; bottom-docked on
    narrow/mobile layouts) only while ≥1 verse is selected. Carries the reference label,
-   a ✕, and the Copy / Insert / Add-to-note actions. Same on desktop and mobile (the bar
-   is the primary surface on mobile, which has no right-click). **How format is chosen on
-   the bar is configurable** (`formatChooserStyle` setting) — all three presentations are
-   implemented and the user picks one:
-   - **`split`** (default) — split buttons `[Copy ▾] [Insert ▾] [Add to note… ▾]`; the
-     body uses the default format, the ▾ chevron opens the other two.
+   a ✕, and the **Copy** and **Insert** actions (plus **Append to note…** *only when the
+   user enables it* — see below). Same on desktop and mobile (the bar is the primary
+   surface on mobile, which has no right-click). **How format is chosen on the bar is
+   configurable** (`formatChooserStyle` setting) — all three presentations are implemented
+   and the user picks one:
+   - **`split`** (default) — split buttons `[Copy ▾] [Insert ▾]`; the body uses the
+     default format, the ▾ chevron opens the other two.
    - **`toggle`** — a segmented format toggle `[ Ref | Block | Quote ]` plus plain action
-     buttons `[Copy] [Insert] [Add to note…]`; pick the format once, then an action.
+     buttons `[Copy] [Insert]`; pick the format once, then an action.
    - **`submenu`** — plain action buttons, each of which opens a format submenu.
-2. **Desktop right-click on the passage** → context menu with the same Copy / Insert /
-   Add-to-note actions, each with a format submenu.
+2. **Desktop right-click on the passage** → context menu with the same Copy / Insert
+   actions (plus Append to note… when enabled), each with a format submenu.
 3. **Desktop right-click inside any editor** (while a selection exists) → an
    "Insert `<ref>` here" entry that inserts at the click point — the precise, reverse-flow
    path that sidesteps the multi-window problem because the user placed their own cursor.
@@ -68,8 +69,10 @@ automatically.
 - **Insert at cursor** — drops into the last-focused markdown editor at its cursor (bar
   button + a hotkey-able command). Primary path.
 - **Right-click in editor → "Insert `<ref>` here"** — inserts at the exact click point.
-- **Add to note…** — fuzzy note-picker (`FuzzySuggestModal` over markdown `TFile`s) →
-  appends to the end of the chosen note. Fallback for a note not currently focused.
+- **Append to note…** *(optional, off by default)* — a fuzzy note-picker (`FuzzySuggestModal`
+  over markdown `TFile`s) → appends to the end of the chosen note. This overlaps with
+  Insert-at-cursor, so it ships disabled and is enabled via `enableAppendToNote`; only then
+  does it appear on the bar / context menu and as a command.
 
 **Three output formats (chosen per-insert; a configurable default sets the button body):**
 - **Inline reference** — `` `Genesis 1:2-3, 5` `` (renders with the existing hover preview).
@@ -120,7 +123,8 @@ This same `data-*` tagging is what the future "find referencing notes" feature w
   selection state; per-`Document` aware (popout windows each have their own doc, like
   `BibleStyles`). Renders its format chooser in whichever mode `formatChooserStyle`
   selects (`split` / `toggle` / `submenu`) — all three implemented.
-- `components/InsertTargetModal.ts` — `FuzzySuggestModal<TFile>` note picker for "Add to note…".
+- `components/InsertTargetModal.ts` — `FuzzySuggestModal<TFile>` note picker for the
+  optional "Append to note…" action (only used when `enableAppendToNote` is on).
 - `utils/VerseFormatter.ts` — turns a `VerseSelection` into each of the three output strings
   (inline ref, code block, blockquote+citation); pure, unit-tested.
 
@@ -131,15 +135,24 @@ This same `data-*` tagging is what the future "find referencing notes" feature w
   (`addChild`); `registerEvent(workspace.on('editor-menu', …))` for "Insert `<ref>` here";
   add commands: *Insert selected verses at cursor*, *Copy selected verses*,
   *Clear verse selection*; pass the service into the renderer.
-- `settings/DisciplesJournalSettings.ts` — new settings (below); UI in the tab.
+- `settings/DisciplesJournalSettings.ts` — new settings (below); **reorganize the settings
+  tab into clearly headed sections** for navigation (e.g. *Display*, *Typography & colors*,
+  *Bible content & storage*, *ESV API*, *Verse selection*) using section headings
+  (`new Setting(containerEl).setHeading()`), grouping the existing settings under them.
 - `components/BibleStyles.ts` — styles for `.dj-verse`, `.dj-verse-selected`, the action bar.
 
 ## Settings
+New settings (grouped under a *Verse selection* heading in the reorganized tab):
 - `enableVerseSelection: boolean` (default `true`).
 - `defaultInsertFormat: 'inline' | 'codeblock' | 'blockquote'` (default `'inline'`); also
   remembers the last-used format per session for the split-button body.
 - `formatChooserStyle: 'split' | 'toggle' | 'submenu'` (default `'split'`) — which of the
   three (all-implemented) format-chooser presentations the action bar uses.
+- `enableAppendToNote: boolean` (default `false`) — surfaces the optional "Append to note…"
+  action on the bar / context menu / commands.
+
+The settings tab itself is reorganized into headed sections (see touch points) so the
+growing list stays navigable.
 
 ## Docs to update (per the repo's working agreements)
 - **CLAUDE.md** — add the `## Design ethos` section (above).
@@ -154,9 +167,9 @@ This same `data-*` tagging is what the future "find referencing notes" feature w
 
 ## Extensibility
 The action surfaces (bar, passage menu) are populated from a small in-memory list of
-"verse-selection actions" `{ id, label, run(selection) }`. Copy / Insert / Add-to-note are
-the first registrations; the future "find notes referencing these verses" is added by
-registering one more action — no UI rework.
+"verse-selection actions" `{ id, label, run(selection), enabled? }`. Copy / Insert (and the
+optional Append-to-note) are the first registrations; the future "find notes referencing
+these verses" is added by registering one more action — no UI rework.
 
 ## Risks / things to watch
 - **Mobile long-press vs. scroll** — the highest-risk UX. Press threshold + cancel-on-move
@@ -177,10 +190,12 @@ registering one more action — no UI rework.
    `formatChooserStyle` setting), passage right-click menu, editor `editor-menu`
    "Insert here", and the three commands.
 3. **Formats + locations**: `VerseFormatter` (+ tests) for all three formats; Copy
-   (clipboard), Insert-at-cursor (last-focused editor), `InsertTargetModal` append.
+   (clipboard) and Insert-at-cursor (last-focused editor). Optional `InsertTargetModal`
+   append behind `enableAppendToNote`.
 4. **Non-contiguous round-trip**: extend parse/resolve for comma lists; reference-formats doc.
 5. **Mobile gestures**: long-press-to-initiate + drag-to-extend with scroll guard.
-6. **Settings, docs, CHANGELOG, ethos section**; build + lint gating.
+6. **Settings (incl. tab reorganization into headed sections), docs, CHANGELOG, ethos
+   section**; build + lint gating.
 
 ## Verification
 - `npm run build` (tsc + `npm test` + esbuild) and `npx eslint .` pass clean.
@@ -189,8 +204,9 @@ registering one more action — no UI rework.
 - Manual in the demo vault (`disciples-journal-demo`):
   - Open a note with a `bible` block (e.g. Genesis 1). Tap v2 and v5 → both highlight, bar
     shows "Genesis 1:2, 5". Shift+click → contiguous range. ✕/Esc clears.
-  - Each action × each format → correct Copy (paste-check), Insert-at-cursor, and
-    Add-to-note (note picker → appended) output, including the non-contiguous case.
+  - Each action × each format → correct Copy (paste-check) and Insert-at-cursor output,
+    including the non-contiguous case. With `enableAppendToNote` on, the optional
+    "Append to note…" picker appends to the chosen note.
   - Right-click in a second note → "Insert Genesis 1:2, 5 here" inserts at cursor.
   - Inserted inline ref and code block render correctly (incl. non-contiguous).
   - Mobile emulation: long-press initiates selection, drag extends, normal swipe scrolls.
