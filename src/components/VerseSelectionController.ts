@@ -78,7 +78,11 @@ export class VerseSelectionController extends Component implements SelectionOwne
 		this.touchStart = { x: t.clientX, y: t.clientY };
 		this.anchor = hit.ref;
 		this.pressTimer = this.sourceEl.win.setTimeout(() => {
-			this.dragging = true; // long-press engaged: subsequent moves select, not scroll
+			// Long-press engaged: select the pressed verse for immediate feedback, then
+			// subsequent moves extend the range (and stop the page scrolling).
+			this.dragging = true;
+			this.selection.add(hit.ref);
+			this.commit();
 		}, LONG_PRESS_MS);
 	}
 
