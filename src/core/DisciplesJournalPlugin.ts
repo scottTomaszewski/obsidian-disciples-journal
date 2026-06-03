@@ -1,4 +1,4 @@
-import {Plugin, MarkdownView, Notice, normalizePath, Editor, Menu, MenuItem} from 'obsidian';
+import {Plugin, MarkdownView, Notice, normalizePath, Editor, Menu, MenuItem, TFile, WorkspaceLeaf} from 'obsidian';
 import {ESVApiService} from '../services/ESVApiService';
 import {BibleContentService} from '../services/BibleContentService';
 import {BibleReferenceRenderer} from '../components/BibleReferenceRenderer';
@@ -36,6 +36,11 @@ export default class DisciplesJournalPlugin extends Plugin {
 	private bibleEventHandlers: BibleEventHandlers;
 	private bibleMarkupProcessor: BibleMarkupProcessor;
 	private verseSelectionService: VerseSelectionService;
+
+	// The most recently active editable, non-generated markdown note — the target for
+	// "Insert selected verses" from the action bar/command (the passage's own pane is
+	// usually a generated Bible note, which we never want to insert into).
+	private lastEditableLeaf: WorkspaceLeaf | null = null;
 
 	async onload() {
 		// Initialize settings
@@ -104,12 +109,10 @@ export default class DisciplesJournalPlugin extends Plugin {
 		this.addCommand({
 			id: 'insert-selected-verses',
 			name: 'Insert selected verses at cursor',
-			editorCallback: (editor: Editor) => {
+			callback: () => {
 				const active = this.verseSelectionService.get();
 				if (!active) { new Notice('No verses selected.'); return; }
-				editor.replaceSelection(
-					buildPayload(this, active.selection, this.settings.defaultInsertFormat, active.owner.sourceEl)
-				);
+				void runVerseAction(this, 'insert', active.selection, this.settings.defaultInsertFormat, active.owner.sourceEl);
 			}
 		});
 
@@ -172,6 +175,42 @@ export default class DisciplesJournalPlugin extends Plugin {
 	handleActiveLeafChange() {
 		// Refresh theme/styling when active leaf changes
 		this.updateBibleStyles();
+
+		// Remember the last editable, non-generated note so "Insert" targets the note the
+		// user was working in — not the (generated) passage note they clicked to select.
+		const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (view?.file && !this.isBibleContentFile(view.file)) {
+			this.lastEditableLeaf = view.leaf;
+		}
+	}
+
+	/** True when a file lives under the configured Bible content folder (a generated note). */
+	public isBibleContentFile(file: TFile): boolean {
+		return file.path.startsWith(normalizePath(this.settings.bibleContentVaultPath) + '/');
+	}
+
+	/**
+	 * Resolve where "Insert selected verses" should go: the most recently active editable,
+	 * non-generated markdown note (if still open), else the active note when it isn't a
+	 * generated Bible note. Returns null when there's no suitable target.
+	 */
+	public resolveInsertTarget(): MarkdownView | null {
+		let leaf = this.lastEditableLeaf;
+		if (leaf) {
+			let stillOpen = false;
+			this.app.workspace.iterateRootLeaves((l) => { if (l === leaf) stillOpen = true; });
+			if (!stillOpen) leaf = null;
+		}
+
+		if (leaf?.view instanceof MarkdownView) {
+			return leaf.view;
+		}
+
+		const active = this.app.workspace.getActiveViewOfType(MarkdownView);
+		if (active?.file && !this.isBibleContentFile(active.file)) {
+			return active;
+		}
+		return null;
 	}
 
 	/**

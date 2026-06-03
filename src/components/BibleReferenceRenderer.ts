@@ -58,17 +58,17 @@ export class BibleReferenceRenderer {
 			}
 
 			try {
-				const reference = BibleReference.parse(codeText);
-				if (!reference) {
+				// Accept single refs and non-contiguous lists (e.g. "Genesis 1:2, 4, 8")
+				if (!BibleReference.parseList(codeText)) {
 					continue;
 				}
-				
+
 				// Create a Bible reference element
 				const referenceEl = element.doc.createElement('span');
 				referenceEl.classList.add('bible-reference');
 				referenceEl.textContent = codeText;
 
-				const response = await this.bibleContentService.getBibleContent(reference);
+				const response = await this.bibleContentService.getBibleContentList(codeText);
 				if (response.isError()) {
 					new Notice(response.errorMessage, 10000);
 					continue;

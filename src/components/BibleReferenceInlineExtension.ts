@@ -38,7 +38,7 @@ export function createInlineReferenceExtension(contentService: BibleContentServi
 								const content = view.state.doc.sliceString(node.from, node.to);
 								// Try to parse as a Bible reference
 								try {
-									const reference = BibleReference.parse(content);
+									const reference = BibleReference.parseList(content);
 									if (reference) {
 										const decor = Decoration.mark({
 											inclusive: true,
@@ -67,13 +67,13 @@ export function createInlineReferenceExtension(contentService: BibleContentServi
 							new Notice("No text content found for Bible reference", 10000);
 							return;
 						}
-						const reference = BibleReference.parse(t.textContent);
+						const reference = BibleReference.parseList(t.textContent);
 						if (!reference) {
 							new Notice("Invalid Bible reference: " + t.textContent, 10000);
 							return;
 						}
 
-						void contentService.getBibleContent(reference).then(response => {
+						void contentService.getBibleContentList(t.textContent).then(response => {
 							if (response.isError()) {
 								new Notice(response.errorMessage, 10000);
 								return;

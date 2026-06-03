@@ -61,10 +61,21 @@ non-obvious things:
 - **One selection, globally.** `VerseSelectionService` (plugin-owned, `addChild`) holds a
   single active selection + its owning controller. Only the owner renders highlight and the
   action bar, so selecting in one passage clears another.
-- **The action bar is per-`Document` and `fixed`-positioned.** It's appended to the
-  passage's own `doc.body` (popout-safe) and positioned from the passage's
-  `getBoundingClientRect`. Blockquote text is extracted from the owner's `sourceEl` (its
-  own document) for the same reason — never query the global `document`.
+- **The action bar is per-`Document` and bottom-center docked.** It's appended to the
+  passage's own `doc.body` (popout-safe). It's docked at the bottom-center of the viewport
+  via CSS — **not** anchored to the passage — because a full chapter is taller than the
+  viewport, so anchoring to the passage's `getBoundingClientRect().bottom` rendered the bar
+  off-screen. Blockquote text is extracted from the owner's `sourceEl` (its own document) so
+  popouts stay correct — never query the global `document`.
 - **Selection clears when its passage unloads.** `controller.onunload` calls
   `service.clearIfOwner(this)`, so a note re-render or pane close drops a stale selection
   and its bar.
+- **"Insert" doesn't target the active pane.** When you click a verse, the active pane
+  *is* the passage's pane — usually a generated note under the Bible content folder, which
+  is the last place you want the verse inserted. So the plugin tracks the last active
+  **editable, non-generated** markdown note (`DisciplesJournalPlugin.handleActiveLeafChange`
+  → `lastEditableLeaf`, filtered by `isBibleContentFile`) and `resolveInsertTarget()`
+  returns it. There's no public "leaves in MRU order" API — this `active-leaf-change`
+  tracking is the stand-in. Insert does **not** steal focus; it drops the text in and shows
+  an `Inserted … into <note>` notice. The right-click "Insert here" path is unaffected — it
+  always uses the clicked editor.

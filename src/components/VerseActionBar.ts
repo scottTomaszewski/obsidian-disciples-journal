@@ -88,8 +88,6 @@ export class VerseActionBar extends Component {
 		});
 		setIcon(close, "x");
 		close.onClickEvent(() => this.onClose());
-
-		this.position();
 	}
 
 	private openFormatMenu(e: MouseEvent, kind: VerseActionKind, label: string, selection: VerseSelection): void {
@@ -100,12 +98,5 @@ export class VerseActionBar extends Component {
 					.onClick(() => void runVerseAction(this.plugin, kind, selection, f, this.passageEl)));
 		}
 		menu.showAtMouseEvent(e);
-	}
-
-	private position(): void {
-		if (!this.root) return;
-		const r = this.passageEl.getBoundingClientRect();
-		// Anchor just below the passage; CSS bottom-docks it on narrow layouts.
-		this.root.setCssStyles({ left: `${r.left}px`, top: `${r.bottom + 4}px` });
 	}
 }
