@@ -22,6 +22,10 @@ export interface DisciplesJournalSettings {
 	hideFootnotesInPreview: boolean;
 	chapterNoteFrontmatter: string;
 	passageNoteFrontmatter: string;
+	enableVerseSelection: boolean;
+	defaultInsertFormat: 'inline' | 'codeblock' | 'blockquote';
+	formatChooserStyle: 'split' | 'toggle' | 'submenu';
+	enableAppendToNote: boolean;
 }
 
 export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
@@ -41,7 +45,11 @@ export const DEFAULT_SETTINGS: DisciplesJournalSettings = {
 	hideFootnotes: false,
 	hideFootnotesInPreview: false,
 	chapterNoteFrontmatter: '',
-	passageNoteFrontmatter: ''
+	passageNoteFrontmatter: '',
+	enableVerseSelection: true,
+	defaultInsertFormat: 'inline',
+	formatChooserStyle: 'split',
+	enableAppendToNote: false
 };
 
 export class DisciplesJournalSettingsTab extends PluginSettingTab {
@@ -263,6 +271,54 @@ export class DisciplesJournalSettingsTab extends PluginSettingTab {
 				.setValue(this.plugin.settings.passageNoteFrontmatter)
 				.onChange(async (value) => {
 					this.plugin.settings.passageNoteFrontmatter = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl).setName('Verse selection').setHeading();
+
+		new Setting(containerEl)
+			.setName('Enable verse selection')
+			.setDesc('Tap verses in a rendered passage to select them and copy/insert them into notes.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableVerseSelection)
+				.onChange(async (value) => {
+					this.plugin.settings.enableVerseSelection = value;
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Default insert format')
+			.setDesc('The format used by the main button before you pick another.')
+			.addDropdown(dropdown => dropdown
+				.addOption('inline', 'Inline reference')
+				.addOption('codeblock', 'Bible code block')
+				.addOption('blockquote', 'Blockquote with text')
+				.setValue(this.plugin.settings.defaultInsertFormat)
+				.onChange(async (value) => {
+					this.plugin.settings.defaultInsertFormat = value as DisciplesJournalSettings['defaultInsertFormat'];
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Format chooser style')
+			.setDesc('How the action bar lets you pick a format.')
+			.addDropdown(dropdown => dropdown
+				.addOption('split', 'Split buttons (default format + chevron)')
+				.addOption('toggle', 'Format toggle + action buttons')
+				.addOption('submenu', 'Action menus with format submenus')
+				.setValue(this.plugin.settings.formatChooserStyle)
+				.onChange(async (value) => {
+					this.plugin.settings.formatChooserStyle = value as DisciplesJournalSettings['formatChooserStyle'];
+					await this.plugin.saveSettings();
+				}));
+
+		new Setting(containerEl)
+			.setName('Enable "Append to note…"')
+			.setDesc('Add an action that appends the selection to the end of a note you pick. Overlaps with Insert at cursor, so it is off by default.')
+			.addToggle(toggle => toggle
+				.setValue(this.plugin.settings.enableAppendToNote)
+				.onChange(async (value) => {
+					this.plugin.settings.enableAppendToNote = value;
 					await this.plugin.saveSettings();
 				}));
 
