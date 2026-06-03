@@ -26,8 +26,15 @@ below) — a failing test blocks both.
 - `BibleReference` — `parse` (the full format matrix from
   [reference-formats.md](reference-formats.md), book-name variants, normalization,
   null cases), `toString` round-trips, and the value-object helpers.
+- `BookNames` — canonical book-name normalization and per-book chapter counts.
+- `VerseFormatter` — the three insert formats (inline reference, `bible` code block,
+  blockquote-with-text + citation).
+- `VerseId` — `parseVerseId` of ESV marker ids (`v01001002-1` → `{chapter, verse}`).
+- `VerseSelection` — collapsing a verse set into contiguous `BibleReference` runs and
+  its display label.
 
-This is the first suite; extend it as other pure logic becomes test-worthy.
+Coverage is the pure logic (parsing, formatting, value objects); extend it as other
+pure logic becomes test-worthy.
 
 ## Gating
 

@@ -12,7 +12,7 @@ frontmatter-as-cache model, `:`→`v` filename encoding) live in
 loads its document listeners/timer and, crucially, tears them down on plugin
 unload. A previous version leaked global `document` listeners; do **not** reintroduce
 per-render or per-reference global listeners — route hover behavior through this one
-handler. (`DisciplesJournalPlugin.ts:60-65`, `BibleEventHandlers.ts`.)
+handler. (`DisciplesJournalPlugin.ts:73-77`, `BibleEventHandlers.ts`.)
 
 ## Pop-out windows: styles don't fully carry over (known-incomplete)
 
@@ -20,7 +20,7 @@ Each Obsidian pop-out window is a separate `Document`, so `updateBibleStyles`
 iterates all leaves and applies styles per-document. A code comment flags that this
 **still doesn't fully work** — a freshly created pop-out doesn't get the style
 vars ported over. If you touch styling and a pop-out looks unstyled, this is why,
-not your change. (`DisciplesJournalPlugin.ts:131-158`.)
+not your change. (`DisciplesJournalPlugin.ts:219-246`.)
 
 ## The passage cache is keyed by object identity — it effectively never hits
 
@@ -30,7 +30,7 @@ up** with the inbound (freshly parsed) `ref`. Two equal-but-distinct
 `BibleReference` objects are different map keys, so cross-call lookups essentially
 always miss; the real cache is the saved note on disk. Harmless today, but if you
 ever rely on this in-memory cache, key it by `ref.toString()` instead.
-(`BibleContentService.ts:14,72-80`.)
+(`BibleContentService.ts:14,97-103`.)
 
 ## scrollToVerse watches the DOM instead of guessing a delay
 

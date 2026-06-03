@@ -111,7 +111,6 @@ Source is organized under `src/` by responsibility:
   `bible` code block, blockquote-with-text + citation).
 - **`FrontmatterUtil.ts`** — apply user-configured custom frontmatter to Bible
   notes (`getCustomFrontmatterForReference`, `applyCustomFrontmatter`).
-- **`BibleCodeblockFormatter.ts`** — formatting helper for the `bible` code block.
 
 ### `settings/`
 
@@ -161,9 +160,9 @@ reuses `toBibleApiResponse` on the stored data instead of re-hitting the API. Se
 ## Tests
 
 `test/` holds the test suites (Node's built-in `node:test` runner via `tsx`), one
-`*.test.ts` per unit — currently `test/BibleReference.test.ts`. Run with `npm test`
-(or `devbox run test`); they also gate `npm run build` and `just release`. See
-[docs/testing.md](docs/testing.md).
+`*.test.ts` per unit — currently `BibleReference`, `BookNames`, `VerseFormatter`,
+`VerseId`, and `VerseSelection`. Run with `npm test` (or `devbox run test`); they
+also gate `npm run build` and `just release`. See [docs/testing.md](docs/testing.md).
 
 ## Build
 

@@ -40,9 +40,9 @@ Releases then go through the `justfile` (`just release <version>`), which:
 1. Refuses to run if `git status` is not clean.
 2. Runs `npm test` — a failing test aborts the release before any files are mutated.
 3. Sets `version` in both `manifest.json` and `package.json` (via `jq`).
-5. Builds with `npm run build-no-check`.
-6. Commits (`Prepares for release '<version>'`) and pushes.
-7. Creates a GitHub release with `gh`, uploading `main.js`, `manifest.json`, and
+4. Builds with `npm run build-no-check`.
+5. Commits (`Prepares for release '<version>'`) and pushes.
+6. Creates a GitHub release with `gh`, uploading `main.js`, `manifest.json`, and
    `styles.css` as assets (release notes are left empty — the changelog is the record).
 
 ### gh token note

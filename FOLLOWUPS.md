@@ -27,7 +27,7 @@ Effort is sized XS (<1 h) · S (1–4 h) · M (1 day) · L (multi-day).
 - **Identified:** 2026-05-31, funky-logic sweep.
 - **What:** Styles aren't fully ported into freshly created pop-out windows.
 - **Why:** Passages render unstyled in pop-outs; a known rough edge.
-- **Context:** `DisciplesJournalPlugin.updateBibleStyles` (`:131-158`) flags this in a
+- **Context:** `DisciplesJournalPlugin.updateBibleStyles` (`:219-246`) flags this in a
   comment; see [docs/gotchas.md](docs/gotchas.md). Tracked upstream in an Obsidian
   Discord thread linked in the code.
 - **Effort:** M
