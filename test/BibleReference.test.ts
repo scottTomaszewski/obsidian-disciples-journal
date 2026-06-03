@@ -179,3 +179,35 @@ test("value-object helpers", async (t) => {
 test("constructor throws on an unnormalizable book name", () => {
 	assert.throws(() => new BibleReference("Xylophone", 1), /Illegal book name/);
 });
+
+test("parseList — comma/non-contiguous lists", async (t) => {
+	await t.test("single ref still parses as a one-element list", () => {
+		const list = BibleReference.parseList("John 3:16");
+		assert.ok(list);
+		assert.equal(list.length, 1);
+		assert.equal(list[0].toString(), "John 3:16");
+	});
+
+	await t.test("bare verse inherits book + chapter", () => {
+		const list = BibleReference.parseList("Genesis 1:2-3, 5");
+		assert.ok(list);
+		assert.deepEqual(list.map((r) => r.toString()), ["Genesis 1:2-3", "Genesis 1:5"]);
+	});
+
+	await t.test("chapter:verse item inherits only the book", () => {
+		const list = BibleReference.parseList("Genesis 1:31, 2:1");
+		assert.ok(list);
+		assert.deepEqual(list.map((r) => r.toString()), ["Genesis 1:31", "Genesis 2:1"]);
+	});
+
+	await t.test("round-trips a VerseSelection label", () => {
+		const list = BibleReference.parseList("Genesis 1:2-4, 7, 2:1");
+		assert.ok(list);
+		assert.deepEqual(list.map((r) => r.toString()), ["Genesis 1:2-4", "Genesis 1:7", "Genesis 2:1"]);
+	});
+
+	await t.test("invalid item makes the whole list null", () => {
+		assert.equal(BibleReference.parseList("Genesis 1:2, banana"), null);
+		assert.equal(BibleReference.parseList(""), null);
+	});
+});
