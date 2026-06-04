@@ -67,8 +67,12 @@ export class BibleFiles {
 	 * Open a chapter note for the given reference, creating it from the API first
 	 * if it isn't on disk yet. If the reference includes a verse, the note is
 	 * scrolled to that verse once it renders.
+	 *
+	 * Pass `openInNewTab` to open the chapter in a fresh tab instead of reusing
+	 * the active leaf (used by the "Open Bible" command so it never replaces the
+	 * note the user is reading).
 	 */
-	public async openChapterNote(reference: BibleReference): Promise<void> {
+	public async openChapterNote(reference: BibleReference, openInNewTab = false): Promise<void> {
 		try {
 			const chapterPath = BibleFiles.pathForPassage(reference, this.plugin);
 			if (!BibleFiles.fileExistsForPassage(reference, this.plugin)) {
@@ -89,7 +93,7 @@ export class BibleFiles {
 
 			const passageNoteFile = BibleFiles.getFileForPassage(reference, this.plugin);
 			if (passageNoteFile instanceof TFile) {
-				const leaf = this.plugin.app.workspace.getLeaf(false);
+				const leaf = this.plugin.app.workspace.getLeaf(openInNewTab ? 'tab' : false);
 				await leaf.openFile(passageNoteFile);
 
 				// If there's a specific verse, scroll to it once it has rendered

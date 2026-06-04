@@ -6,6 +6,11 @@ header text is **exactly** the release tag (no leading `v`).
 
 ## Unreleased
 
+- The "Open Bible" command (and ribbon icon) now opens the chosen chapter in a new tab
+  instead of replacing the note you were reading
+
+## 1.14.0
+
 - Adds verse selection: tap verses in a rendered passage to select them (shift-click or
   long-press-drag for a range), then copy or insert them as an inline reference, a `bible`
   code block, or a blockquote of the verse text. A floating action bar (docked at the

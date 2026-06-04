@@ -68,7 +68,7 @@ export class OpenBibleModal extends SuggestModal<BibleTarget> {
 			if (chapterCount === 1) {
 				// Single-chapter book, open directly
 				const loadingNotice = new Notice("Loading chapter...", 0);
-				await this.bibleFiles.openChapterNote(new BibleReference(item.book, 1));
+				await this.bibleFiles.openChapterNote(new BibleReference(item.book, 1), true);
 				loadingNotice.hide();
 			} else {
 				// Reopen for chapter selection
@@ -77,7 +77,7 @@ export class OpenBibleModal extends SuggestModal<BibleTarget> {
 			}
 		} else {
 			const loadingNotice = new Notice("Loading chapter...", 0);
-			await this.bibleFiles.openChapterNote(new BibleReference(item.book, item.chapter));
+			await this.bibleFiles.openChapterNote(new BibleReference(item.book, item.chapter), true);
 			loadingNotice.hide();
 		}
 	}
@@ -124,7 +124,7 @@ class OpenBibleChapterModal extends SuggestModal<BibleTarget> {
 
 	private async openChapter(item: BibleTarget): Promise<void> {
 		const loadingNotice = new Notice("Loading chapter...", 0);
-		await this.bibleFiles.openChapterNote(new BibleReference(item.book, item.chapter));
+		await this.bibleFiles.openChapterNote(new BibleReference(item.book, item.chapter), true);
 		loadingNotice.hide();
 	}
 }
