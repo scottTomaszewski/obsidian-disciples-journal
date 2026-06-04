@@ -31,19 +31,24 @@ The repo follows `eslint-plugin-obsidianmd` (see `eslint.config.mjs`) and the
 
 ## Releasing
 
-**Before releasing**, rename the `## Unreleased` header in [../CHANGELOG.md](../CHANGELOG.md)
-to the version tag — the `justfile` does **not** touch the changelog (it creates the
-GitHub release with empty notes), so this promotion is a manual step.
+Releases go through the `justfile` (`just release <version>`). Accumulate user-facing
+changes under `## Unreleased` in [../CHANGELOG.md](../CHANGELOG.md) as you work — the
+recipe promotes that section to the release version for you (no manual rename needed).
+The recipe:
 
-Releases then go through the `justfile` (`just release <version>`), which:
-
-1. Refuses to run if `git status` is not clean.
-2. Runs `npm test` — a failing test aborts the release before any files are mutated.
-3. Sets `version` in both `manifest.json` and `package.json` (via `jq`).
-4. Builds with `npm run build-no-check`.
-5. Commits (`Prepares for release '<version>'`) and pushes.
-6. Creates a GitHub release with `gh`, uploading `main.js`, `manifest.json`, and
-   `styles.css` as assets (release notes are left empty — the changelog is the record).
+1. Normalizes the version (strips a leading `v`) and rejects anything that isn't semver
+   (e.g. `1.0.1` or `1.0.1-rc.1`).
+2. Refuses to run if `git status` is not clean, or if the tag already exists.
+3. Syncs the version into `manifest.json`, `package.json`, and `versions.json` (via
+   `jq`) — `versions.json` maps the new version to the current `minAppVersion`.
+4. Promotes `## Unreleased` → `## <version>` in `CHANGELOG.md` and uses that section's
+   body as the GitHub release notes (falls back to `Release <version>` if empty).
+5. Builds with `npm run build` (type-check + tests + production esbuild) — a failing
+   type-check or test aborts the release after the file edits but before commit/push.
+6. Commits (`Prepares for release '<version>'`) the four metadata/changelog files and
+   pushes the current branch (`git push -u origin HEAD`).
+7. Creates a GitHub release with `gh`, targeting the just-pushed branch and uploading
+   `main.js`, `manifest.json`, and `styles.css` as assets.
 
 ### gh token note
 
